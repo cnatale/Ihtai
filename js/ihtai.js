@@ -13,4 +13,55 @@ TODO:
 -add drive center (algorithms representing internal stimuli)
 
 */ 
-var 
+
+var Ihtai = (function(){
+
+	function memorize(){
+		
+	}
+
+	function recall(){
+
+	}
+
+
+	return {
+		recall: recall,
+		memorize: memorize
+	};
+})();
+
+//clusters are 'buckets' that input stimuli are placed in
+var Clusters = (function(){
+	//TODO: implement as k-means clustering
+	//TODO: allow number of clusters to be variable
+
+	function init(){
+
+	}
+
+	function add(){
+
+	}
+
+	return {
+		init: init,
+		add: add
+	};
+})();
+
+//drives are internal stimuli determined by algorithms that take each other and external stimuli as inputs
+var Drives = (function(){
+
+	return {
+
+	};
+})();
+
+//instincts are actions triggered when no memory series matches desired drive state closely enough.
+var Instincts = (function(){
+
+	return{
+
+	};
+})();
