@@ -85,7 +85,8 @@ var Memorizer = (function(_height){
 			level[i].ctr =0; //initialize time sequence counter for each level
 		}
 
-		//TODO: set a real homeostasisGoal
+		//TODO: set a real homeostasisGoal, which requires mapping this to correct number of dimensions
+		//TODO: should be pulled from drives portion of app
 		homeostasisGoal=[0,0,0,0,0];
 	}
 	init();
@@ -93,21 +94,22 @@ var Memorizer = (function(_height){
 	/**
 		Takes a cluster containing vector representing current i/o stimuli state combined with current 
 		drive state.
-		@returns a vector representing the moment output stimuli for moment in time 
-		most likely to satiate current drives, i.e. the behavior most likely to satiate drives.
+		@returns A vector representing the next action agent should take to minimize homeostasis differential.
+		If no vector is within acceptable range, return null.
 	*/
 	function query(cluster){
-		var outputStimuli, stimDist, sd;
+		var outputStimuli=null, stimDist, sd;
 
 		for(var i=0; i<height; i++){
 			//At each level, compare time series' end drive state with homeostasis goal.
 			//If result < acceptable range, return time series' starting ouput stimuli (what agent will act on).
 			//TODO: define homeostasisGoal
-			sd = sqDist(level[i].series[cluster.id].endState, homeostasisGoal);
-
-			if(sd <= acceptableRange){
-				outputStimuli = level[i].series[cluster.id].secondState;
-				break;
+			if(level[i].series.hasOwnProperty(cluster.id)){
+				sd = sqDist(level[i].series[cluster.id].endState, homeostasisGoal);
+				if(sd <= acceptableRange){
+					outputStimuli = level[i].series[cluster.id].secondState;
+					break;
+				}
 			}
 			//if no match is within acceptable range, go to next level
 		}
@@ -201,7 +203,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 	*/
 	function init(){
 		//TODO:create clusters with id(needs to be unique) and stimuli properties
-		for(var i=0;i<numClusters.length;i++){
+		for(var i=0;i<numClusters;i++){
 			clusters[i].id=i;
 			clusters[i].stimuli=[];
 			//TODO:randomly populate vector
@@ -219,7 +221,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 
 		@returns {Object} the nearest cluster to v
 	*/
-	function insertVector(v){
+	function findNearestCluster(v){
 		var nearestCluster, clusters=getClusters();
 		var leastSq, t;
 		for(var i=0; i < clusters.length; i++){
@@ -236,7 +238,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 
 		//move nearest cluster a bit closer to v
 		for(i=0; i< nearestCluster.length; i++){
-			nearestCluster[i] += v[i]*.01;
+			//nearestCluster[i] += v[i]*.01; turn this off for now. doesn't play well with k-d tree balancing
 		}
 
 		return nearestCluster;
@@ -248,7 +250,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 
 	return {
 		init: init, 
-		insertVector: insertVector
+		findNearestCluster: findNearestCluster
 	};
 });
 

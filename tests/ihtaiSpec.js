@@ -18,7 +18,7 @@ describe('ihtai', function(){
 
 		it('should initialize clusters', function(){
 			var clusters = new Clusters();
-			clusters.init(1000);
+			clusters.init(1000, 5);
 		});
 
 		it('should insert a vector', function(){
