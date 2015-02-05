@@ -105,24 +105,15 @@ var Memorizer = (function(_height){
 			//TODO: define homeostasisGoal
 			sd = sqDist(level[i].series[cluster.id].endState, homeostasisGoal);
 
-			//if no match is within acceptable range, go to next level
 			if(sd <= acceptableRange){
 				outputStimuli = level[i].series[cluster.id].secondState;
 				break;
 			}
+			//if no match is within acceptable range, go to next level
 		}
 
 
 		return outputStimuli;
-	}
-
-	function sqDist(v1, v2){
-		var d=0;
-		for(var i=0; i<v1.length;i++){
-			d+=Math.pow(v1[i] - v2[i], 2);
-		}
-
-		return d;
 	}
 
 	/**
@@ -140,7 +131,7 @@ var Memorizer = (function(_height){
 		stimuli=cluster.stimuli;
 		for(var i=0; i<height; i++){
 
-			if(level[i].ctr==0){
+			if(level[i].ctr == 0){
 				//start tracking new memory series
 				level[i].recordingSeries.startState=stimuli;
 				level[i].recordingSeries.clusterId=cluster.id; //key series based on startState cluster id
@@ -176,25 +167,50 @@ var Memorizer = (function(_height){
 		}
 	}
 
+	function sqDist(v1, v2){
+		var d=0;
+		for(var i=0; i<v1.length;i++){
+			d+=Math.pow(v1[i] - v2[i], 2);
+		}
+
+		return d;
+	}
+
+
 	return {
 		query: query,
 		memorize: memorize
 	}
 });
 
-//clusters are 'buckets' that input stimuli are placed in
-var Clusters = (function(_numClusters){
-	//TODO: implement as k-means clustering
-	//TODO: allow number of clusters to be variable
+//clusters are 'buckets' that input stimuli are placed inside
+var Clusters = (function(_numClusters, _vectorDim){
 	//TODO: think about sorting data for better search performance. research k-d trees, n-dimensional nearest neighbor solutions.
+	/**
+		Individual clusters have the following properties:
+		id: a unique id
+		stimuli: a vector representing stimuli
+	*/
 
+	var clusters=[], vectorDim=_vectorDim;
 	var numClusters = _numClusters
 
 	/**
-		-randomly assign k clusters over n-dimensional vector space
+		-TODO:randomly assign k clusters over n-dimensional vector space
 		@param {number} k
 	*/
-	function init(){}
+	function init(){
+		//TODO:create clusters with id(needs to be unique) and stimuli properties
+		for(var i=0;i<numClusters.length;i++){
+			clusters[i].id=i;
+			clusters[i].stimuli=[];
+			//TODO:randomly populate vector
+			for(var j=0;j<vectorDim;j++){
+				//assumes vectors are normalized to a 0-100 scale
+				clusters[i].stimuli[j]=Math.random()*100;
+			}
+		}
+	}
 
 	/** 
 		-find nearest cluster to v
@@ -209,7 +225,7 @@ var Clusters = (function(_numClusters){
 		for(var i=0; i < clusters.length; i++){
 			t=0;
 			for(var j=0; j< v.length; j++){
-				t+= v[j]*v[j] - clusters[i][j]*clusters[i][j];
+				t+= Math.pow(v[j] - clusters[i].stimuli[j], 2);
 			}
 
 			if(i==0 || t < leastSq){
@@ -227,7 +243,7 @@ var Clusters = (function(_numClusters){
 	}
 
 	function getClusters(){
-		//TODO: return clusters
+		return clusters;
 	}
 
 	return {
@@ -243,7 +259,6 @@ var Clusters = (function(_numClusters){
 var IoStimuli = (function(){
 
 	/**
-	
 		@returns a vector representing the current io state
 	*/
 	function getCurrentStimuli(){
