@@ -114,7 +114,6 @@ var Memorizer = (function(_height){
 			//if no match is within acceptable range, go to next level
 		}
 
-
 		return outputStimuli;
 	}
 
@@ -145,19 +144,30 @@ var Memorizer = (function(_height){
 			if(level[i].ctr == i+2){
 				level[i].recordingSeries.endState=stimuli;
 				/*
-				TODO: If series' end state is less different from homeostasis goal than   
-				current series stored at this start state, overwrite.
+				If series' end state is less different from homeostasis goal than   
+				current series stored at this start state, overwrite. If no current series is stored
+				at this start state, store it.
 				*/
-				sd1 = sqDist(level[i].recordingSeries.endState, homeostasisGoal);
-				sd2 = sqDist(level[i].series[level[i].recordingSeries.clusterId].endState, homeostasisGoal);
+				if(level[i].series.hasOwnProperty(level[i].recordingSeries.clusterId)){
+					sd1 = sqDist(level[i].recordingSeries.endState, homeostasisGoal);
+					sd2 = sqDist(level[i].series[level[i].recordingSeries.clusterId].endState, homeostasisGoal);
 
-				if(sd1 < sd2){
+					if(sd1 < sd2){
+						//add memory series to level. Hash based on starting state cluster id.
+						level[i].series[level[i].recordingSeries.clusterId]={
+							startState: level[i].recordingSeries.startState, 
+							secondState: level[i].recordingSeries.secondState,
+							endState: level[i].recordingSeries.endState
+						};					
+					}
+				}
+				else{
 					//add memory series to level. Hash based on starting state cluster id.
 					level[i].series[level[i].recordingSeries.clusterId]={
 						startState: level[i].recordingSeries.startState, 
 						secondState: level[i].recordingSeries.secondState,
 						endState: level[i].recordingSeries.endState
-					};					
+					};						
 				}
 
 				level[i].ctr=0;
@@ -202,17 +212,23 @@ var Clusters = (function(_numClusters, _vectorDim){
 		@param {number} k
 	*/
 	function init(){
-		//TODO:create clusters with id(needs to be unique) and stimuli properties
+		//create clusters with id(needs to be unique) and stimuli properties
 		for(var i=0;i<numClusters;i++){
-			clusters[i].id=i;
-			clusters[i].stimuli=[];
-			//TODO:randomly populate vector
+			clusters[i]={id:i, stimuli:[]};
+			//map clusters to random points in n-dimensional space 
 			for(var j=0;j<vectorDim;j++){
 				//assumes vectors are normalized to a 0-100 scale
-				clusters[i].stimuli[j]=Math.random()*100;
+				if(i==0){ //test cluster
+					clusters[i].stimuli[j]=50;
+				}
+				else{
+					clusters[i].stimuli[j]=Math.random()*100;
+				}
+				
 			}
 		}
 	}
+	init();
 
 	/** 
 		-find nearest cluster to v
@@ -249,8 +265,8 @@ var Clusters = (function(_numClusters, _vectorDim){
 	}
 
 	return {
-		init: init, 
-		findNearestCluster: findNearestCluster
+		findNearestCluster: findNearestCluster,
+		getClusters: getClusters
 	};
 });
 
