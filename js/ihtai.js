@@ -80,6 +80,7 @@ var Memorizer = (function(_height){
 		//initialize a 2d array representing all possible memories
 		level=[];
 		for(var i=0; i<height; i++){
+			level[i]={};
 			level[i].series={};
 			level[i].recordingSeries={};
 			level[i].ctr =0; //initialize time sequence counter for each level
@@ -188,10 +189,19 @@ var Memorizer = (function(_height){
 		return d;
 	}
 
+	function getHeight(){
+		return height;
+	}
+
+	function getLevels(){
+		return level;
+	}
 
 	return {
 		query: query,
-		memorize: memorize
+		memorize: memorize,
+		getHeight: getHeight,
+		getLevels: getLevels
 	}
 });
 
