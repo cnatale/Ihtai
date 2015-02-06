@@ -74,16 +74,14 @@ var Ihtai = (function(){
 	moments in time represented by vectors combining stimuli and drive states.
 */
 var Memorizer = (function(_height){
-	var height=_height, acceptableRange=1, level, homeostasisGoal;
+	var height=_height, acceptableRange=1, level, buffer, homeostasisGoal;
 
 	function init(){
 		//initialize a 2d array representing all possible memories
-		level=[];
+		level=[], buffer=[];
 		for(var i=0; i<height; i++){
 			level[i]={};
 			level[i].series={};
-			level[i].recordingSeries={};
-			level[i].ctr =0; //initialize time sequence counter for each level
 		}
 
 		//TODO: set a real homeostasisGoal, which requires mapping this to correct number of dimensions
@@ -129,53 +127,50 @@ var Memorizer = (function(_height){
 			Every level has a counter, that is reset every time a new memory sequence starts. The memory
 			sequence counts to i+2	
 		*/
-		var sd1,sd2;
+		var sd1,sd2,size, startState, secondState, endState;
 		stimuli=cluster.stimuli;
-		for(var i=0; i<height; i++){
 
-			if(level[i].ctr == 0){
-				//start tracking new memory series
-				level[i].recordingSeries.startState=stimuli;
-				level[i].recordingSeries.clusterId=cluster.id; //key series based on startState cluster id
-			}
-			//TODO: add in signal after first, which is the one that will be returned
-			if(level[i].ctr == 1){
-				level[i].recordingSeries.secondState=stimuli;
-			}
-			if(level[i].ctr == i+2){
-				level[i].recordingSeries.endState=stimuli;
+		//update the buffer
+		buffer.push(cluster);
+		if(buffer.length>height)
+			buffer.shift(); //this may be an O(n) implementation. Think about changing.
+
+		for(var i=0; i<height; i++){
+			size=i+3;
+			startState=buffer.length-size;
+			secondState=buffer.length-size+1;
+			endState=buffer.length-1;
+
+			//Once we have a buffer full enough for this level, add a memory every cycle
+			if(buffer.length>=size){
+				
 				/*
 				If series' end state is less different from homeostasis goal than   
 				current series stored at this start state, overwrite. If no current series is stored
 				at this start state, store it.
-				*/
-				if(level[i].series.hasOwnProperty(level[i].recordingSeries.clusterId)){
-					sd1 = sqDist(level[i].recordingSeries.endState, homeostasisGoal);
-					sd2 = sqDist(level[i].series[level[i].recordingSeries.clusterId].endState, homeostasisGoal);
+				*/				
+				if(level[i].series.hasOwnProperty(buffer[startState].id)){
+					sd1 = sqDist(buffer[endState].stimuli, homeostasisGoal);
+					sd2 = sqDist(level[i].series[buffer[startState].id].endState, homeostasisGoal);
 
 					if(sd1 < sd2){
 						//add memory series to level. Hash based on starting state cluster id.
-						level[i].series[level[i].recordingSeries.clusterId]={
-							startState: level[i].recordingSeries.startState, 
-							secondState: level[i].recordingSeries.secondState,
-							endState: level[i].recordingSeries.endState
-						};					
-					}
+						level[i].series[buffer[startState].id]={
+							startState: buffer[startState].stimuli, 
+							secondState: buffer[secondState].stimuli,
+							endState: buffer[endState].stimuli
+						};
+					}					
 				}
 				else{
-					//add memory series to level. Hash based on starting state cluster id.
-					level[i].series[level[i].recordingSeries.clusterId]={
-						startState: level[i].recordingSeries.startState, 
-						secondState: level[i].recordingSeries.secondState,
-						endState: level[i].recordingSeries.endState
-					};						
+					
+					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
+					level[i].series[buffer[startState].id]={
+						startState: buffer[startState].stimuli, 
+						secondState: buffer[secondState].stimuli,
+						endState: buffer[endState].stimuli
+					};					
 				}
-
-				level[i].ctr=0;
-			}
-			else{
-				
-				level[i].ctr++;
 			}
 		}
 	}
