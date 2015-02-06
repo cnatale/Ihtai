@@ -1,17 +1,7 @@
 /*
 TODO:
--add k-means clustering for initial signal inputs
--add data struct that allows for hierarchical queries based on:
-	-using the cluster most closely matching input signal,
-	-from shortest time series to longest
-		-find time series with closest ending signal match to desired drive state. return time series.
-	-go up a time series length level
-	-if no time series levels are close enough, act on instinct
--add memorize()
--add recall()
 -add instinct center (automated physical actions)
 -add drive center (algorithms representing internal stimuli)
-
 */ 
 
 var Ihtai = (function(){
@@ -309,7 +299,7 @@ var Drives = (function(_drives){
 	}
 	init();
 
-	function cycle(){
+	function cycle(cluster){
 		for(var i=0;i<drives.length;i++){
 			//TODO:execute each method in drives once per cycle
 			drives[i]();
@@ -325,19 +315,42 @@ var Drives = (function(_drives){
 	Reflexes are actions that can be 'hot-triggered' every cycle. They map certain input stimuli vectors to set output responses,
 	Ex: a knee nerve stimulation of sufficient level triggers a kick reflex.
 
-	Reflexes also serve the hidden purpose of seeding the Memorizer with behaviors that it can build on.
+	Reflexes also serve the purpose of seeding the Memorizer with behaviors that it can build on.
 */
 var Reflexes = (function(_reflexes){
+	/*
+	each reflex is an object that contains:
+	matcher: vector indices to match against, in the form of {indices:[], signal:[]}
+	response: the reflex response, in the form of {indices:[], signal:[]}. The responseLevels part is a vector
+	of the dimensions described by the indices part. So a match containing only the second index would return
+	a 1-d vector signal, which would be sent as an output stimuli to the second index.
+
+	*/
 	var reflexes = _reflexes;
 	function init(){
-
 	}	
 	init();
 
-	function cycle(){
+	function cycle(cluster){
+		var output=[], matcher, response, indices, stimuli=cluster.stimuli, ctr;
+		//cluster has properties: id, stimuli
 		for(var i=0; i<reflexes.length;i++){
-			reflexes[i]();
+			matcher=reflexes[i].matcher;
+			indices=matcher.indices;
+			ctr=0;
+			for(j=0;j<indices.length;j++){
+				//for each index, check to see if the cluster signal matches the matcher signal
+				if(matcher.signal[j]==stimuli[matcher.indices[j]])
+					ctr++;
+			}
+			if(ctr==matcher.indices.length){
+				//match. send reflex's output signal out 
+				//TODO:integrate into output
+				output.push(reflexes[i].response);
+			}			
 		}
+
+		return output;
 	}
 
 	return{

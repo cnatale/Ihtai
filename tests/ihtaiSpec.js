@@ -84,6 +84,33 @@ describe('ihtai', function(){
 
 	});
 
+	describe('Reflexes', function(){
+		var reflexes;
+		beforeEach(function(){
+			var input=[];
+			reflexes = new Reflexes([{
+				matcher:{indices:[3], signal:[40]} , 
+				response:{indices:[4], signal:[10]} 
+			}]);
+
+		});
+		afterEach(function(){
+
+		});
+
+		it('should trigger reflexes', function(){
+			var memory=[10,20,30,40,50];
+			var cluster = {id:0, stimuli:memory};
+			var res=reflexes.cycle(cluster);
+
+			expect(res.length).toBe(1);
+			expect(res[0].indices).toEqual([4]);
+			expect(res[0].signal).toEqual([10]);
+		});
+
+
+	});
+
 	describe('ihtai core', function(){
 		beforeEach(function(){
 
