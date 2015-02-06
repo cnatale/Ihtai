@@ -290,24 +290,33 @@ var IoStimuli = (function(){
 	as inputs. Each drive contains a method which maps io stimuli and other drive states into an output
 	drive state.
 
-	@params drives: Array. An array of drive methods.
+	@params drives: Array. An array of drive methods. Each drive takes form {init:function, cycle:function}
 */
 var Drives = (function(_drives){
 	var drives = _drives;
 	function init(){
-
+		for(var i=0;i<drives.length;i++){
+			drives[i].init();
+		}
 	}
 	init();
 
 	function cycle(cluster){
+		var response=[];
 		for(var i=0;i<drives.length;i++){
 			//TODO:execute each method in drives once per cycle
-			drives[i]();
+			response.push(drives[i].cycle(cluster.stimuli)); //expects each drives method to return a Number 0-100
 		}
+		return response;
+	}
+
+	function getDrives(){
+		return drives;
 	}
 
 	return {
-		cycle:cycle
+		cycle:cycle,
+		getDrives:getDrives
 	};
 });
 
@@ -324,7 +333,6 @@ var Reflexes = (function(_reflexes){
 	response: the reflex response, in the form of {indices:[], signal:[]}. The responseLevels part is a vector
 	of the dimensions described by the indices part. So a match containing only the second index would return
 	a 1-d vector signal, which would be sent as an output stimuli to the second index.
-
 	*/
 	var reflexes = _reflexes;
 	function init(){
@@ -344,8 +352,7 @@ var Reflexes = (function(_reflexes){
 					ctr++;
 			}
 			if(ctr==matcher.indices.length){
-				//match. send reflex's output signal out 
-				//TODO:integrate into output
+				//match. place reflex's output signal on response stack
 				output.push(reflexes[i].response);
 			}			
 		}

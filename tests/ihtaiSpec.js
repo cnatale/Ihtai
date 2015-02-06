@@ -111,6 +111,51 @@ describe('ihtai', function(){
 
 	});
 
+	describe('Drives', function(){
+		var drives, cluster;
+		beforeEach(function(){
+			//creates a simple drive object
+			var drive={
+				v:5,
+				init:function(){
+					this.v=5;
+					return this.v;
+				},
+				cycle:function(stimuli){
+					if(stimuli[0] > 50)
+						this.v=0;
+					else
+						this.v++;
+					return this.v;
+				}
+			};
+			drives= new Drives([drive]);
+
+
+		});
+		afterEach(function(){
+
+		});
+
+		it('should initialize a drive', function(){
+			var d=drives.getDrives();
+			expect(d[0].v).toBe(5);
+		});
+
+		it('should cycle drive state', function(){
+			var memory=[60,20,30,40,50], d;
+			cluster = {id:0, stimuli:memory};
+			drives.cycle(cluster);
+			d=drives.getDrives();
+			expect(d[0].v).toBe(0);
+
+			memory=[10,20,30,40,50];
+			cluster = {id:1, stimuli:memory};
+			drives.cycle(cluster);
+			expect(d[0].v).toBe(1);
+		});
+	});
+
 	describe('ihtai core', function(){
 		beforeEach(function(){
 
