@@ -143,15 +143,13 @@ describe('ihtai', function(){
 		});
 
 		it('should cycle drive state', function(){
-			var memory=[60,20,30,40,50], d;
-			cluster = {id:0, stimuli:memory};
-			drives.cycle(cluster);
+			var ioStim=[60,20,30,40,50], d;
+			drives.cycle(ioStim);
 			d=drives.getDrives();
 			expect(d[0].v).toBe(0);
 
-			memory=[10,20,30,40,50];
-			cluster = {id:1, stimuli:memory};
-			drives.cycle(cluster);
+			ioStim=[10,20,30,40,50];
+			drives.cycle(ioStim);
 			expect(d[0].v).toBe(1);
 		});
 	});
@@ -165,7 +163,7 @@ describe('ihtai', function(){
 		});
 
 		it('should initialize', function(){
-			var ihtai = new Ihtai();
+			//var ihtai = new Ihtai();
 			
 		});	
 	})

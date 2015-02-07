@@ -4,9 +4,11 @@ TODO:
 -add drive center (algorithms representing internal stimuli)
 */ 
 
-var Ihtai = (function(){
+var Ihtai = (function(bundle){
 
-	var numClusters, ioStimuli, memorizer, intervalID;
+	var clusterCount, vectorDim, memorizer, memoryHeight, driveList, reflexList, intervalID;
+	var clusters, memorizer, drives, reflexes;
+	var outputStimuli =[]; //the output stimuli buffer;
 
 	function init(bundle){
 		if(typeof bundle == "undefined")
@@ -14,48 +16,72 @@ var Ihtai = (function(){
 		if(typeof bundle != "object")
 			throw "Error: initialization parameter should be an object!"
 
-		if(bundle.ioStimuli){
-			//should be an array of stimuli types
-			if(bundle.ioStimuli.constructor === Array ){
-				ioStimuli = bundle.ioStimuli;
-				//todo: init io stimuli
-			}
-			else
-				throw "Error: 'ioStimuli' property should be an array!"
-
-		}
+		if(bundle.clusterCount)
+			clusterCount= bundle.clusterCount;
 		else
-			throw "Error: no 'ioStimuli' property found in initialization object!"
-
-		if(bundle.clusters){
-			numClusters= bundle.numClusters;
-			
-		}	
+			throw "Error: no 'clusterCount' property found in initialization object!"
+		if(bundle.vectorDim)
+			vectorDim=bundle.vectorDim;
 		else
-			throw "Error: no 'clusters' property found in initialization object!"
-
-		if(bundle.memoryHeight){
-			//todo:build memorizer
-			memorizer = new memorizer(bundle.memoryHeight);
-		}
+			throw "Error: no 'vectorDim' property found in initialization object!"		
+		if(bundle.memoryHeight)
+			memoryHeight=bundle.memoryHeight;
 		else
 			throw "Error: no 'memoryHeight' property found in initialization object!"
+		if(bundle.drivesList)
+			driveList=bundle.drives;
+		else
+			throw "Error: no 'drives' property found in initialization object!"
+		if(bundle.reflexList)
+			reflexList=bundle.reflexes;
+		else
+			throw "Error: no 'reflexes' property found in initialization object!"
 
 
-		console.log('init clusters: '+ k);
+		clusters = new Clusters(clusterCount, vectorDim);
+		reflexes = new Reflexes(reflexList);
+		drives = new Drives(driveList);
+		memorizer = new Memorizer(memoryHeight);
 
 		//intervalID = window.setInterval(cycle, 33); //initiate cycle
 	}
+	init(bundle);
 
-	function cycle(){
-		//TODO: cycle through memorization, drives, reflexes, and iostimuli in correct order
+	function cycle(ioStimuli){
+		var combinedStimuli, curCluster;
 
+		//cycle drives
+		var drivesOutput=drives.cycle(ioStimuli);
+
+		//merge ioStimuli and drives output
+		combinedStimuli = ioStimuli.concat(drivesOutput);
+
+		//get nearest cluster for combined stimuli
+		curCluster= clusters.findNearestCluster(combinedStimuli);
+
+		//TODO:cycle reflexes
+		var reflexOutput=reflexes.cycle(curCluster);
+
+		//cycle memorizer		
+		var memorizerOutput=memorizer.query(curCluster);
+		memorizer.memorize(curCluster);
+		
+		//send reflex output and memorizer output back to ai agent
+		return {
+			reflexOutput:reflexOutput,
+			memorizerOutput:memorizerOutput
+		};
 	}
 
+	//TODO:Implement
+	function getInputSignal(){
+		var inputSignal;
 
+		return inputSignal;
+	}
 
 	return {
-		init: init
+		cycle:cycle
 	};
 });
 
@@ -266,26 +292,6 @@ var Clusters = (function(_numClusters, _vectorDim){
 });
 
 /**
-	integrates the entirety of input and output stimuli into a vector for
-	coordination with motor function and memory
-*/
-var IoStimuli = (function(){
-
-	/**
-		@returns a vector representing the current io state
-	*/
-	function getCurrentStimuli(){
-
-
-		return currentStimuli;
-	}
-
-	return {
-
-	};
-});
-
-/**
 	Drives are internal stimuli with states determined by algorithms that take each other and external stimuli 
 	as inputs. Each drive contains a method which maps io stimuli and other drive states into an output
 	drive state.
@@ -301,11 +307,11 @@ var Drives = (function(_drives){
 	}
 	init();
 
-	function cycle(cluster){
+	function cycle(ioStim){
 		var response=[];
 		for(var i=0;i<drives.length;i++){
-			//TODO:execute each method in drives once per cycle
-			response.push(drives[i].cycle(cluster.stimuli)); //expects each drives method to return a Number 0-100
+			//execute each method in drives once per cycle
+			response.push(drives[i].cycle(ioStim)); //expects each drives method to return a Number 0-100
 		}
 		return response;
 	}
