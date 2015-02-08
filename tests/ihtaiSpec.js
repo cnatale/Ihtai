@@ -167,5 +167,14 @@ describe('ihtai', function(){
 			
 		});	
 	})
-
 });
+
+describe('ihtai utils', function(){
+	describe('merge sort', function(){
+		it('should sort an array of numbers', function(){
+			var arr = [12, 7, 4 , 5, 100, 20, 6, 8, 1];
+			var res = mergeSort(arr);
+			expect(res).toEqual([ 1, 4, 5, 6, 7, 8, 12, 20, 100 ]);
+		})
+	})
+})

@@ -100,6 +100,8 @@ var Memorizer = (function(_height){
 			level[i].series={};
 		}
 
+		//TODO:implement as K-D Tree
+
 		//TODO: set a real homeostasisGoal, which requires mapping this to correct number of dimensions
 		//TODO: should be pulled from drives portion of app
 		homeostasisGoal=[0,0,0,0,0];
@@ -163,7 +165,7 @@ var Memorizer = (function(_height){
 				/*
 				If series' end state is less different from homeostasis goal than   
 				current series stored at this start state, overwrite. If no current series is stored
-				at this start state, store it.
+				at this start state, store it regardless.
 				*/				
 				if(level[i].series.hasOwnProperty(buffer[startState].id)){
 					sd1 = sqDist(buffer[endState].stimuli, homeostasisGoal);
@@ -216,7 +218,7 @@ var Memorizer = (function(_height){
 	}
 });
 
-//clusters are 'buckets' that input stimuli are placed inside
+//clusters are 'buckets' that n-dimensional stimuli moments are placed inside
 var Clusters = (function(_numClusters, _vectorDim){
 	//TODO: think about sorting data for better search performance. research k-d trees, n-dimensional nearest neighbor solutions.
 	/**
@@ -225,7 +227,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 		stimuli: a vector representing stimuli
 	*/
 
-	var clusters=[], vectorDim=_vectorDim;
+	var clusters=[], vectorDim=_vectorDim, clusterTree;
 	var numClusters = _numClusters
 
 	/**
@@ -233,6 +235,8 @@ var Clusters = (function(_numClusters, _vectorDim){
 		@param {number} k
 	*/
 	function init(){
+		//TODO:implement as K-D Tree
+		
 		//create clusters with id(needs to be unique) and stimuli properties
 		for(var i=0;i<numClusters;i++){
 			clusters[i]={id:i, stimuli:[]};
