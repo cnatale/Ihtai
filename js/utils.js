@@ -5,7 +5,7 @@ IhtaiUtils.KdTree = (function(_data){
 
 	function init(){
 		//TODO: find median at each level
-		buildKdTree(data, 0);
+		//buildKdTree(data, 0);
 	}
 	init();
 
@@ -13,17 +13,25 @@ IhtaiUtils.KdTree = (function(_data){
 		@param p an array of n-dimensional values
 	*/
 
-	function buildKdTree(p, depth){
+	function buildKdTree(data, depth){
 		//each node contains the following properties: left, right, and data
-		if(p.length == 1){}
+		if(data.length == 1){}
 			//return a leaf storing the point
-		//TODO: run mergeSort on each dimension (d*n*log(n) running time)
-
-
+		//run mergeSort on each dimension (d*n*log(n) running time)
+		var sorted=[];
+		for(var i=0; i<data[0].length;i++){
+			sorted[i]=IhtaiUtils.mergeSort(data, function(a, b){
+				if(a[i] < b[i])
+					return true;
+				else
+					return false;
+			});
+		}
+		return sorted;
 	}
 
 	return {
-
+		buildKdTree:buildKdTree
 	}
 });
 
@@ -37,9 +45,9 @@ IhtaiUtils.mergeSort = function(data, f){
 	right = data.slice(split);
 
 	var mergedArr = IhtaiUtils.merge(IhtaiUtils.mergeSort(left, f), IhtaiUtils.mergeSort(right, f), f);
-	mergedArr.unshift(0, data.length);
-	data.splice.apply(data, mergedArr);
-	return data;
+	//mergedArr.unshift(0, data.length);
+	//data.splice.apply(data, mergedArr);
+	return /*data*/ mergedArr;
 }
 
 IhtaiUtils.merge = function(left, right, f){
