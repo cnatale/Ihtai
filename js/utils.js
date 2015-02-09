@@ -1,4 +1,6 @@
-var KdTree = (function(_data){
+var IhtaiUtils ={};
+
+IhtaiUtils.KdTree = (function(_data){
 	var data=_data;
 
 	function init(){
@@ -15,6 +17,7 @@ var KdTree = (function(_data){
 		//each node contains the following properties: left, right, and data
 		if(p.length == 1){}
 			//return a leaf storing the point
+		//TODO: run mergeSort on each dimension (d*n*log(n) running time)
 
 
 	}
@@ -24,7 +27,7 @@ var KdTree = (function(_data){
 	}
 });
 
-function mergeSort(data){
+IhtaiUtils.mergeSort = function(data, f){
 	var left, right, split;
 	if(data.length < 2)
 		return data;
@@ -33,17 +36,17 @@ function mergeSort(data){
 	left = data.slice(0,split);
 	right = data.slice(split);
 
-	var mergedArr = merge(mergeSort(left), mergeSort(right));
+	var mergedArr = IhtaiUtils.merge(IhtaiUtils.mergeSort(left, f), IhtaiUtils.mergeSort(right, f), f);
 	mergedArr.unshift(0, data.length);
 	data.splice.apply(data, mergedArr);
 	return data;
 }
 
-function merge(left, right){
+IhtaiUtils.merge = function(left, right, f){
 	var il=0, ir=0, output=[];
 
 	while(il < left.length && ir < right.length){
-		if(left[il] < right[ir])
+		if(f(left[il],right[ir]))
 			output.push(left[il++]);
 		else
 			output.push(right[ir++]);

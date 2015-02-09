@@ -173,7 +173,12 @@ describe('ihtai utils', function(){
 	describe('merge sort', function(){
 		it('should sort an array of numbers', function(){
 			var arr = [12, 7, 4 , 5, 100, 20, 6, 8, 1];
-			var res = mergeSort(arr);
+			var res = IhtaiUtils.mergeSort(arr, function(a, b){
+				if(a < b)
+					return true;
+				else
+					return false;
+			});
 			expect(res).toEqual([ 1, 4, 5, 6, 7, 8, 12, 20, 100 ]);
 		})
 	})
