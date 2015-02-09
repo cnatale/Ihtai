@@ -194,7 +194,7 @@ describe('ihtai utils', function(){
 			];
 
 			var kdTree=IhtaiUtils.KdTree(arr);
-			var res= kdTree.buildKdTree(arr)
+			var res= kdTree.sortDataByDimension(arr);
 			expect(res[0][4][0]).toEqual(75);
 			expect(res[1][4][1]).toEqual(61);
 			expect(res[2][4][2]).toEqual(58);

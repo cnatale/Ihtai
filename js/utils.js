@@ -14,9 +14,17 @@ IhtaiUtils.KdTree = (function(_data){
 	*/
 
 	function buildKdTree(data, depth){
+
+		/*
+		TODO: For each level l, split array of n-dimensional points along median of 
+		dimension l % d. Assign median point to node. Recursively perform operation on
+		left and right sub-arrays.
+		*/
+
 		//each node contains the following properties: left, right, and data
-		if(data.length == 1){}
-			//return a leaf storing the point
+	}
+
+	function sortDataByDimension(data){
 		//run mergeSort on each dimension (d*n*log(n) running time)
 		var sorted=[];
 		for(var i=0; i<data[0].length;i++){
@@ -28,10 +36,12 @@ IhtaiUtils.KdTree = (function(_data){
 			});
 		}
 		return sorted;
+
 	}
 
 	return {
-		buildKdTree:buildKdTree
+		buildKdTree:buildKdTree,
+		sortDataByDimension:sortDataByDimension
 	}
 });
 
