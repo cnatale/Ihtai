@@ -78,12 +78,83 @@ IhtaiUtils.KdTree = (function(_data){
 		}
 	}
 
+	/**
+	Perform nearest neighbor search on kd-tree.
+	@param v the vector to use when performing nearest neighbor search
+	nodes have properties left, right, and value
+	*/
+	function nearestNeighbor(pt, node){
+		var bestPt, bestDist=Infinity;
+	
+		nn(root, 0);
+		return bestPt;
+
+		function nn(node, lvl){
+			var left=1, right=-1, dir;
+			var dim=lvl % pt.length;
+
+			if(node==null)
+				return;
+
+			if(pt[dim]<node.value[dim]){
+				//descend left
+				nn(node.left, lvl++);
+				dir=left;
+			}
+			else{
+				//descend right
+				nn(node.right, lvl++);
+				dir=right;
+			}
+
+			//check if current node is closer than current best
+			var d=distSq(node.value, pt);
+			if(d<bestDist){
+				bestDist=d;
+				bestPt=node.value;
+			}
+
+			/*
+			Whichever way we went, check other child node to see if it could be closer.
+			If so, descend.
+			*/
+			d=Math.pow(pt[dim]-node.value[dim],2);
+			if(dir==left){
+				//check right
+				if(d<bestDist){
+					//traverse right
+					nn(node.right, lvl++);
+				}
+			}
+			else{
+				//check left
+				if(d<bestDist){
+					//traverse left
+					nn(node.left, lvl++);
+				}
+			}
+		}
+	}
+
+	/**
+	Returns the distance of two vectors
+	*/
+	function distSq(a, b){
+		var d=0;
+		//assumes a and b are the same length
+		for(var i=0;i<a.length;i++){
+			d+= Math.pow(a[i]-b[i], 2);
+		}
+		return d;
+	}
+
 	function getRoot(){
 		return root;
 	}
 
 	return {
 		buildKdTree:buildKdTree,
+		nearestNeighbor:nearestNeighbor,
 		getRoot:getRoot
 	}
 });

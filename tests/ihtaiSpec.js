@@ -184,7 +184,7 @@ describe('ihtai utils', function(){
 	})
 
 	describe('kd tree', function(){
-		var arr;
+		var arr, kdTree, root;
 
 		beforeEach(function(){
 			arr=[
@@ -194,11 +194,13 @@ describe('ihtai utils', function(){
 				[60, 61, 58, 57, 77],
 				[29, 2, 32, 20, 10]
 			];
+
+			kdTree = IhtaiUtils.KdTree(arr); 
+			root = kdTree.getRoot();			
 		});
 
 		it('should create a tree', function(){
-			var kdTree = IhtaiUtils.KdTree(arr); 
-			var root = kdTree.getRoot();
+
 
 			expect(root.value).toEqual([29,2,32,20,10]);
 			expect(root.left.value).toEqual([8,20,25,30,1]);
@@ -206,6 +208,15 @@ describe('ihtai utils', function(){
 			expect(root.left.left.value).toEqual([10,5,5,3,6]);
 			expect(root.right.left.value).toEqual([75,50,22,20,21]);
 
+		});
+
+		it('should find the nearest neighbor to a vector', function(){
+			nearestNeighbor = kdTree.nearestNeighbor([60, 61, 58, 57, 77]);
+			expect(nearestNeighbor).toEqual([60, 61, 58, 57, 77]);
+			var nn = kdTree.nearestNeighbor([1,1,1,1,1]);
+			expect(nn).toEqual([10,5,5,3,6]);
+			var nn2 = kdTree.nearestNeighbor([61, 58, 59, 61, 78]);
+			expect(nn2).toEqual([60,61,58,57,77]);
 		})
 	});
 
