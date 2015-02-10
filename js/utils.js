@@ -1,6 +1,7 @@
 var IhtaiUtils ={};
 
-IhtaiUtils.KdTree = (function(_data){
+IhtaiUtils.KdTree = (function(_data, _comparisonProp){
+	var comparisonProp=_comparisonProp;
 	var data=_data;
 	var root;
 
@@ -45,7 +46,13 @@ IhtaiUtils.KdTree = (function(_data){
 
 				//sort array by current dimension
 				var sortedData=IhtaiUtils.mergeSort(data, function(a, b){
-					if(a[dim] < b[dim])
+					var comparison;
+					if(typeof comparisonProp==="string"){
+						comparison=a[comparisonProp][dim] < b[comparisonProp][dim];
+					}
+					else
+						comparison=a[dim] < b[dim];
+					if(comparison)
 						return true;
 					else
 						return false;
@@ -83,7 +90,7 @@ IhtaiUtils.KdTree = (function(_data){
 	@param v the vector to use when performing nearest neighbor search
 	nodes have properties left, right, and value
 	*/
-	function nearestNeighbor(pt, node){
+	function nearestNeighbor(pt){
 		var bestPt, bestDist=Infinity;
 	
 		nn(root, 0);
@@ -96,19 +103,19 @@ IhtaiUtils.KdTree = (function(_data){
 			if(node==null)
 				return;
 
-			if(pt[dim]<node.value[dim]){
+			if(pt[dim]< (typeof comparisonProp=="string" ? node.value[comparisonProp][dim] : node.value[dim])){
 				//descend left
-				nn(node.left, lvl++);
+				nn(node.left, lvl+1);
 				dir=left;
 			}
 			else{
 				//descend right
-				nn(node.right, lvl++);
+				nn(node.right, lvl+1);
 				dir=right;
 			}
 
 			//check if current node is closer than current best
-			var d=distSq(node.value, pt);
+			var d=distSq((typeof comparisonProp=="string" ? node.value[comparisonProp] : node.value), pt);
 			if(d<bestDist){
 				bestDist=d;
 				bestPt=node.value;
@@ -118,19 +125,20 @@ IhtaiUtils.KdTree = (function(_data){
 			Whichever way we went, check other child node to see if it could be closer.
 			If so, descend.
 			*/
-			d=Math.pow(pt[dim]-node.value[dim],2);
+			//TODO:check this part closely vs other kd-tree implementations. have a feeling it's wrong
+			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bestPt[comparisonProp][dim]: bestPt[dim]),2);
 			if(dir==left){
 				//check right
-				if(d<bestDist){
+				if(d<=bestDist){
 					//traverse right
-					nn(node.right, lvl++);
+					nn(node.right, lvl+1);
 				}
 			}
 			else{
 				//check left
-				if(d<bestDist){
+				if(d<=bestDist){
 					//traverse left
-					nn(node.left, lvl++);
+					nn(node.left, lvl+1);
 				}
 			}
 		}

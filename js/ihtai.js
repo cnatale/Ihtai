@@ -100,8 +100,6 @@ var Memorizer = (function(_height){
 			level[i].series={};
 		}
 
-		//TODO:implement as K-D Tree
-
 		//TODO: set a real homeostasisGoal, which requires mapping this to correct number of dimensions
 		//TODO: should be pulled from drives portion of app
 		homeostasisGoal=[0,0,0,0,0];
@@ -234,9 +232,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 		-TODO:randomly assign k clusters over n-dimensional vector space
 		@param {number} k
 	*/
-	function init(){
-		//TODO:implement as K-D Tree
-		
+	function init(){	
 		//create clusters with id(needs to be unique) and stimuli properties
 		for(var i=0;i<numClusters;i++){
 			clusters[i]={id:i, stimuli:[]};
@@ -252,6 +248,9 @@ var Clusters = (function(_numClusters, _vectorDim){
 				
 			}
 		}
+
+		//populate kd-tree
+		clusterTree= new IhtaiUtils.KdTree(clusters, "stimuli");
 	}
 	init();
 
@@ -263,9 +262,13 @@ var Clusters = (function(_numClusters, _vectorDim){
 		@returns {Object} the nearest cluster to v
 	*/
 	function findNearestCluster(v){
+		//TODO: replace with kd-tree
 		var nearestCluster, clusters=getClusters();
 		var leastSq, t;
-		for(var i=0; i < clusters.length; i++){
+
+
+
+		/*for(var i=0; i < clusters.length; i++){
 			t=0;
 			for(var j=0; j< v.length; j++){
 				t+= Math.pow(v[j] - clusters[i].stimuli[j], 2);
@@ -275,12 +278,9 @@ var Clusters = (function(_numClusters, _vectorDim){
 				leastSq=t;
 				nearestCluster=clusters[i];
 			}			
-		}
+		}*/
+		nearestCluster = clusterTree.nearestNeighbor(v);
 
-		//move nearest cluster a bit closer to v
-		for(i=0; i< nearestCluster.length; i++){
-			//nearestCluster[i] += v[i]*.01; turn this off for now. doesn't play well with k-d tree balancing
-		}
 
 		return nearestCluster;
 	}

@@ -12,6 +12,7 @@ describe('ihtai', function(){
 		var clusters;
 		beforeEach(function(){
 			clusters = new Clusters(1000, 5);
+
 		});
 		afterEach(function(){
 
@@ -24,6 +25,8 @@ describe('ihtai', function(){
 		});
 
 		it('should find nearest cluster for a vector', function(){
+			//TODO: always returns cluster 333 regardless of input. figure out why.
+			clusters= new Clusters(1000, 5);
 			var res=clusters.findNearestCluster([50,50,50,50,50]);
 			expect(res.id).toBe(0); //cluster 0 is specifically given this value during initialization
 		});
