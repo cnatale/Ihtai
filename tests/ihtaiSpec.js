@@ -184,24 +184,31 @@ describe('ihtai utils', function(){
 	})
 
 	describe('kd tree', function(){
-		it('should sort an n-dimensional array by each dimension', function(){
-			var arr=[
+		var arr;
+
+		beforeEach(function(){
+			arr=[
 				[10, 5, 5, 3, 6],
 				[8, 20, 25, 30, 1],
 				[75, 50, 22, 20, 21],
 				[60, 61, 58, 57, 77],
 				[29, 2, 32, 20, 10]
 			];
-
-			var kdTree=IhtaiUtils.KdTree(arr);
-			var res= kdTree.sortDataByDimension(arr);
-			expect(res[0][4][0]).toEqual(75);
-			expect(res[1][4][1]).toEqual(61);
-			expect(res[2][4][2]).toEqual(58);
-			expect(res[3][4][3]).toEqual(57);
-			expect(res[4][4][4]).toEqual(77);
 		});
+
+		it('should create a tree', function(){
+			var kdTree = IhtaiUtils.KdTree(arr); 
+			var root = kdTree.getRoot();
+
+			expect(root.value).toEqual([29,2,32,20,10]);
+			expect(root.left.value).toEqual([8,20,25,30,1]);
+			expect(root.right.value).toEqual([60,61,58,57,77]);
+			expect(root.left.left.value).toEqual([10,5,5,3,6]);
+			expect(root.right.left.value).toEqual([75,50,22,20,21]);
+
+		})
 	});
+
 
 
 })
