@@ -129,14 +129,14 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp){
 			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bestPt[comparisonProp][dim]: bestPt[dim]),2);
 			if(dir==left){
 				//check right
-				if(d<=bestDist){
+				if(d<bestDist){
 					//traverse right
 					nn(node.right, lvl+1);
 				}
 			}
 			else{
 				//check left
-				if(d<=bestDist){
+				if(d<bestDist){
 					//traverse left
 					nn(node.left, lvl+1);
 				}
