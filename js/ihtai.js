@@ -29,11 +29,11 @@ var Ihtai = (function(bundle){
 		else
 			throw "Error: no 'memoryHeight' property found in initialization object!"
 		if(bundle.drivesList)
-			driveList=bundle.drives;
+			driveList=bundle.drivesList;
 		else
 			throw "Error: no 'drives' property found in initialization object!"
 		if(bundle.reflexList)
-			reflexList=bundle.reflexes;
+			reflexList=bundle.reflexList;
 		else
 			throw "Error: no 'reflexes' property found in initialization object!"
 
@@ -41,7 +41,7 @@ var Ihtai = (function(bundle){
 		clusters = new Clusters(clusterCount, vectorDim);
 		reflexes = new Reflexes(reflexList);
 		drives = new Drives(driveList);
-		memorizer = new Memorizer(memoryHeight);
+		memorizer = new Memorizer(memoryHeight, drives.getGoals());
 
 		//intervalID = window.setInterval(cycle, 33); //initiate cycle
 	}
@@ -63,21 +63,15 @@ var Ihtai = (function(bundle){
 		var reflexOutput=reflexes.cycle(curCluster);
 
 		//cycle memorizer		
+		
 		var memorizerOutput=memorizer.query(curCluster);
 		memorizer.memorize(curCluster);
-		
+	
 		//send reflex output and memorizer output back to ai agent
 		return {
 			reflexOutput:reflexOutput,
 			memorizerOutput:memorizerOutput
 		};
-	}
-
-	//TODO:Implement
-	function getInputSignal(){
-		var inputSignal;
-
-		return inputSignal;
 	}
 
 	return {
@@ -89,7 +83,7 @@ var Ihtai = (function(bundle){
 	The cerebral cortex of the a.i. Hierarchically, temporally memorizes
 	moments in time represented by vectors combining stimuli and drive states.
 */
-var Memorizer = (function(_height){
+var Memorizer = (function(_height, _homeostasisGoal){
 	var height=_height, acceptableRange=1, level, buffer, homeostasisGoal;
 
 	function init(){
@@ -100,9 +94,12 @@ var Memorizer = (function(_height){
 			level[i].series={};
 		}
 
-		//TODO: set a real homeostasisGoal, which requires mapping this to correct number of dimensions
-		//TODO: should be pulled from drives portion of app
-		homeostasisGoal=[0,0,0,0,0];
+		/*The default homeostasis goal value is for test purposes only. The _homeostasisGoal 
+		parameter should always be included when initializing Meorizer.*/
+		if(typeof _homeostasisGoal !== "undefined")
+			homeostasisGoal = _homeostasisGoal;
+		else
+			homeostasisGoal=[0,0,0,0,0]; //default for test purposes
 	}
 	init();
 
@@ -115,12 +112,16 @@ var Memorizer = (function(_height){
 	function query(cluster){
 		var outputStimuli=null, stimDist, sd;
 
+		/*TODO:this could be improved to log(h) if the data was sorted according to dist from
+		homeostasis goal * some multiplier for height value (to disincentivize longer-term solutions)
+		*/
 		for(var i=0; i<height; i++){
 			//At each level, compare time series' end drive state with homeostasis goal.
 			//If result < acceptable range, return time series' starting ouput stimuli (what agent will act on).
-			//TODO: define homeostasisGoal
+			
+			//TODO: the sqDist should be applied only to homeostasis goal values, not entire array
 			if(level[i].series.hasOwnProperty(cluster.id)){
-				sd = sqDist(level[i].series[cluster.id].endState, homeostasisGoal);
+				sd = sqDist(level[i].series[cluster.id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
 				if(sd <= acceptableRange){
 					outputStimuli = level[i].series[cluster.id].secondState;
 					break;
@@ -166,8 +167,8 @@ var Memorizer = (function(_height){
 				at this start state, store it regardless.
 				*/				
 				if(level[i].series.hasOwnProperty(buffer[startState].id)){
-					sd1 = sqDist(buffer[endState].stimuli, homeostasisGoal);
-					sd2 = sqDist(level[i].series[buffer[startState].id].endState, homeostasisGoal);
+					sd1 = sqDist(buffer[endState].stimuli.slice(-homeostasisGoal.length), homeostasisGoal);
+					sd2 = sqDist(level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
 
 					if(sd1 < sd2){
 						//add memory series to level. Hash based on starting state cluster id.
@@ -206,6 +207,10 @@ var Memorizer = (function(_height){
 
 	function getLevels(){
 		return level;
+	}
+
+	function getGoals(){
+		return homeostasisGoal;
 	}
 
 	return {
@@ -324,9 +329,18 @@ var Drives = (function(_drives){
 		return drives;
 	}
 
+	function getGoals(){
+		var goals=[];
+		for(var i=0;i<drives.length;i++){
+			goals.push(drives[i].targetValue);
+		}
+		return goals;
+	}
+
 	return {
 		cycle:cycle,
-		getDrives:getDrives
+		getDrives:getDrives,
+		getGoals:getGoals
 	};
 });
 

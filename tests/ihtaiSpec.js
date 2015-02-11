@@ -71,8 +71,6 @@ describe('ihtai', function(){
 		});
 
 		it('should memorize vectors', function(){
-
-
 			var levels = memorizer.getLevels();
 			expect(levels[0].series["3"].startState).toEqual([30,30,30,30,30]);
 			expect(levels[0].series["3"].secondState).toEqual([35,35,35,35,35]);
@@ -135,7 +133,8 @@ describe('ihtai', function(){
 					else
 						this.v++;
 					return this.v;
-				}
+				},
+				targetValue:0
 			};
 			drives= new Drives([drive]);
 
@@ -143,6 +142,9 @@ describe('ihtai', function(){
 		});
 		afterEach(function(){
 
+		});
+		it('should allow access to drive goals', function(){
+			expect(drives.getGoals()).toEqual([0]);
 		});
 
 		it('should initialize a drive', function(){
@@ -163,16 +165,52 @@ describe('ihtai', function(){
 	});
 
 	describe('ihtai core', function(){
+		var ihtai, drives, reflexList;
 		beforeEach(function(){
+			var drive={
+				v:5,
+				init:function(){
+					this.v=5;
+					return this.v;
+				},
+				cycle:function(stimuli){
+					if(stimuli[0] > 50)
+						this.v=0;
+					else
+						this.v++;
+					return this.v;
+				},
+				targetValue:0
+			};
+			drives=[drive];
 
+			var reflexes = [{
+				matcher:{indices:[3], signal:[40]} , 
+				response:{indices:[4], signal:[10]} 
+			}];
+
+			//initiliaze an ihtai with 9 dimensional i/o signal and 1d drive signal
+			ihtai = new Ihtai({
+				clusterCount:1000,
+				vectorDim:10,
+				memoryHeight:100,
+				drivesList:drives,
+				reflexList:reflexes
+			});
 		});
 		afterEach(function(){
 
 		});
 
-		it('should initialize', function(){
-			//var ihtai = new Ihtai();
-			
+		it('should cycle when presented with io stimuli', function(){
+			//io array should be of length vectorDim - drivesList.length
+			ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
+			ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
+	
+			ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
+
+			var res=ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
+		
 		});	
 	})
 });
