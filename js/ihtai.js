@@ -7,7 +7,7 @@ TODO:
 var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memorizer, memoryHeight, driveList, reflexList, intervalID;
-	var clusters, memorizer, drives, reflexes;
+	var clusters, memorizer, drives, reflexes, acceptableRange;
 	var outputStimuli =[]; //the output stimuli buffer;
 
 	function init(bundle){
@@ -36,12 +36,15 @@ var Ihtai = (function(bundle){
 			reflexList=bundle.reflexList;
 		else
 			throw "Error: no 'reflexes' property found in initialization object!"
-
+		if(bundle.acceptableRange)
+			acceptableRange=bundle.acceptableRange;
+		else
+			acceptableRange=null;
 
 		clusters = new Clusters(clusterCount, vectorDim);
 		reflexes = new Reflexes(reflexList);
 		drives = new Drives(driveList);
-		memorizer = new Memorizer(memoryHeight, drives.getGoals());
+		memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);
 
 		//intervalID = window.setInterval(cycle, 33); //initiate cycle
 	}
@@ -63,7 +66,6 @@ var Ihtai = (function(bundle){
 		var reflexOutput=reflexes.cycle(curCluster);
 
 		//cycle memorizer		
-		
 		var memorizerOutput=memorizer.query(curCluster);
 		memorizer.memorize(curCluster);
 	
@@ -83,8 +85,14 @@ var Ihtai = (function(bundle){
 	The cerebral cortex of the a.i. Hierarchically, temporally memorizes
 	moments in time represented by vectors combining stimuli and drive states.
 */
-var Memorizer = (function(_height, _homeostasisGoal){
-	var height=_height, acceptableRange=1, level, buffer, homeostasisGoal;
+var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
+	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
+	var level, buffer, homeostasisGoal;
+
+	if(_acceptableRange)
+		acceptableRange=_acceptableRange;
+	else
+		acceptableRange=75;
 
 	function init(){
 		//initialize a 2d array representing all possible memories

@@ -195,7 +195,8 @@ describe('ihtai', function(){
 				vectorDim:10,
 				memoryHeight:100,
 				drivesList:drives,
-				reflexList:reflexes
+				reflexList:reflexes,
+				acceptableRange:80
 			});
 		});
 		afterEach(function(){
@@ -204,12 +205,10 @@ describe('ihtai', function(){
 
 		it('should cycle when presented with io stimuli', function(){
 			//io array should be of length vectorDim - drivesList.length
-			ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
-			ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
-	
-			ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
-
-			var res=ihtai.cycle([10, 50, 50, 8, 7, 20, 9, 5, 9]);
+			ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
+			ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
+			ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
+			var res=ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
 		
 		});	
 	})
