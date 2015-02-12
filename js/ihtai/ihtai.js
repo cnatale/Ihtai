@@ -1,9 +1,3 @@
-/*
-TODO:
--add instinct center (automated physical actions)
--add drive center (algorithms representing internal stimuli)
-*/ 
-
 var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memorizer, memoryHeight, driveList, reflexList, intervalID;
