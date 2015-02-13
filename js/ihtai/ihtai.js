@@ -169,17 +169,44 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 				at this start state, store it regardless.
 				*/				
 				if(level[i].series.hasOwnProperty(buffer[startState].id)){
-					sd1 = sqDist(buffer[endState].stimuli.slice(-homeostasisGoal.length), homeostasisGoal);
-					sd2 = sqDist(level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
+					/*
+					If same first and second state lead to a different end drive state, store the memory
+					as weighted average of the two (same firstState and secondState, endState drive values become
+					weighted average. Actually, can probably get rid of endState iostimuli as it's not being
+					used anywhere.)
 
-					if(sd1 < sd2){
-						//add memory series to level. Hash based on starting state cluster id.
-						level[i].series[buffer[startState].id]={
-							startState: buffer[startState].stimuli, 
-							secondState: buffer[secondState].stimuli,
-							endState: buffer[endState].stimuli
-						};
-					}					
+					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
+					should raise its cost for future queries.
+
+					TODO: the averaging step should really be weighted in favor of the existing drive endstate,
+					based on how many secondState collisions have occurred. The more collisions, the more the
+					averaging step is weighted towards the existing drive endState. This requires storing an 
+					extra number holding the secondState collision count, reset every time new secondState and endState
+					is selected (as opposed to merging).
+					*/		
+					if(sqDist(buffer[secondState].stimuli, level[i].series[buffer[startState].id].secondState) === 0){
+						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);
+						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
+						for(var j=0;j<bufferGoalDist.length;j++){
+							endStateGoalDist[j]= (endStateGoalDist[j]+bufferGoalDist[j])/2;
+						}
+						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(endStateGoalDist);
+						Array.prototype.splice.apply(level[i].series[buffer[startState].id].endState, args);		
+					}
+					else{ 
+						//secondStates are different. Figure out which one leads to better outcome.
+						sd1 = sqDist(buffer[endState].stimuli.slice(-homeostasisGoal.length), homeostasisGoal);
+						sd2 = sqDist(level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
+
+						if(sd1 < sd2){
+							//add memory series to level. Hash based on starting state cluster id.
+							level[i].series[buffer[startState].id]={
+								startState: buffer[startState].stimuli, 
+								secondState: buffer[secondState].stimuli,
+								endState: buffer[endState].stimuli
+							};
+						}	
+					}		
 				}
 				else{
 					
