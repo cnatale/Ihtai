@@ -169,15 +169,49 @@ require(['physicsjs'], function(Physics){
 			} 
 		})	  
 
-	     //TODO:init Ihtai
-	    /*var ihtai = new Ihtai({
+	    ///////// init Ihtai /////////////
+		var drive={
+			v:5,
+			init:function(){
+				this.v=5;
+				return this.v;
+			},
+			cycle:function(stimuli){
+				if(stimuli[0] > 50)
+					this.v=0;
+				else
+					this.v++;
+				return this.v;
+			},
+			targetValue:0
+		};
+		drives=[drive];
+
+		var reflexes = [{
+			matcher: function(stimuli){
+				if(stimuli[0]===40)
+					return true;
+				else
+					return false;
+			}, 
+			response:/*{indices:[4], signal:[10]} */ function(stimuli){
+				return {
+					indices:[4],
+					signal:[10]
+				}
+			}
+
+		}];
+
+	    var ihtai = new Ihtai({
 			clusterCount:1000,
 			vectorDim:10,
 			memoryHeight:100,
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:80
-		});*/
+		});
+	    /////////////////////////////////
 
 		// start the ticker
 		Physics.util.ticker.start();

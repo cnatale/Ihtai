@@ -101,7 +101,12 @@ describe('ihtai', function(){
 					else
 						return false;
 				}, 
-				response:{indices:[4], signal:[10]} 
+				response: function(stimuli){
+					return {
+						indices:[4],
+						signal:[10]
+					}
+				}
 			}]);
 
 		});
@@ -196,7 +201,12 @@ describe('ihtai', function(){
 					else
 						return false;
 				}, 
-				response:{indices:[4], signal:[10]} 
+				response: function(stimuli){
+					return {
+						indices:[4],
+						signal:[10]
+					}
+				}
 			}];
 
 			//initiliaze an ihtai with 9 dimensional i/o signal and 1d drive signal
