@@ -396,7 +396,13 @@ var Reflexes = (function(_reflexes){
 		var output=[], matcher, response, indices, stimuli=cluster.stimuli, ctr;
 		//cluster has properties: id, stimuli
 		for(var i=0; i<reflexes.length;i++){
+			//TODO:rewrite to compare with a matcher fn that takes stimuli as a parameter
 			matcher=reflexes[i].matcher;
+			if(matcher(stimuli))
+				output.push(reflexes[i].response);
+
+			////////////////////////////////
+			/*matcher=reflexes[i].matcher;
 			indices=matcher.indices;
 			ctr=0;
 			for(j=0;j<indices.length;j++){
@@ -408,6 +414,7 @@ var Reflexes = (function(_reflexes){
 				//match. place reflex's output signal on response stack
 				output.push(reflexes[i].response);
 			}			
+			*/
 		}
 
 		return output;

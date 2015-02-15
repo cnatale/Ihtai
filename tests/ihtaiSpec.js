@@ -95,7 +95,12 @@ describe('ihtai', function(){
 		beforeEach(function(){
 			var input=[];
 			reflexes = new Reflexes([{
-				matcher:{indices:[3], signal:[40]} , 
+				matcher: function(stimuli){
+					if(stimuli[3]===40)
+						return true;
+					else
+						return false;
+				}, 
 				response:{indices:[4], signal:[10]} 
 			}]);
 
@@ -185,7 +190,12 @@ describe('ihtai', function(){
 			drives=[drive];
 
 			var reflexes = [{
-				matcher:{indices:[3], signal:[40]} , 
+				matcher: function(stimuli){
+					if(stimuli[3]===40)
+						return true;
+					else
+						return false;
+				}, 
 				response:{indices:[4], signal:[10]} 
 			}];
 
