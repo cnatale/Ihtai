@@ -1,7 +1,7 @@
 var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memorizer, memoryHeight, driveList, reflexList, intervalID;
-	var clusters, memorizer, drives, reflexes, acceptableRange;
+	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true;
 	var outputStimuli =[]; //the output stimuli buffer;
 
 	function init(bundle){
@@ -39,8 +39,6 @@ var Ihtai = (function(bundle){
 		reflexes = new Reflexes(reflexList);
 		drives = new Drives(driveList);
 		memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);
-
-		//intervalID = window.setInterval(cycle, 33); //initiate cycle
 	}
 	init(bundle);
 
@@ -57,7 +55,13 @@ var Ihtai = (function(bundle){
 		curCluster= clusters.findNearestCluster(combinedStimuli);
 
 		//TODO:cycle reflexes
-		var reflexOutput=reflexes.cycle(curCluster);
+		var reflexOutput;
+		if(_enableReflexes){
+			reflexOutput=reflexes.cycle(curCluster);
+		}
+		else{
+			reflexOutput=[];
+		}
 
 		//cycle memorizer		
 		var memorizerOutput=memorizer.query(curCluster);
@@ -70,8 +74,13 @@ var Ihtai = (function(bundle){
 		};
 	}
 
+	function enableReflexes(state){
+		_enableReflexes=state;
+	}
+
 	return {
-		cycle:cycle
+		cycle:cycle,
+		enableReflexes:enableReflexes
 	};
 });
 

@@ -53,8 +53,8 @@ require(['physicsjs'], function(Physics){
 		// constrain objects to these bounds
 		var edgeBounce = Physics.behavior('edge-collision-detection', {
 			aabb: viewportBounds,
-			restitution: 0.5,
-			cof: 0.99
+			restitution: 0.2,
+			cof: .4
 		});
 
 		// constrain objects to these bounds
@@ -100,42 +100,7 @@ require(['physicsjs'], function(Physics){
 		// add some gravity
 		world.add( Physics.behavior('constant-acceleration') );
 
-		// subscribe to ticker to advance the simulation
-		Physics.util.ticker.on(function( time, dt ){
-		    world.step( time );
-		    //test making ball always face square
-
-		});
-
 	    $("#viewport").click(function(e){
-	    	//get the circle
-	    	var queryFn = Physics.query({
-	    		name:'circle'
-	    	});
-	    	var circle=world.findOne(queryFn);
-
-	    	//get a square if one exists
-	    	queryFn = Physics.query({
-	    		name:'square'
-	    	});
-	    	var square=world.findOne(queryFn)
-
-	    	if(circle && square){
-			    var scratch = Physics.scratchpad();
-			    // assuming your viewport is the whole screen
-			    var circlePos = scratch.vector().set(circle.state.pos.x, circle.state.pos.y); 
-			    circlePos.vsub( square.state.pos ); // get vector pointing towards mouse pos
-
-			    var newAngle = circlePos.angle(); // get angle with respect to x axis
-				scratch.done();	
-			    circle.state.angular.vel=0;
-			    circle.state.angular.acc=0;
-  				newAngle+=Math.PI;
-  				var xDir=Math.cos(newAngle);
-  				var yDir=Math.sin(newAngle);
-			    circle.state.angular.pos = newAngle;
-	    	}
-
 	     	// checking canvas coordinates for the mouse click
 			var offset = $(this).offset();
 			var px = e.pageX - offset.left;
@@ -171,47 +136,134 @@ require(['physicsjs'], function(Physics){
 
 	    ///////// init Ihtai /////////////
 		var drive={
-			v:5,
+			hunger:100,
 			init:function(){
-				this.v=5;
-				return this.v;
+				return this.hunger;
 			},
 			cycle:function(stimuli){
-				if(stimuli[0] > 50)
-					this.v=0;
+				if(stimuli[3] < 10){
+					if(this.hunger>0){
+						this.hunger--;
+					}
+					else
+						this.hunger=0;
+				}
 				else
-					this.v++;
-				return this.v;
+					if(this.hunger<100){
+						this.hunger+=.01;
+					}
+					else{
+						this.hunger=100;
+					}
+				return this.hunger;
 			},
 			targetValue:0
 		};
 		drives=[drive];
 
 		var reflexes = [{
-			matcher: function(stimuli){
-				if(stimuli[0]===40)
+			matcher: function(stimuli){ /*move if pellet it detected*/
+				if(stimuli[0]>=50)
 					return true;
 				else
 					return false;
 			}, 
-			response:/*{indices:[4], signal:[10]} */ function(stimuli){
+			response: function(stimuli){
 				return {
-					indices:[4],
-					signal:[10]
+					indices:[2],
+					signal:[100]
 				}
 			}
-
+		},
+		{
+			matcher: function(stimuli){ /*dont' move if no pellet is detected*/
+				if(stimuli[0]<50)
+					return true;
+				else
+					return false;
+			}, 
+			response: function(stimuli){
+				return {
+					indices:[2],
+					signal:[0]
+				}
+			}
 		}];
 
 	    var ihtai = new Ihtai({
 			clusterCount:1000,
-			vectorDim:10,
+			vectorDim:3,
 			memoryHeight:100,
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:80
 		});
 	    /////////////////////////////////
+	    var moveVel=0;
+		// subscribe to ticker to advance the simulation
+		Physics.util.ticker.on(function( time, dt ){
+		    world.step( time );
+
+		    //test making ball always face square
+	    	///////////////////
+	    	//get the circle
+	    	var queryFn = Physics.query({
+	    		name:'circle'
+	    	});
+	    	var circle=world.findOne(queryFn);
+
+	    	//get a square if one exists
+	    	queryFn = Physics.query({
+	    		name:'square'
+	    	});
+	    	var square=world.findOne(queryFn), newAngle;
+
+	    	if(circle && square){
+			    var scratch = Physics.scratchpad();
+			    // assuming your viewport is the whole screen
+			    var circlePos = scratch.vector().set(circle.state.pos.x, circle.state.pos.y); 
+			    circlePos.vsub( square.state.pos ); // get vector pointing towards mouse pos
+
+			    newAngle = circlePos.angle(); // get angle with respect to x axis
+				scratch.done();	
+			    circle.state.angular.vel=0;
+			    circle.state.angular.acc=0;
+  				newAngle+=Math.PI;
+  				var xDir=Math.cos(newAngle);
+  				var yDir=Math.sin(newAngle);
+			    circle.state.angular.pos = newAngle;
+	    	}
+	    	//move circle
+	    	var dist, normalizedDist=100;
+	    	var normalizer = Math.sqrt(window.height*window.height + window.width*window.width);
+	    	if(newAngle){
+	    		//circle.state.vel.set(Math.cos(newAngle)*moveVel, Math.sin(newAngle)*moveVel);
+				circle.state.pos.set(circle.state.pos.x+Math.cos(newAngle)*moveVel, circle.state.pos.y+Math.sin(newAngle)*moveVel);
+				dist=circle.state.pos.dist(square.state.pos);
+				normalizedDist=(dist/normalizer)*100;
+			}
+	    	//////////////////////
+	    	var normalizedAngle;
+	    	if(newAngle){
+	    		normalizedAngle=newAngle*(100/(2*Math.PI));
+	    	}
+	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist]);
+	    	//returns {reflexOutput:~, memorizerOutput:~}
+	    	if(res.reflexOutput){
+	    		if(res.reflexOutput.length==1){
+	    			moveVel=res.reflexOutput[0].signal[0]/100;
+	    		}
+	    		else{
+	    			moveVel=0;
+	    		}
+	    	}
+
+		});
+
+		$("#turnOffBtn").click(function(e){
+
+			ihtai.enableReflexes(false);
+		});
 
 		// start the ticker
 		Physics.util.ticker.start();
