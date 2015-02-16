@@ -1,7 +1,7 @@
 var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memorizer, memoryHeight, driveList, reflexList, intervalID;
-	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true;
+	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
 	var outputStimuli =[]; //the output stimuli buffer;
 
 	function init(bundle){
@@ -63,8 +63,14 @@ var Ihtai = (function(bundle){
 			reflexOutput=[];
 		}
 
-		//cycle memorizer		
-		var memorizerOutput=memorizer.query(curCluster);
+		//cycle memorizer
+		var memorizerOutput;		
+		if(_enableMemories){
+			memorizerOutput=memorizer.query(curCluster);
+		}
+		else{
+			memorizerOutput=null;
+		}
 		memorizer.memorize(curCluster);
 	
 		//send reflex output and memorizer output back to ai agent
@@ -77,10 +83,21 @@ var Ihtai = (function(bundle){
 	function enableReflexes(state){
 		_enableReflexes=state;
 	}
-
+	function areReflexesEnabled(){
+		return _enableReflexes;
+	}
+	function enableMemories(state){
+		_enableMemories=state;
+	}
+	function areMemoriesEnabled(){
+		return _enableMemories;
+	}
 	return {
 		cycle:cycle,
-		enableReflexes:enableReflexes
+		enableReflexes:enableReflexes,
+		areReflexesEnabled:areReflexesEnabled,
+		enableMemories:enableMemories,
+		areMemoriesEnabled:areMemoriesEnabled
 	};
 });
 

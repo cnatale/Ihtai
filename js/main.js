@@ -150,13 +150,14 @@ require(['physicsjs'], function(Physics){
 				}
 				else
 					if(this.hunger<100){
-						this.hunger+=.01;
+						this.hunger+=.1;
 					}
 					else{
 						this.hunger=100;
 					}
 
-				console.log(this.hunger);	
+				//console.log(this.hunger);
+				$('#hunger').html("hunger: "+Math.floor(this.hunger));	
 				return this.hunger;
 			},
 			targetValue:0
@@ -194,7 +195,7 @@ require(['physicsjs'], function(Physics){
 
 	    var ihtai = new Ihtai({
 			clusterCount:1000,
-			vectorDim:3,
+			vectorDim:4,
 			memoryHeight:100,
 			drivesList:drives,
 			reflexList:reflexes,
@@ -251,19 +252,51 @@ require(['physicsjs'], function(Physics){
 	    	}
 	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist]);
 	    	//returns {reflexOutput:~, memorizerOutput:~}
-	    	if(res.reflexOutput){
-	    		if(res.reflexOutput.length==1){
-	    			moveVel=res.reflexOutput[0].signal[0]/100;
-	    		}
-	    		else{
-	    			moveVel=0;
-	    		}
+
+	    	if(res.memorizerOutput != null){
+	    			if(res.memorizerOutput[0]>50){ //has a pellet been detected?
+	    				moveVel=res.memorizerOutput[2]/100;
+	    			}
+	    			else{
+	    				moveVel=0;
+	    			}
+	    	}
+	    	else{
+		    	if(ihtai.areReflexesEnabled()){
+			    	if(res.reflexOutput){
+			    		if(res.reflexOutput.length==1){
+			    			moveVel=res.reflexOutput[0].signal[0]/100;
+			    		}
+			    		else{
+			    			moveVel=0;
+			    		}
+			    	}
+		    	}	    		
 	    	}
 
 		});
 
 		$("#turnOffBtn").click(function(e){
-			ihtai.enableReflexes(false);
+			var areTheyEnabled=ihtai.areReflexesEnabled();
+			if(areTheyEnabled){
+				ihtai.enableReflexes(false);
+				$('#turnOffBtn').html('Enable Reflexes');
+			}
+			else{
+				ihtai.enableReflexes(true);
+				$('#turnOffBtn').html('Disable Reflexes');
+			}
+		});
+		$("#turnOffMemBtn").click(function(e){
+			var areTheyEnabled=ihtai.areMemoriesEnabled();
+			if(areTheyEnabled){
+				ihtai.enableMemories(false);
+				$('#turnOffMemBtn').html('Enable Memories');
+			}
+			else{
+				ihtai.enableMemories(true);
+				$('#turnOffMemBtn').html('Disable Memories');
+			}			
 		});
 
 		// start the ticker
