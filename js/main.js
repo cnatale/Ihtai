@@ -155,6 +155,8 @@ require(['physicsjs'], function(Physics){
 					else{
 						this.hunger=100;
 					}
+
+				console.log(this.hunger);	
 				return this.hunger;
 			},
 			targetValue:0
@@ -235,7 +237,7 @@ require(['physicsjs'], function(Physics){
 	    	}
 	    	//move circle
 	    	var dist, normalizedDist=100;
-	    	var normalizer = Math.sqrt(window.height*window.height + window.width*window.width);
+	    	var normalizer = Math.sqrt(window.innerHeight*window.innerHeight + window.innerWidth*window.innerWidth);
 	    	if(newAngle){
 	    		//circle.state.vel.set(Math.cos(newAngle)*moveVel, Math.sin(newAngle)*moveVel);
 				circle.state.pos.set(circle.state.pos.x+Math.cos(newAngle)*moveVel, circle.state.pos.y+Math.sin(newAngle)*moveVel);
@@ -261,7 +263,6 @@ require(['physicsjs'], function(Physics){
 		});
 
 		$("#turnOffBtn").click(function(e){
-
 			ihtai.enableReflexes(false);
 		});
 
