@@ -54,7 +54,7 @@ var Ihtai = (function(bundle){
 		//get nearest cluster for combined stimuli
 		curCluster= clusters.findNearestCluster(combinedStimuli);
 
-		//TODO:cycle reflexes
+		//cycle reflexes
 		var reflexOutput;
 		if(_enableReflexes){
 			reflexOutput=reflexes.cycle(curCluster);
@@ -76,7 +76,8 @@ var Ihtai = (function(bundle){
 		//send reflex output and memorizer output back to ai agent
 		return {
 			reflexOutput:reflexOutput,
-			memorizerOutput:memorizerOutput
+			memorizerOutput:memorizerOutput,
+			drivesOutput:drivesOutput
 		};
 	}
 
@@ -91,6 +92,37 @@ var Ihtai = (function(bundle){
 	}
 	function areMemoriesEnabled(){
 		return _enableMemories;
+	}
+	function save(){
+		var deflated;
+
+		/*TODO:store all information necessary to rebuild as json
+		*/
+		var tree= clusters.getClusterTree();
+		//save tree as an array by in-order traversing and outputing results into array
+		//TODO:implement using a toJSON property attached to tree, and calling json.stringify() on tree.
+		//TODO:implement fromJSON to unpack
+
+		//save clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
+		deflated.clusterCount=clusterCount;
+		deflated.vectorDim=vectorDim;
+		deflated.memoryHeight=memoryHeight;
+		deflated.acceptableRange=acceptableRange;
+
+		//save drives
+		//TODO:implement using a toJSON property attached to drives obj
+		//TODO:implement fromJSON to unpack
+
+		//save reflexes
+		//TODO:implement using a toJSON property attached to reflexes obj 
+		//TODO:implement fromJSON to unpack
+
+		//open the deflated data in a new window as text so the user can save
+		var url = 'data:text/json;charset=utf8,' + encodeURIComponent(deflated);
+		window.open(url, '_blank');
+		window.focus();
+
+		return deflated;
 	}
 	return {
 		cycle:cycle,
@@ -140,7 +172,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 	function query(cluster){
 		var outputStimuli=null, stimDist, sd;
 
-		/*TODO:this could be improved to log(h) if the data was sorted according to dist from
+		/*TODO:this query could be improved to log(h) if the data was sorted according to dist from
 		homeostasis goal * some multiplier for height value (to disincentivize longer-term solutions)
 		*/
 		for(var i=0; i<height; i++){
@@ -171,6 +203,10 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 			
 			Every level has a counter, that is reset every time a new memory sequence starts. The memory
 			sequence counts to i+2	
+
+			Each vector is a reference to to a cluster's stimuli array, making this an efficient way
+			to re-use the existing memory allocations (only need to store a pointer instead of the raw
+			vector data).
 		*/
 		var sd1,sd2,size, startState, secondState, endState;
 		stimuli=cluster.stimuli;
@@ -348,10 +384,14 @@ var Clusters = (function(_numClusters, _vectorDim){
 	function getClusters(){
 		return clusters;
 	}
+	function getClusterTree(){
+		return clusterTree;
+	}
 
 	return {
 		findNearestCluster: findNearestCluster,
-		getClusters: getClusters
+		getClusters: getClusters,
+		getClusterTree: getClusterTree
 	};
 });
 

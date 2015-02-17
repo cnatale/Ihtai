@@ -1,5 +1,12 @@
 var IhtaiUtils ={};
 
+IhtaiUtils.load = (function(){
+
+	return{
+
+	}
+});
+
 IhtaiUtils.KdTree = (function(_data, _comparisonProp){
 	var comparisonProp=_comparisonProp;
 	var data=_data;
@@ -41,7 +48,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp){
 			}
 			else{
 				var median, medianIndex, dimensionality, dim, left, right;
-				dimensionality=data[0].length;
+				dimensionality=data[0].length; //assumes all elements are of same dimension
 				dim = lvl % dimensionality;
 
 				//sort array by current dimension

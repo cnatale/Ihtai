@@ -53,7 +53,7 @@ require(['physicsjs'], function(Physics){
 		// constrain objects to these bounds
 		var edgeBounce = Physics.behavior('edge-collision-detection', {
 			aabb: viewportBounds,
-			restitution: 1,
+			restitution: .25,
 			cof: .4
 		});
 
@@ -124,7 +124,7 @@ require(['physicsjs'], function(Physics){
 							{x:60, y:0}
 
 						],
-						restitution:1,
+						restitution:.25,
 						name:'square'
 					}));
 			}
@@ -135,7 +135,9 @@ require(['physicsjs'], function(Physics){
 		})	  
 
 	    ///////// init Ihtai /////////////
-		var drive={
+	    //TODO:add tiredness drive, add behavior that when tiredness=100, stop moving (to 'seed'
+	   	// conservation of motion).
+		var hungerDrive={
 			hunger:100,
 			init:function(){
 				return this.hunger;
@@ -162,7 +164,34 @@ require(['physicsjs'], function(Physics){
 			},
 			targetValue:0 //the goal value for hunger
 		};
-		drives=[drive];
+		var tiredDrive={
+			tiredness:0,
+			init:function(){
+				return this.tiredness;
+			},
+			cycle:function(stimuli){
+				if(stimuli[2] <= 50){
+					if(this.tiredness>0){
+						this.tiredness-=.1;
+					}
+					else
+						this.tiredness=0;
+				}
+				else
+					if(this.tiredness<100){
+						this.tiredness+=.1;
+					}
+					else{
+						this.tiredness=100;
+					}
+
+				//console.log(this.hunger);
+				$('#tiredness').html("tiredness: "+Math.floor(this.tiredness));	
+				return this.tiredness;
+			},
+			targetValue:0 //the goal value for hunger
+		};
+		drives=[hungerDrive, tiredDrive];
 
 		var reflexes = [{
 			matcher: function(stimuli){ /*move if pellet it detected*/
@@ -196,14 +225,13 @@ require(['physicsjs'], function(Physics){
 	    var ihtai = new Ihtai({
 			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:4,
-			memoryHeight:100,
+			memoryHeight:1000,
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:80
+			acceptableRange:600/*acceptable range is in square dist*/
 		});
 	    /////////////////////////////////
-	    var moveVel=0;
-	    var lastTime;
+	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;
 		// subscribe to ticker to advance the simulation
 		Physics.util.ticker.on(function( time, dt ){
 		    world.step( time );
@@ -262,7 +290,8 @@ require(['physicsjs'], function(Physics){
 	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist]);
 	    	//returns {reflexOutput:~, memorizerOutput:~}
 
-	    	if(res.memorizerOutput != null){
+	    	//use memorizer and reflex pellet recognition output to move circle 
+	    	if(res.memorizerOutput != null && !isRavenous){
 	    			if(res.memorizerOutput[0]>50){ //has a pellet been detected?
 	    				moveVel=res.memorizerOutput[2];
 	    				//sometimes the above value will not come back as 0 or 100 due to compression.
@@ -288,6 +317,27 @@ require(['physicsjs'], function(Physics){
 	    	else{
 	    		moveVel=0;
 	    	}
+
+	    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
+
+	    	if (res.drivesOutput!=null){
+	    		if(res.drivesOutput[1]==100){
+	    			sleepMode=true;
+	    		}
+	    		if(res.drivesOutput[1]==0){ //circle has gotten enough sleep. wake it back up.
+	    			sleepMode=false;
+	    		}
+	    		if(res.drivesOutput[0]==100){
+	    			isRavenous=true;
+	    		}
+	    		if(res.drivesOutput[0]<=50){
+	    			isRavenous=false;
+	    		}
+	    	}
+	    	if(sleepMode){
+	    		moveVel=0;
+	    	}
+	    	
 
 		});
 
