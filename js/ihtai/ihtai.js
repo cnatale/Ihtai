@@ -97,6 +97,9 @@ var Ihtai = (function(bundle){
 		var deflated;
 
 		/*TODO:store all information necessary to rebuild as json
+
+		useful link: http://stackoverflow.com/questions/7955965/how-come-json-cant-save-objects-functions
+
 		*/
 		var tree= clusters.getClusterTree();
 		//save tree as an array by in-order traversing and outputing results into array
