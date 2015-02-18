@@ -263,6 +263,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 					if(sqDist(buffer[secondState].stimuli, level[i].series[buffer[startState].id].secondState) === 0){
 						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);
 						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
+						level[i].series[buffer[startState].id].collisions++;
 						for(var j=0;j<bufferGoalDist.length;j++){
 							//todo:rework with new collisions property
 							var collisions=level[i].series[buffer[startState].id].collisions;
@@ -273,8 +274,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 						}
 						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(endStateGoalDist);
 						Array.prototype.splice.apply(level[i].series[buffer[startState].id].endState, args);	
-
-						level[i].series[buffer[startState].id].collisions++;	
 					}
 					else{ 
 						//secondStates are different. Figure out which one leads to better outcome.
