@@ -246,19 +246,19 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 				*/				
 				if(level[i].series.hasOwnProperty(buffer[startState].id)){
 					/*
-					If same first and second state lead to a different end drive state, store the memory
+					If same first and second states are the same, store the memory
 					as weighted average of the two (same firstState and secondState, endState drive values become
-					weighted average. Actually, can probably get rid of endState iostimuli as it's not being
-					used anywhere.)
+					weighted average)
 
 					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
-					should raise its cost for future queries.
+					should raise its cost for future queries. Also if a marginally optimal outcome becomes more optimal,
+					increase fitness. It also simulates how behavior "hardens" as it is carried out more and more often.
 
 					The averaging step is weighted in favor of the existing drive endstate,
 					based on how many secondState collisions have occurred. The more collisions, the more the
 					averaging step is weighted towards the existing drive endState. This requires storing an 
 					extra number holding the secondState collision count, reset every time new secondState and endState
-					is selected (as opposed to merging).
+					is selected (as opposed to non-weighted average).
 					*/		
 					if(sqDist(buffer[secondState].stimuli, level[i].series[buffer[startState].id].secondState) === 0){
 						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);

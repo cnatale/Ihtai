@@ -249,7 +249,7 @@ describe('ihtai utils', function(){
 	})
 
 	describe('kd tree', function(){
-		var arr, kdTree, root;
+		var arr, kdTree, root, heap;
 
 		beforeEach(function(){
 			arr=[
@@ -282,7 +282,30 @@ describe('ihtai utils', function(){
 			expect(nn).toEqual([10,5,5,3,6]);
 			var nn2 = kdTree.nearestNeighbor([61, 58, 59, 61, 78]);
 			expect(nn2).toEqual([60,61,58,57,77]);
-		})
+		});
+
+		it('should convert a kd tree into a binary heap', function(){
+			heap=kdTree.toBinaryHeap();
+			expect(heap[0]).toEqual([29,2,32,20,10]);
+			expect(heap[1]).toEqual([8,20,25,30,1]);
+			expect(heap[2]).toEqual([60,61,58,57,77]);
+			expect(heap[3]).toEqual([10,5,5,3,6]);
+			expect(heap[4]).toEqual(null);
+			expect(heap[5]).toEqual([75,50,22,20,21]);
+			for(var i=6;i<=10;i++){
+				expect(heap[i]).toEqual(null);
+			}
+	
+		});
+		it('should convert a binary heap into a kd tree', function(){
+			var inflatedRoot=IhtaiUtils.binaryHeapToKdTree(heap);
+			
+			expect(inflatedRoot.value).toEqual([29,2,32,20,10]);
+			expect(inflatedRoot.left.value).toEqual([8,20,25,30,1]);
+			expect(inflatedRoot.right.value).toEqual([60,61,58,57,77]);
+			expect(inflatedRoot.left.left.value).toEqual([10,5,5,3,6]);
+			expect(inflatedRoot.right.left.value).toEqual([75,50,22,20,21]);
+		});
 	});
 
 

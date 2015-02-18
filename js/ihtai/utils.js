@@ -1,6 +1,6 @@
 var IhtaiUtils ={};
 
-IhtaiUtils.load = (function(){
+IhtaiUtils.loadFile = (function(){
 	/*
 	useful link for loading local file-system data: http://stackoverflow.com/questions/7346563/loading-local-json-file
 
@@ -11,6 +11,33 @@ IhtaiUtils.load = (function(){
 	return{
 
 	}
+});
+
+/**
+Each element in the heap param contains a kd-tree's .value property
+*/
+IhtaiUtils.binaryHeapToKdTree = (function(heap){
+	var root,node, parent;
+	for(var i=0;i<heap.length;i++){
+		if(heap[i]!=null){
+			node={
+				value:heap[i]
+			}
+			heap[i]=node; //replace value with inflated object
+
+			if(i==0)
+				root=node;
+			else{
+				parent=heap[Math.floor((i-1)/2)];
+				if(!parent.hasOwnProperty('left'))
+					parent.left=node;
+				else
+					parent.right=node;
+			}			
+		}
+	}
+
+	return root;
 });
 
 IhtaiUtils.KdTree = (function(_data, _comparisonProp){
@@ -24,18 +51,34 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp){
 	}
 	init();
 
-	/**
-		@param p an array of n-dimensional values
-	*/
 
+	function toBinaryHeap(){
+		var queue=new Queue(),output=[],node;
+		queue.enqueue(root);
+		while(queue.getLength()>0){
+			node=queue.dequeue();
+			if(node!=null){
+				queue.enqueue(node.left);
+				queue.enqueue(node.right);
+				output.push(node.value);
+			}
+			else
+				output.push(node);
+		}
+		return output;
+	}
+
+	/**
+		@param data: an array of n-dimensional values
+	*/
 	function buildKdTree(data){
 		/*
-		TODO: For each level l, split array of n-dimensional points along median of 
+		For each level l, split array of n-dimensional points along median of 
 		dimension l % d. Assign median point to node. Recursively perform operation on
 		left and right sub-arrays.
 		*/
 
-		//each node contains the following properties: left, right, and data		
+		//each node contains the following properties: left, right, and value		
 
 		var root=createNode(data,0); //this will build the entire kd-tree, with reference to root
 		return root;
@@ -176,7 +219,8 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp){
 	return {
 		buildKdTree:buildKdTree,
 		nearestNeighbor:nearestNeighbor,
-		getRoot:getRoot
+		getRoot:getRoot,
+		toBinaryHeap:toBinaryHeap
 	}
 });
 

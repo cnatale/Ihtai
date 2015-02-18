@@ -16,6 +16,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'js/ihtai/*.js',
+      'js/external/Queue.js',
       'tests/**/*Spec.js'
     ],
 
