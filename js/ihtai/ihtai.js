@@ -100,6 +100,13 @@ var Ihtai = (function(bundle){
 
 		useful link: http://stackoverflow.com/questions/7955965/how-come-json-cant-save-objects-functions
 
+		approach to saving a binary tree breadth-first: http://stackoverflow.com/questions/337868/want-to-save-binary-tree-to-disk-for-20-questions-game
+		(see second answer, the one about breadth-first traversal)
+
+		also look at heap implementation as array for idea on loading/unloading: http://en.wikipedia.org/wiki/Binary_heap
+		Specifically, since we can know the parent and children based on index, this offers a way to load w/o
+		doing all the sorts that are required by unordered data. Combine with prev link for solution.
+
 		*/
 		var tree= clusters.getClusterTree();
 		//save tree as an array by in-order traversing and outputing results into array
@@ -115,10 +122,12 @@ var Ihtai = (function(bundle){
 		//save drives
 		//TODO:implement using a toJSON property attached to drives obj
 		//TODO:implement fromJSON to unpack
+		//save drive functions as strings by doing fn+''
 
 		//save reflexes
 		//TODO:implement using a toJSON property attached to reflexes obj 
 		//TODO:implement fromJSON to unpack
+		//save reflex functions as strings by doing fn+''
 
 		//open the deflated data in a new window as text so the user can save
 		var url = 'data:text/json;charset=utf8,' + encodeURIComponent(deflated);
@@ -171,6 +180,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 		drive state.
 		@returns A vector representing the next action agent should take to minimize homeostasis differential.
 		If no vector is within acceptable range, return null.
+
+		TODO:think about adding the previous cycle's drive vectors to io signal
 	*/
 	function query(cluster){
 		var outputStimuli=null, stimDist, sd;
@@ -243,7 +254,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
 					should raise its cost for future queries.
 
-					TODO: the averaging step should really be weighted in favor of the existing drive endstate,
+					The averaging step is weighted in favor of the existing drive endstate,
 					based on how many secondState collisions have occurred. The more collisions, the more the
 					averaging step is weighted towards the existing drive endState. This requires storing an 
 					extra number holding the secondState collision count, reset every time new secondState and endState
@@ -253,10 +264,17 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);
 						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
 						for(var j=0;j<bufferGoalDist.length;j++){
-							endStateGoalDist[j]= (endStateGoalDist[j]+bufferGoalDist[j])/2;
+							//todo:rework with new collisions property
+							var collisions=level[i].series[buffer[startState].id].collisions;
+							endStateGoalDist[j]= ((endStateGoalDist[j]*collisions)+bufferGoalDist[j])/(collisions+1);
+				
+							//the old non-weighted collision logic
+							//endStateGoalDist[j]= (endStateGoalDist[j]+bufferGoalDist[j])/2;
 						}
 						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(endStateGoalDist);
-						Array.prototype.splice.apply(level[i].series[buffer[startState].id].endState, args);		
+						Array.prototype.splice.apply(level[i].series[buffer[startState].id].endState, args);	
+
+						level[i].series[buffer[startState].id].collisions++;	
 					}
 					else{ 
 						//secondStates are different. Figure out which one leads to better outcome.
@@ -268,7 +286,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 							level[i].series[buffer[startState].id]={
 								startState: buffer[startState].stimuli, 
 								secondState: buffer[secondState].stimuli,
-								endState: buffer[endState].stimuli
+								endState: buffer[endState].stimuli,
+								collisions:0
 							};
 						}	
 					}		
@@ -279,7 +298,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 					level[i].series[buffer[startState].id]={
 						startState: buffer[startState].stimuli, 
 						secondState: buffer[secondState].stimuli,
-						endState: buffer[endState].stimuli
+						endState: buffer[endState].stimuli,
+						collisions:0
 					};					
 				}
 			}
@@ -328,10 +348,17 @@ var Clusters = (function(_numClusters, _vectorDim){
 	var numClusters = _numClusters
 
 	/**
-		-TODO:randomly assign k clusters over n-dimensional vector space
+		-randomly assign k clusters over n-dimensional vector space
 		@param {number} k
 	*/
 	function init(){	
+		/*
+		TODO: think about distributing points using a low-discrepancy sequence instead of randomly
+		(http://stackoverflow.com/questions/10644154/uniform-distribution-of-points)
+		It seems like there are significant gaps in mapping space even with cluster values of 100,000 with
+		pseudo-random uniform distribution.
+		*/
+
 		//create clusters with id(needs to be unique) and stimuli properties
 		for(var i=0;i<numClusters;i++){
 			clusters[i]={id:i, stimuli:[]};
@@ -361,25 +388,10 @@ var Clusters = (function(_numClusters, _vectorDim){
 		@returns {Object} the nearest cluster to v
 	*/
 	function findNearestCluster(v){
-		//TODO: replace with kd-tree
 		var nearestCluster, clusters=getClusters();
 		var leastSq, t;
 
-
-
-		/*for(var i=0; i < clusters.length; i++){
-			t=0;
-			for(var j=0; j< v.length; j++){
-				t+= Math.pow(v[j] - clusters[i].stimuli[j], 2);
-			}
-
-			if(i==0 || t < leastSq){
-				leastSq=t;
-				nearestCluster=clusters[i];
-			}			
-		}*/
 		nearestCluster = clusterTree.nearestNeighbor(v);
-
 
 		return nearestCluster;
 	}

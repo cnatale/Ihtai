@@ -224,7 +224,7 @@ require(['physicsjs'], function(Physics){
 
 	    var ihtai = new Ihtai({
 			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-			vectorDim:4,
+			vectorDim:6,/*number of iostimuli values + drives*/
 			memoryHeight:1000,
 			drivesList:drives,
 			reflexList:reflexes,
