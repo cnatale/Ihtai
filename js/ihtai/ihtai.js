@@ -122,12 +122,31 @@ var Ihtai = (function(bundle){
 		//save drives
 		//TODO:implement using a toJSON property attached to drives obj
 		//TODO:implement fromJSON to unpack
-		//save drive functions as strings by doing fn+''
+		var driveFns=drives.getDrives(),deflatedDrives=[],d;
+		for(var i=0;i<driveFns.length;i++){
+			//convert functions to strings for storage
+			d={
+				init:driveFns[i].init+'',
+				cycle:driveFns[i].cycle+'',
+				targetValue:driveFns[i].targetValue
+			};
+			deflatedDrives[i]=d;
+		}
+		deflated.drives=deflatedDrives;
 
 		//save reflexes
 		//TODO:implement using a toJSON property attached to reflexes obj 
 		//TODO:implement fromJSON to unpack
-		//save reflex functions as strings by doing fn+''
+		var reflexFns=reflexes.getReflexes(),deflatedReflexes=[],r;
+		for(var i=0;i<reflexFns.length;i++){
+			//convert functions to strings for storage
+			r={
+				matcher:reflexFns[i].matcher+'',
+				response:reflexFns[i].response+''
+			}
+			deflatedReflexes[i]=r; //convert function to string for storage
+		}
+		deflated.reflexes=deflatedReflexes;
 
 		//open the deflated data in a new window as text so the user can save
 		var url = 'data:text/json;charset=utf8,' + encodeURIComponent(deflated);
@@ -336,15 +355,13 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 
 //clusters are 'buckets' that n-dimensional stimuli moments are placed inside
 var Clusters = (function(_numClusters, _vectorDim){
-	//TODO: think about sorting data for better search performance. research k-d trees, n-dimensional nearest neighbor solutions.
+	var vectorDim=_vectorDim, clusterTree;
+	var numClusters = _numClusters	
 	/**
 		Individual clusters have the following properties:
 		id: a unique id
 		stimuli: a vector representing stimuli
 	*/
-
-	var clusters=[], vectorDim=_vectorDim, clusterTree;
-	var numClusters = _numClusters
 
 	/**
 		-randomly assign k clusters over n-dimensional vector space
@@ -357,7 +374,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 		It seems like there are significant gaps in mapping space even with cluster values of 100,000 with
 		pseudo-random uniform distribution.
 		*/
-
+		var clusters=[];
 		//create clusters with id(needs to be unique) and stimuli properties
 		for(var i=0;i<numClusters;i++){
 			clusters[i]={id:i, stimuli:[]};
@@ -387,7 +404,7 @@ var Clusters = (function(_numClusters, _vectorDim){
 		@returns {Object} the nearest cluster to v
 	*/
 	function findNearestCluster(v){
-		var nearestCluster, clusters=getClusters();
+		var nearestCluster;
 		var leastSq, t;
 
 		nearestCluster = clusterTree.nearestNeighbor(v);
@@ -395,16 +412,12 @@ var Clusters = (function(_numClusters, _vectorDim){
 		return nearestCluster;
 	}
 
-	function getClusters(){
-		return clusters;
-	}
 	function getClusterTree(){
 		return clusterTree;
 	}
 
 	return {
 		findNearestCluster: findNearestCluster,
-		getClusters: getClusters,
 		getClusterTree: getClusterTree
 	};
 });
@@ -485,7 +498,12 @@ var Reflexes = (function(_reflexes){
 		return output;
 	}
 
+	function getReflexes(){
+		return reflexes;
+	}
+
 	return{
-		cycle:cycle
+		cycle:cycle,
+		getReflexes:getReflexes
 	};
 });

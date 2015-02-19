@@ -18,11 +18,6 @@ describe('ihtai', function(){
 
 		});
 
-		it('should initialize clusters', function(){
-			var c= clusters.getClusters();
-			expect(c.length).toBe(1000);
-			expect(c[0].stimuli).toEqual([50,50,50,50,50]);
-		});
 
 		it('should find nearest cluster for a vector', function(){
 			//TODO: always returns cluster 333 regardless of input. figure out why.
@@ -299,7 +294,7 @@ describe('ihtai utils', function(){
 		});
 		it('should convert a binary heap into a kd tree', function(){
 			var inflatedRoot=IhtaiUtils.binaryHeapToKdTree(heap);
-			
+
 			expect(inflatedRoot.value).toEqual([29,2,32,20,10]);
 			expect(inflatedRoot.left.value).toEqual([8,20,25,30,1]);
 			expect(inflatedRoot.right.value).toEqual([60,61,58,57,77]);
