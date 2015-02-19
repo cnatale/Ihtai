@@ -1,12 +1,25 @@
 var IhtaiUtils ={};
 
-IhtaiUtils.loadFile = (function(){
+IhtaiUtils.loadFile = (function(fileStr){
 	/*
 	useful link for loading local file-system data: http://stackoverflow.com/questions/7346563/loading-local-json-file
 
 	By implementing this using a binary heap array approach, we get O(n) tree load time vs. O(n*log(n)^2) for 
 	the standard kd-tree builder algorithm without the data already ordered.
 	*/
+
+	//convert string to json
+	var parsedFile=JSON.parse(fileStr);
+
+	//TODO: inflate primitives
+
+	//TODO: inflate clusters
+
+	//TODO: inflate reflexes
+
+	//TODO: inflate drives
+
+	//TODO: inflate memorizer
 
 	return{
 

@@ -220,12 +220,18 @@ describe('ihtai', function(){
 
 		it('should cycle when presented with io stimuli', function(){
 			//io array should be of length vectorDim - drivesList.length
-			ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
-			ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
-			ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
+			ihtai.cycle([10, 20, 30, 40, 50, 60, 70, 80, 90]);
+			ihtai.cycle([90, 80, 70, 60, 50, 40, 30, 20, 10]);
+			ihtai.cycle([0, 100, 0, 100, 0, 100, 0, 100, 0]);
 			var res=ihtai.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50]);
 		
 		});	
+
+		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
+			var resp=ihtai.save(true);
+
+			//todo:add re-inflate check
+		});
 	})
 });
 

@@ -93,8 +93,8 @@ var Ihtai = (function(bundle){
 	function areMemoriesEnabled(){
 		return _enableMemories;
 	}
-	function save(){
-		var deflated;
+	function save(noOutput){
+		var deflated={};
 
 		/*TODO:store all information necessary to rebuild as json
 
@@ -109,6 +109,9 @@ var Ihtai = (function(bundle){
 
 		*/
 		var tree= clusters.getClusterTree();
+		//save clusterTree
+		var heap=tree.toBinaryHeap();
+		deflated.clusterTreeHeap=heap;
 		//save tree as an array by in-order traversing and outputing results into array
 		//TODO:implement using a toJSON property attached to tree, and calling json.stringify() on tree.
 		//TODO:implement fromJSON to unpack
@@ -147,20 +150,24 @@ var Ihtai = (function(bundle){
 			deflatedReflexes[i]=r; //convert function to string for storage
 		}
 		deflated.reflexes=deflatedReflexes;
+		var stringifiedAndDeflated=JSON.stringify(deflated);
 
 		//open the deflated data in a new window as text so the user can save
-		var url = 'data:text/json;charset=utf8,' + encodeURIComponent(deflated);
-		window.open(url, '_blank');
-		window.focus();
+		if(typeof noOutput == "undefined" || noOutput==false){
+			var url = 'data:text/json;charset=utf8,' + encodeURIComponent(stringifiedAndDeflated);
+			window.open(url, '_blank');
+			window.focus();
+		}
 
-		return deflated;
+		return stringifiedAndDeflated;
 	}
 	return {
 		cycle:cycle,
 		enableReflexes:enableReflexes,
 		areReflexesEnabled:areReflexesEnabled,
 		enableMemories:enableMemories,
-		areMemoriesEnabled:areMemoriesEnabled
+		areMemoriesEnabled:areMemoriesEnabled,
+		save:save
 	};
 });
 
