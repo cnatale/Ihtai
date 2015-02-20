@@ -17,12 +17,20 @@ describe('ihtai', function(){
 	}
 
 	beforeEach(function(){
-	    this.addMatchers({
-	        toBeJsonEqual: function(expected){
-	            var one = JSON.stringify(this.actual, replacer).replace(/(\\t|\\n)/g,''),
-	                two = JSON.stringify(expected, replacer).replace(/(\\t|\\n)/g,'');
-	                return one === two;
-	            }
+	    jasmine.addMatchers({
+	        toBeJsonEqual: function(util, customEqualityTesters){
+	        	return {
+		        	compare:function(actual, expected){
+		            	var one = JSON.stringify(actual, replacer).replace(/(\\t|\\n)/g,''),
+		                two = JSON.stringify(expected, replacer).replace(/(\\t|\\n)/g,'');
+		                var passed= one === two;
+		                return {
+	                		pass: passed,
+	                		message: 'Expected ' + actual + (passed ? '' : ' not') + ' to equal ' + expected
+		                };
+		            }
+		        }
+	        }
 	    });
 	});
 

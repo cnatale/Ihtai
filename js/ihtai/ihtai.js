@@ -198,6 +198,10 @@ var Ihtai = (function(bundle){
 
 		var stringifiedAndDeflated=JSON.stringify(deflated);
 	
+		/*
+		TODO:local file save still doesn't work for files larger than ~10,000 memories.
+		Try chunking output and saving in pieces.
+		*/
 		if(typeof suppressOutput == "undefined" || suppressOutput==false){
 			//Physically save a copy to user's hard drive
 			var link = document.createElement('a');
