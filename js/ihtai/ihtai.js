@@ -4,7 +4,7 @@ var Ihtai = (function(bundle){
 	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
 	var outputStimuli =[]; //the output stimuli buffer;
 
-	if(typeof bundle=="string"){ //load from json file instead of default initialization
+	if(typeof bundle=="string"){ //load from stringified json instead of default initialization
 		var parsedFile=JSON.parse(bundle); 
 		//inflate clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
 		clusterCount= parsedFile.clusterCount;
@@ -205,7 +205,7 @@ var Ihtai = (function(bundle){
 		if(typeof suppressOutput == "undefined" || suppressOutput==false){
 			//Physically save a copy to user's hard drive
 			var link = document.createElement('a');
-			link.setAttribute('href', 'data:text/json;charset=utf8,'+stringifiedAndDeflated);
+			link.setAttribute('href', 'data:text/plain;charset=UTF-8,'+stringifiedAndDeflated);
 			link.setAttribute('download', fileName+'.json');
 			document.getElementsByTagName("body")[0].appendChild(link).click();		
 		}
