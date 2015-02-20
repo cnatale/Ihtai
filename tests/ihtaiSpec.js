@@ -228,9 +228,9 @@ describe('ihtai', function(){
 		});	
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
-			var resp=ihtai.save(true);
-
-			//todo:add re-inflate check
+			var resp=ihtai.saveFile(true);
+			var rebuiltIhtai=new Ihtai(resp);
+			//TODO:add re-inflate check
 			/*note: setting clusterCount to > 10,000 causes karma to crash. when exporting json to another
 			window. Will probably need to use some kind of server-side logic to accomplish local saves.
 			*/

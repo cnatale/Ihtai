@@ -1,5 +1,16 @@
 var IhtaiUtils ={};
 
+String.prototype.escapeSpecialChars = function() {
+    return this.replace(new RegExp("\n", "g"), "\\n")
+               .replace(new RegExp("\'", "g"), "\\'")
+               .replace(new RegExp('\"', "g"), '\\"')
+               .replace(new RegExp("\&", "g"), "\\&")
+               .replace(new RegExp("\r", "g"), "\\r")
+               .replace(new RegExp("\t", "g"), "\\t")
+               .replace(new RegExp("\b", "g"), "\\b")
+               .replace(new RegExp("\f", "g"), "\\f");
+};
+
 IhtaiUtils.loadFile = (function(fileStr){
 	/*
 	useful link for loading local file-system data: http://stackoverflow.com/questions/7346563/loading-local-json-file

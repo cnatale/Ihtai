@@ -5,6 +5,7 @@ var Ihtai = (function(bundle){
 	var outputStimuli =[]; //the output stimuli buffer;
 
 	if(typeof bundle=="string"){ //load from json file instead of default initialization
+		var parsedFile=JSON.parse(bundle); 
 		//inflate clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
 		clusterCount= parsedFile.clusterCount;
 		vectorDim=parsedFile.vectorDim;
@@ -21,7 +22,8 @@ var Ihtai = (function(bundle){
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
 		var deflatedReflexes=parsedFile.reflexes,inflatedReflexes=[],r;
-		for(var i=0;i<reflexFns.length;i++){
+
+		for(var i=0;i<deflatedReflexes.length;i++){
 			//convert functions to strings for storage
 			r={
 				matcher:eval(deflatedReflexes[i].matcher),
@@ -30,7 +32,7 @@ var Ihtai = (function(bundle){
 			inflatedReflexes[i]=r; //convert function to string for storage
 		}
 		reflexes = new Reflexes(inflatedReflexes);
-
+	
 		//TODO: inflate drives
 		//TODO: inflate indiv drive functions back from strings by eval'ing them
 		var deflatedDrives=parsedFile.drives,inflatedDrives=[],d;
@@ -46,8 +48,9 @@ var Ihtai = (function(bundle){
 		drives = new Drives(inflatedDrives);
 
 		//TODO: inflate memorizer	
-		//TODO: I forgot to save Memorizer's instance variables. Get them as well.	
-		memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);
+		var buffer=parsedFile.memorizer.buffer;
+		var levels=parsedFile.memorizer.levels;
+		memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange, buffer, levels);
 
 	}
 	else{
@@ -55,28 +58,28 @@ var Ihtai = (function(bundle){
 			if(typeof bundle == "undefined")
 				throw "Error: no initialization object!"
 			if(typeof bundle != "object")
-				throw "Error: initialization parameter should be an object!"
+				throw "Error: initialization parameter should be an Object or String!"
 
 			if(bundle.clusterCount)
 				clusterCount= bundle.clusterCount;
 			else
-				throw "Error: no 'clusterCount' property found in initialization object!"
+				throw "Error: no 'clusterCount' property found in initialization Object!"
 			if(bundle.vectorDim)
 				vectorDim=bundle.vectorDim;
 			else
-				throw "Error: no 'vectorDim' property found in initialization object!"		
+				throw "Error: no 'vectorDim' property found in initialization Object!"		
 			if(bundle.memoryHeight)
 				memoryHeight=bundle.memoryHeight;
 			else
-				throw "Error: no 'memoryHeight' property found in initialization object!"
+				throw "Error: no 'memoryHeight' property found in initialization Object!"
 			if(bundle.drivesList)
 				driveList=bundle.drivesList;
 			else
-				throw "Error: no 'drives' property found in initialization object!"
+				throw "Error: no 'drives' property found in initialization Object!"
 			if(bundle.reflexList)
 				reflexList=bundle.reflexList;
 			else
-				throw "Error: no 'reflexes' property found in initialization object!"
+				throw "Error: no 'reflexes' property found in initialization Object!"
 			if(bundle.acceptableRange)
 				acceptableRange=bundle.acceptableRange;
 			else
@@ -87,8 +90,8 @@ var Ihtai = (function(bundle){
 			drives = new Drives(driveList);
 			memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);		
 		}
-	}
 	init(bundle);
+	}
 
 	function cycle(ioStimuli){
 		var combinedStimuli, curCluster;
@@ -141,28 +144,15 @@ var Ihtai = (function(bundle){
 	function areMemoriesEnabled(){
 		return _enableMemories;
 	}
-	function save(noOutput){
+	function saveFile(noOutput){
 		var deflated={};
 
-		/*TODO:store all information necessary to rebuild as json
+		//store all information necessary to rebuild as json
 
-		useful link: http://stackoverflow.com/questions/7955965/how-come-json-cant-save-objects-functions
-
-		approach to saving a binary tree breadth-first: http://stackoverflow.com/questions/337868/want-to-save-binary-tree-to-disk-for-20-questions-game
-		(see second answer, the one about breadth-first traversal)
-
-		also look at heap implementation as array for idea on loading/unloading: http://en.wikipedia.org/wiki/Binary_heap
-		Specifically, since we can know the parent and children based on index, this offers a way to load w/o
-		doing all the sorts that are required by unordered data. Combine with prev link for solution.
-
-		*/
-		var tree= clusters.getClusterTree();
 		//save clusterTree
+		var tree= clusters.getClusterTree();		
 		var heap=tree.toBinaryHeap();
 		deflated.clusterTreeHeap=heap;
-		//save tree as an array by in-order traversing and outputing results into array
-		//TODO:implement using a toJSON property attached to tree, and calling json.stringify() on tree.
-		//TODO:implement fromJSON to unpack
 
 		//save clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
 		deflated.clusterCount=clusterCount;
@@ -171,14 +161,14 @@ var Ihtai = (function(bundle){
 		deflated.acceptableRange=acceptableRange;
 
 		//save drives
-		//TODO:implement using a toJSON property attached to drives obj
-		//TODO:implement fromJSON to unpack
 		var driveFns=drives.getDrives(),deflatedDrives=[],d;
 		for(var i=0;i<driveFns.length;i++){
 			//convert functions to strings for storage
+			var init='('+String(driveFns[i].init)+')'.escapeSpecialChars();
+			var cycle='('+String(driveFns[i].cycle)+')'.escapeSpecialChars();
 			d={
-				init:driveFns[i].init+'',
-				cycle:driveFns[i].cycle+'',
+				init:init,
+				cycle:cycle,
 				targetValue:driveFns[i].targetValue
 			};
 			deflatedDrives[i]=d;
@@ -186,20 +176,28 @@ var Ihtai = (function(bundle){
 		deflated.drives=deflatedDrives;
 
 		//save reflexes
-		//TODO:implement using a toJSON property attached to reflexes obj 
-		//TODO:implement fromJSON to unpack
 		var reflexFns=reflexes.getReflexes(),deflatedReflexes=[],r;
 		for(var i=0;i<reflexFns.length;i++){
 			//convert functions to strings for storage
+			var matcher='('+String(reflexFns[i].matcher)+')'.escapeSpecialChars();
+			var response='('+String(reflexFns[i].response)+')'.escapeSpecialChars();
 			r={
-				matcher:reflexFns[i].matcher+'',
-				response:reflexFns[i].response+''
+				matcher:matcher,
+				response:response
 			}
 			deflatedReflexes[i]=r; //convert function to string for storage
 		}
 		deflated.reflexes=deflatedReflexes;
-		var stringifiedAndDeflated=JSON.stringify(deflated);
 
+
+		//save Memorizer
+		deflated.memorizer={
+			buffer:memorizer.getBuffer(),
+			levels:memorizer.getLevels()
+		};
+
+		var stringifiedAndDeflated=JSON.stringify(deflated);
+	
 		//open the deflated data in a new window as text so the user can save
 		if(typeof noOutput == "undefined" || noOutput==false){
 			var url = 'data:text/json;charset=utf8,' + encodeURIComponent(stringifiedAndDeflated);
@@ -215,7 +213,7 @@ var Ihtai = (function(bundle){
 		areReflexesEnabled:areReflexesEnabled,
 		enableMemories:enableMemories,
 		areMemoriesEnabled:areMemoriesEnabled,
-		save:save
+		saveFile:saveFile
 	};
 });
 
@@ -223,7 +221,7 @@ var Ihtai = (function(bundle){
 	The cerebral cortex of the a.i. Hierarchically, temporally memorizes
 	moments in time represented by vectors combining stimuli and drive states.
 */
-var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
+var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
 	var level, buffer, homeostasisGoal;
 
@@ -233,11 +231,19 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 		acceptableRange=75;
 
 	function init(){
-		//initialize an array of hashmaps representing all possible memories
-		level=[], buffer=[];
-		for(var i=0; i<height; i++){
-			level[i]={};
-			level[i].series={};
+
+		if(typeof _buffer != "undefined" && typeof _levels != "undefined"){
+			//rebuild from existing buffer and level data
+			buffer=_buffer;
+			level=_levels;
+		}
+		else{
+			//initialize an array of hashmaps representing all possible memories
+			level=[], buffer=[];
+			for(var i=0; i<height; i++){
+				level[i]={};
+				level[i].series={};
+			}
 		}
 
 		/*The default homeostasis goal value is for test purposes only. The _homeostasisGoal 
@@ -297,7 +303,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 			vector data).
 		*/
 		var sd1,sd2,size, startState, secondState, endState;
-		stimuli=cluster.stimuli;
 
 		//update the buffer
 		buffer.push(cluster);
@@ -407,7 +412,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 		query: query,
 		memorize: memorize,
 		getHeight: getHeight,
-		getLevels: getLevels
+		getLevels: getLevels,
+		getBuffer: getBuffer
 	}
 });
 
