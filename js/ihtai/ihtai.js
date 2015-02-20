@@ -144,7 +144,7 @@ var Ihtai = (function(bundle){
 	function areMemoriesEnabled(){
 		return _enableMemories;
 	}
-	function saveFile(noOutput){
+	function saveFile(fileName, suppressOutput){
 		var deflated={};
 
 		//store all information necessary to rebuild as json
@@ -198,11 +198,12 @@ var Ihtai = (function(bundle){
 
 		var stringifiedAndDeflated=JSON.stringify(deflated);
 	
-		//open the deflated data in a new window as text so the user can save
-		if(typeof noOutput == "undefined" || noOutput==false){
-			var url = 'data:text/json;charset=utf8,' + encodeURIComponent(stringifiedAndDeflated);
-			window.open(url, '_blank');
-			window.focus();
+		if(typeof suppressOutput == "undefined" || suppressOutput==false){
+			//Physically save a copy to user's hard drive
+			var link = document.createElement('a');
+			link.setAttribute('href', 'data:text/json;charset=utf8,'+stringifiedAndDeflated);
+			link.setAttribute('download', fileName+'.json');
+			document.getElementsByTagName("body")[0].appendChild(link).click();		
 		}
 
 		return stringifiedAndDeflated;

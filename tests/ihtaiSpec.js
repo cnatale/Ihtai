@@ -1,5 +1,10 @@
 describe('ihtai', function(){
 
+	/*
+	toBeJsonEqual matcher and replacer method originally from StackOverflow user 
+	pocesar: http://stackoverflow.com/users/647380/pocesar
+	http://stackoverflow.com/questions/14541287/jasmine-toequal-for-complex-objects-mixed-with-functions
+	*/
 	function replacer(k, v) {
 	    if (typeof v === 'function') {
 	        v = v.toString();
@@ -12,10 +17,6 @@ describe('ihtai', function(){
 	}
 
 	beforeEach(function(){
-		/*
-		toBeJsonEqual matcher originally from StackOverflow user pocesar: http://stackoverflow.com/users/647380/pocesar
-		http://stackoverflow.com/questions/14541287/jasmine-toequal-for-complex-objects-mixed-with-functions
-		*/
 	    this.addMatchers({
 	        toBeJsonEqual: function(expected){
 	            var one = JSON.stringify(this.actual, replacer).replace(/(\\t|\\n)/g,''),
@@ -249,7 +250,7 @@ describe('ihtai', function(){
 		});	
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
-			var resp=ihtai.saveFile(true);
+			var resp=ihtai.saveFile('ihtaiSave',true);
 			var rebuiltIhtai=new Ihtai(resp);
 			//re-inflated Ihtai should be identical to original instance
 			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
