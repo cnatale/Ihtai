@@ -1,6 +1,6 @@
 var Ihtai = (function(bundle){
 
-	var clusterCount, vectorDim, memorizer, memoryHeight, driveList, reflexList, intervalID;
+	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
 	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
 	var outputStimuli =[]; //the output stimuli buffer;
 
@@ -207,13 +207,32 @@ var Ihtai = (function(bundle){
 
 		return stringifiedAndDeflated;
 	}
+
+	function getProperties(){
+		return {
+			clusterCount:clusterCount, 
+			vectorDim:vectorDim,
+			memorizer:memorizer, 
+			memoryHeight:memoryHeight, 
+			driveList:driveList,
+			reflexList:reflexList,
+			
+			clusters:clusters, 
+			drives:drives, 
+			reflexes:reflexes, 
+			acceptableRange:acceptableRange,
+			_enableReflexes:_enableReflexes, 
+			_enableMemories:_enableMemories
+		};
+	}
 	return {
 		cycle:cycle,
 		enableReflexes:enableReflexes,
 		areReflexesEnabled:areReflexesEnabled,
 		enableMemories:enableMemories,
 		areMemoriesEnabled:areMemoriesEnabled,
-		saveFile:saveFile
+		saveFile:saveFile,
+		getProperties:getProperties
 	};
 });
 
