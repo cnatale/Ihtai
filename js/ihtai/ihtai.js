@@ -14,10 +14,11 @@ var Ihtai = (function(bundle){
 
 		//rebuild kd-tree from binary heap
 		var heap=parsedFile.clusterTreeHeap;
-		var tree=IhtaiUtils.binaryHeapToKdTree(heap);
+		//TODO: BUG: the new kdTree instance isn't a complete kdTree. only has nodes, not methods or props		
+		var treeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
-		//TODO: inflate clusters
-		clusters = new Clusters(clusterCount, vectorDim, tree);
+		//inflate clusters
+		clusters = new Clusters(clusterCount, vectorDim, treeRoot);
 
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
@@ -33,8 +34,8 @@ var Ihtai = (function(bundle){
 		}
 		reflexes = new Reflexes(inflatedReflexes);
 	
-		//TODO: inflate drives
-		//TODO: inflate indiv drive functions back from strings by eval'ing them
+		//inflate drives
+		//inflate indiv drive functions back from strings by eval'ing them
 		var deflatedDrives=parsedFile.drives,inflatedDrives=[],d;
 		for(var i=0;i<deflatedDrives.length;i++){
 			//convert functions to strings for storage
@@ -47,7 +48,7 @@ var Ihtai = (function(bundle){
 		}
 		drives = new Drives(inflatedDrives);
 
-		//TODO: inflate memorizer	
+		//inflate memorizer	
 		var buffer=parsedFile.memorizer.buffer;
 		var levels=parsedFile.memorizer.levels;
 		memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange, buffer, levels);
@@ -486,7 +487,7 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 			clusterTree= new IhtaiUtils.KdTree(clusters, "stimuli");
 		}
 		else{
-			clusterTree=_kdTree;
+			clusterTree=new IhtaiUtils.KdTree(_kdTree, "stimuli", true);
 		}
 	}
 	init(_kdTree);
@@ -501,7 +502,6 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 	function findNearestCluster(v){
 		var nearestCluster;
 		var leastSq, t;
-
 		nearestCluster = clusterTree.nearestNeighbor(v);
 
 		return nearestCluster;

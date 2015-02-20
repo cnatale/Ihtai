@@ -258,10 +258,14 @@ describe('ihtai', function(){
 		});	
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
-			var resp=ihtai.saveFile('ihtaiSave',false);
+			
+			var resp=ihtai.saveFile('ihtaiSave',true);
 			var rebuiltIhtai=new Ihtai(resp);
 			//re-inflated Ihtai should be identical to original instance
 			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
+			//make sure it still works
+			//debugger;
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0]);
 		});
 	})
 });
@@ -330,7 +334,7 @@ describe('ihtai utils', function(){
 	
 		});
 		it('should convert a binary heap into a kd tree', function(){
-			var inflatedRoot=IhtaiUtils.binaryHeapToKdTree(heap);
+			var inflatedRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
 			expect(inflatedRoot.value).toEqual([29,2,32,20,10]);
 			expect(inflatedRoot.left.value).toEqual([8,20,25,30,1]);

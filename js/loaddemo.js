@@ -161,7 +161,6 @@ require(['physicsjs'], function(Physics){
 			})	  
 
 		    ///////// init Ihtai /////////////
-		    debugger;
 			ihtai = new Ihtai(ihtaiJsonStr);
 
 		    /////////////////////////////////

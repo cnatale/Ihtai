@@ -28,7 +28,8 @@ the standard kd-tree builder algorithm without the data already ordered.
 
 Each element in the heap param contains a kd-tree's .value property
 */
-IhtaiUtils.binaryHeapToKdTree = (function(heap){
+IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap, comparisonFn){
+	//TODO: this needs to create a complete kd-tree object, not just the tree aspect
 	var root,node, parent;
 	for(var i=0;i<heap.length;i++){
 		if(heap[i]!=null){
@@ -49,17 +50,24 @@ IhtaiUtils.binaryHeapToKdTree = (function(heap){
 		}
 	}
 
+	//var newTree= IhtaiUtils.KdTree(root, comparisonFn, true);
+
 	return root;
 });
 
-IhtaiUtils.KdTree = (function(_data, _comparisonProp){
+IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	var comparisonProp=_comparisonProp;
 	var data=_data;
 	var root;
 
 	function init(){
 		//TODO: find median at each level
-		root = buildKdTree(data);
+		if(typeof useExistingTree != 'undefined' && useExistingTree){
+			root=_data; //the tree is already built, no need to build again
+		}
+		else{
+			root = buildKdTree(data);
+		}
 	}
 	init();
 
@@ -228,10 +236,15 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp){
 		return root;
 	}
 
+	function getComparisonProp(){
+		return comparisonProp;
+	}
+
 	return {
 		buildKdTree:buildKdTree,
 		nearestNeighbor:nearestNeighbor,
 		getRoot:getRoot,
+		getComparisonProp:getComparisonProp,
 		toBinaryHeap:toBinaryHeap
 	}
 });
