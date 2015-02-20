@@ -4,41 +4,89 @@ var Ihtai = (function(bundle){
 	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
 	var outputStimuli =[]; //the output stimuli buffer;
 
-	function init(bundle){
-		if(typeof bundle == "undefined")
-			throw "Error: no initialization object!"
-		if(typeof bundle != "object")
-			throw "Error: initialization parameter should be an object!"
+	if(typeof bundle=="string"){ //load from json file instead of default initialization
+		//inflate clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
+		clusterCount= parsedFile.clusterCount;
+		vectorDim=parsedFile.vectorDim;
+		memoryHeight=parsedFile.memoryHeight;
+		acceptableRange=parsedFile.acceptableRange;
 
-		if(bundle.clusterCount)
-			clusterCount= bundle.clusterCount;
-		else
-			throw "Error: no 'clusterCount' property found in initialization object!"
-		if(bundle.vectorDim)
-			vectorDim=bundle.vectorDim;
-		else
-			throw "Error: no 'vectorDim' property found in initialization object!"		
-		if(bundle.memoryHeight)
-			memoryHeight=bundle.memoryHeight;
-		else
-			throw "Error: no 'memoryHeight' property found in initialization object!"
-		if(bundle.drivesList)
-			driveList=bundle.drivesList;
-		else
-			throw "Error: no 'drives' property found in initialization object!"
-		if(bundle.reflexList)
-			reflexList=bundle.reflexList;
-		else
-			throw "Error: no 'reflexes' property found in initialization object!"
-		if(bundle.acceptableRange)
-			acceptableRange=bundle.acceptableRange;
-		else
-			acceptableRange=null;
+		//rebuild kd-tree from binary heap
+		var heap=parsedFile.clusterTreeHeap;
+		var tree=IhtaiUtils.binaryHeapToKdTree(heap);
 
-		clusters = new Clusters(clusterCount, vectorDim);
-		reflexes = new Reflexes(reflexList);
-		drives = new Drives(driveList);
+		//TODO: inflate clusters
+		clusters = new Clusters(clusterCount, vectorDim, tree);
+
+		//inflate reflexes
+		//inflate indiv reflex functions back from strings by eval'ing them
+		var deflatedReflexes=parsedFile.reflexes,inflatedReflexes=[],r;
+		for(var i=0;i<reflexFns.length;i++){
+			//convert functions to strings for storage
+			r={
+				matcher:eval(deflatedReflexes[i].matcher),
+				response:eval(deflatedReflexes[i].response)
+			}
+			inflatedReflexes[i]=r; //convert function to string for storage
+		}
+		reflexes = new Reflexes(inflatedReflexes);
+
+		//TODO: inflate drives
+		//TODO: inflate indiv drive functions back from strings by eval'ing them
+		var deflatedDrives=parsedFile.drives,inflatedDrives=[],d;
+		for(var i=0;i<deflatedDrives.length;i++){
+			//convert functions to strings for storage
+			d={
+				init:eval(deflatedDrives[i].init),
+				cycle:eval(deflatedDrives[i].cycle),
+				targetValue:deflatedDrives[i].targetValue
+			};
+			inflatedDrives[i]=d;
+		}
+		drives = new Drives(inflatedDrives);
+
+		//TODO: inflate memorizer	
+		//TODO: I forgot to save Memorizer's instance variables. Get them as well.	
 		memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);
+
+	}
+	else{
+		function init(bundle){
+			if(typeof bundle == "undefined")
+				throw "Error: no initialization object!"
+			if(typeof bundle != "object")
+				throw "Error: initialization parameter should be an object!"
+
+			if(bundle.clusterCount)
+				clusterCount= bundle.clusterCount;
+			else
+				throw "Error: no 'clusterCount' property found in initialization object!"
+			if(bundle.vectorDim)
+				vectorDim=bundle.vectorDim;
+			else
+				throw "Error: no 'vectorDim' property found in initialization object!"		
+			if(bundle.memoryHeight)
+				memoryHeight=bundle.memoryHeight;
+			else
+				throw "Error: no 'memoryHeight' property found in initialization object!"
+			if(bundle.drivesList)
+				driveList=bundle.drivesList;
+			else
+				throw "Error: no 'drives' property found in initialization object!"
+			if(bundle.reflexList)
+				reflexList=bundle.reflexList;
+			else
+				throw "Error: no 'reflexes' property found in initialization object!"
+			if(bundle.acceptableRange)
+				acceptableRange=bundle.acceptableRange;
+			else
+				acceptableRange=null;
+
+			clusters = new Clusters(clusterCount, vectorDim);
+			reflexes = new Reflexes(reflexList);
+			drives = new Drives(driveList);
+			memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);		
+		}
 	}
 	init(bundle);
 
@@ -185,7 +233,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 		acceptableRange=75;
 
 	function init(){
-		//initialize a 2d array representing all possible memories
+		//initialize an array of hashmaps representing all possible memories
 		level=[], buffer=[];
 		for(var i=0; i<height; i++){
 			level[i]={};
@@ -347,6 +395,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 	function getLevels(){
 		return level;
 	}
+	function getBuffer(){
+		return buffer;
+	}
 
 	function getGoals(){
 		return homeostasisGoal;
@@ -361,7 +412,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange){
 });
 
 //clusters are 'buckets' that n-dimensional stimuli moments are placed inside
-var Clusters = (function(_numClusters, _vectorDim){
+//_kdTree is an optional param
+var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 	var vectorDim=_vectorDim, clusterTree;
 	var numClusters = _numClusters	
 	/**
@@ -374,34 +426,40 @@ var Clusters = (function(_numClusters, _vectorDim){
 		-randomly assign k clusters over n-dimensional vector space
 		@param {number} k
 	*/
-	function init(){	
+	function init(_kdTree){	
 		/*
 		TODO: think about distributing points using a low-discrepancy sequence instead of randomly
 		(http://stackoverflow.com/questions/10644154/uniform-distribution-of-points)
 		It seems like there are significant gaps in mapping space even with cluster values of 100,000 with
 		pseudo-random uniform distribution.
 		*/
-		var clusters=[];
-		//create clusters with id(needs to be unique) and stimuli properties
-		for(var i=0;i<numClusters;i++){
-			clusters[i]={id:i, stimuli:[]};
-			//map clusters to random points in n-dimensional space 
-			for(var j=0;j<vectorDim;j++){
-				//assumes vectors are normalized to a 0-100 scale
-				if(i==0){ //test cluster
-					clusters[i].stimuli[j]=50;
-				}
-				else{
-					clusters[i].stimuli[j]=Math.random()*100;
-				}
-				
-			}
-		}
 
-		//populate kd-tree
-		clusterTree= new IhtaiUtils.KdTree(clusters, "stimuli");
+		if(typeof _kdTree == "undefined"){
+			var clusters=[];
+			//create clusters with id(needs to be unique) and stimuli properties
+			for(var i=0;i<numClusters;i++){
+				clusters[i]={id:i, stimuli:[]};
+				//map clusters to random points in n-dimensional space 
+				for(var j=0;j<vectorDim;j++){
+					//assumes vectors are normalized to a 0-100 scale
+					if(i==0){ //test cluster
+						clusters[i].stimuli[j]=50;
+					}
+					else{
+						clusters[i].stimuli[j]=Math.random()*100;
+					}
+					
+				}
+			}
+
+			//populate kd-tree
+			clusterTree= new IhtaiUtils.KdTree(clusters, "stimuli");
+		}
+		else{
+			clusterTree=_kdTree;
+		}
 	}
-	init();
+	init(_kdTree);
 
 	/** 
 		-find nearest cluster to v

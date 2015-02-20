@@ -231,6 +231,9 @@ describe('ihtai', function(){
 			var resp=ihtai.save(true);
 
 			//todo:add re-inflate check
+			/*note: setting clusterCount to > 10,000 causes karma to crash. when exporting json to another
+			window. Will probably need to use some kind of server-side logic to accomplish local saves.
+			*/
 		});
 	})
 });
