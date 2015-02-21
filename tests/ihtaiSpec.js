@@ -264,8 +264,8 @@ describe('ihtai', function(){
 			//re-inflated Ihtai should be identical to original instance
 			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
 			//make sure it still works
-			//debugger;
 			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0]);
+			//TODO:compare cycle results from orig and rebuilt ihtai
 		});
 	})
 });
