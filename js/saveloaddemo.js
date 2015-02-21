@@ -15,6 +15,43 @@ require.config({
 
 require(['physicsjs'], function(Physics){
 	//application starting point
+	var ihtai;
+
+	//////////// Load File Functionality /////////////////
+	if (window.File && window.FileReader && window.FileList && window.Blob) {
+	  // Great success! All the File APIs are supported.
+	} else {
+	  alert('The File APIs are not fully supported in this browser.');
+	}
+
+    function handleFileSelect(evt) {
+	    var files = evt.target.files; // FileList object
+	    var file= files[0];
+	    var reader = new FileReader();
+	    reader.onload= 
+	  	reader.onload=(function(theFile){
+	    	//call runapp with the content passed as param
+			return function(e) {
+				var ihtaiJsonString=e.target.result;
+				//runApp(res);
+
+				/*TODO: 
+				-remove any circles currently in scene. (maybe not necessary since we're just
+				replacing its brain?)
+				-associate ihtai variable with new ihtai instance created through json string
+				*/
+				//instantiate ihtai with loaded file
+				ihtai= new Ihtai(ihtaiJsonString);
+        	};
+	  	})(file);
+
+	  	reader.readAsText(file);
+    }
+
+    document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    //////////////////////////////////////////////////////
+
+
 
 	Physics(function(world){
 	    var viewWidth = window.innerWidth;
@@ -250,7 +287,7 @@ require(['physicsjs'], function(Physics){
 			}
 		}];
 
-	    var ihtai = new Ihtai({
+	    ihtai = new Ihtai({
 			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostimuli values + drives*/
 			memoryHeight:1000,
