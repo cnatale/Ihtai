@@ -14,7 +14,6 @@ var Ihtai = (function(bundle){
 
 		//rebuild kd-tree from binary heap
 		var heap=parsedFile.clusterTreeHeap;
-		//TODO: BUG: the new kdTree instance isn't a complete kdTree. only has nodes, not methods or props		
 		var treeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
 		//inflate clusters
@@ -199,10 +198,6 @@ var Ihtai = (function(bundle){
 
 		var stringifiedAndDeflated=JSON.stringify(deflated);
 	
-		/*
-		TODO:local file save still doesn't work for files larger than ~10,000 memories.
-		Try chunking output and saving in pieces.
-		*/
 		if(typeof suppressOutput == "undefined" || suppressOutput==false){
 			//Physically save a copy to user's hard drive
 			var link = document.createElement('a');
@@ -285,8 +280,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 		drive state.
 		@returns A vector representing the next action agent should take to minimize homeostasis differential.
 		If no vector is within acceptable range, return null.
-
-		TODO:think about adding the previous cycle's drive vectors to io signal
 	*/
 	function query(cluster){
 		var outputStimuli=null, stimDist, sd;
@@ -298,7 +291,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			//At each level, compare time series' end drive state with homeostasis goal.
 			//If result < acceptable range, return time series' starting ouput stimuli (what agent will act on).
 			
-			//TODO: the sqDist should be applied only to homeostasis goal values, not entire array
 			if(level[i].series.hasOwnProperty(cluster.id)){
 				sd = sqDist(level[i].series[cluster.id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
 				if(sd <= acceptableRange){
@@ -369,12 +361,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
 						level[i].series[buffer[startState].id].collisions++;
 						for(var j=0;j<bufferGoalDist.length;j++){
-							//todo:rework with new collisions property
 							var collisions=level[i].series[buffer[startState].id].collisions;
 							endStateGoalDist[j]= ((endStateGoalDist[j]*collisions)+bufferGoalDist[j])/(collisions+1);
-				
-							//the old non-weighted collision logic
-							//endStateGoalDist[j]= (endStateGoalDist[j]+bufferGoalDist[j])/2;
 						}
 						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(endStateGoalDist);
 						Array.prototype.splice.apply(level[i].series[buffer[startState].id].endState, args);	
@@ -487,7 +475,7 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 			clusterTree= new IhtaiUtils.KdTree(clusters, "stimuli");
 		}
 		else{
-			clusterTree=new IhtaiUtils.KdTree(_kdTree, "stimuli", true);
+			clusterTree= new IhtaiUtils.KdTree(_kdTree, "stimuli", true);
 		}
 	}
 	init(_kdTree);
@@ -584,7 +572,6 @@ var Reflexes = (function(_reflexes){
 		var output=[], matcher, response, indices, stimuli=cluster.stimuli, ctr;
 		//cluster has properties: id, stimuli
 		for(var i=0; i<reflexes.length;i++){
-			//TODO:rewrite to compare with a matcher fn that takes stimuli as a parameter
 			matcher=reflexes[i].matcher;
 			if(matcher(stimuli))
 				output.push(reflexes[i].response(stimuli));

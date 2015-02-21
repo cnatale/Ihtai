@@ -29,7 +29,6 @@ the standard kd-tree builder algorithm without the data already ordered.
 Each element in the heap param contains a kd-tree's .value property
 */
 IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap, comparisonFn){
-	//TODO: this needs to create a complete kd-tree object, not just the tree aspect
 	var root,node, parent;
 	for(var i=0;i<heap.length;i++){
 		if(heap[i]!=null){
@@ -61,7 +60,6 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	var root;
 
 	function init(){
-		//TODO: find median at each level
 		if(typeof useExistingTree != 'undefined' && useExistingTree){
 			root=_data; //the tree is already built, no need to build again
 		}
@@ -201,7 +199,6 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			Whichever way we went, check other child node to see if it could be closer.
 			If so, descend.
 			*/
-			//TODO:check this part closely vs other kd-tree implementations. have a feeling it's wrong
 			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bestPt[comparisonProp][dim]: bestPt[dim]),2);
 			if(dir==left){
 				//check right
