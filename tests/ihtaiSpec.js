@@ -259,7 +259,7 @@ describe('ihtai', function(){
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
 			
-			var resp=ihtai.saveFile('ihtaiSave',true);
+			var resp=ihtai.toJsonString('ihtaiSave');
 			var rebuiltIhtai=new Ihtai(resp);
 			//re-inflated Ihtai should be identical to original instance
 			expect(ihtai).toBeJsonEqual(rebuiltIhtai);

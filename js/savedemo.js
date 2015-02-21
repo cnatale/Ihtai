@@ -132,7 +132,35 @@ require(['physicsjs'], function(Physics){
 				// there is a body under mouse position, let's remove it
 				world.removeBody(body);
 			} 
-		})	  
+		})	
+		function dropBox(){
+	    	//get a square if one exists
+	    	queryFn = Physics.query({
+	    		name:'square'
+	    	});
+	    	var square=world.findOne(queryFn), newAngle;
+	    	if(square){
+	    		world.remove(square);
+	    	}
+
+	     	world.add(Physics.body("convex-polygon",{
+					x: Math.random()*viewWidth,
+					y: 0,
+					vertices: [
+						{x:0, y:0},
+						{x:0, y:60},
+						{x:60, y:60},
+						{x:60, y:0}
+
+					],
+					restitution:.25,
+					name:'square'
+				}));	
+			window.setTimeout(dropBox, 60000+ Math.random()*30000);	
+		}  
+
+		dropBox();
+		//window.setTimeout(dropBox, Math.random()*30000);
 
 	    ///////// init Ihtai /////////////
 	    //TODO:add tiredness drive, add behavior that when tiredness=100, stop moving (to 'seed'
@@ -223,7 +251,7 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    var ihtai = new Ihtai({
-			clusterCount:1000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostimuli values + drives*/
 			memoryHeight:1000,
 			drivesList:drives,
@@ -342,7 +370,7 @@ require(['physicsjs'], function(Physics){
 		});
 
 		$("#saveBtn").click(function(e){
-			ihtai.saveFile('IhtaiDemo');
+			var jsonString=ihtai.toJsonString('IhtaiDemo');
 		});
 		$("#turnOffMemBtn").click(function(e){
 			var areTheyEnabled=ihtai.areMemoriesEnabled();
