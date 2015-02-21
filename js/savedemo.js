@@ -371,6 +371,7 @@ require(['physicsjs'], function(Physics){
 
 		$("#saveBtn").click(function(e){
 			var jsonString=ihtai.toJsonString('IhtaiDemo');
+			download(new Blob([jsonString]), "ihtaiBlob.json", "text/plain");
 		});
 		$("#turnOffMemBtn").click(function(e){
 			var areTheyEnabled=ihtai.areMemoriesEnabled();
