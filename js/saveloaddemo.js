@@ -90,7 +90,7 @@ require(['physicsjs'], function(Physics){
 		// constrain objects to these bounds
 		var edgeBounce = Physics.behavior('edge-collision-detection', {
 			aabb: viewportBounds,
-			restitution: .25,
+			restitution: .25, //turn on bouncy physics
 			cof: .4
 		});
 
@@ -250,7 +250,6 @@ require(['physicsjs'], function(Physics){
 						this.tiredness=100;
 					}
 
-				//console.log(this.hunger);
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));	
 				return this.tiredness;
 			},
@@ -328,8 +327,6 @@ require(['physicsjs'], function(Physics){
 			    circle.state.angular.vel=0;
 			    circle.state.angular.acc=0;
   				newAngle+=Math.PI;
-  				/*var xDir=Math.cos(newAngle);
-  				var yDir=Math.sin(newAngle);*/
 			    circle.state.angular.pos = newAngle;
 	    	}
 	    	//move circle
@@ -342,12 +339,9 @@ require(['physicsjs'], function(Physics){
 	    		td=0;
 	    	lastTime=time;
 	    	if(newAngle){
-	    		//circle.state.vel.set(Math.cos(newAngle)*moveVel, Math.sin(newAngle)*moveVel);
-	    		//var mx=(circle.state.pos.x+Math.cos(newAngle)*(td*(moveVel/1000)));
-	    		//var my=(circle.state.pos.y+Math.sin(newAngle)*(td*(moveVel/1000)));
-				//circle.state.pos.set(mx, my);
-	    		var mx=(circle.state.acc.x+Math.cos(newAngle)*((td/100)*(moveVel/1000)));
-	    		var my=(circle.state.acc.y+Math.sin(newAngle)*((td/100)*(moveVel/1000)));				
+	    		//todo:instead of dividing td by a constant, change the moveVel denom. constant
+	    		var mx=(circle.state.acc.x+Math.cos(newAngle)*((td/200)*(moveVel/1000)));
+	    		var my=(circle.state.acc.y+Math.sin(newAngle)*((td/200)*(moveVel/1000)));				
 				circle.state.acc.set(mx,my);
 				dist=circle.state.pos.dist(square.state.pos);
 				normalizedDist=(dist/normalizer)*100;
@@ -371,7 +365,7 @@ require(['physicsjs'], function(Physics){
 	    			else{
 	    				moveVel=0;
 	    			}
-	    			console.log('memorizer');
+	    			//console.log('memorizer');
 	    	}
 	    	else if(ihtai.areReflexesEnabled()){
 		    	if(res.reflexOutput){
@@ -381,7 +375,7 @@ require(['physicsjs'], function(Physics){
 		    		else{
 		    			moveVel=0;
 		    		}
-		    		console.log('reflexes')
+		    		//console.log('reflexes')
 		    	}    		
 	    	}
 	    	else{
