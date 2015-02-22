@@ -321,7 +321,10 @@ require(['physicsjs'], function(Physics){
 			    var circlePos = scratch.vector().set(circle.state.pos.x, circle.state.pos.y); 
 			    circlePos.vsub( square.state.pos ); // get vector pointing towards mouse pos
 
-			    newAngle = circlePos.angle(); // get angle with respect to x axis
+				// get angle with respect to x axis
+				//TODO: possibly change this to a subjective measurement relative to circle,
+				//so it can re-use behavior it learned facing in one direction
+			    newAngle = circlePos.angle(); 
 				scratch.done();	
 			    circle.state.angular.vel=0;
 			    circle.state.angular.acc=0;
@@ -408,7 +411,7 @@ require(['physicsjs'], function(Physics){
 
 		$("#saveBtn").click(function(e){
 			var jsonString=ihtai.toJsonString('IhtaiDemo');
-			download(new Blob([jsonString]), "ihtaiBlob.json", "text/plain");
+			download(new Blob([jsonString]), "ihtaiSave.json", "text/plain");
 		});
 		$("#turnOffMemBtn").click(function(e){
 			var areTheyEnabled=ihtai.areMemoriesEnabled();
