@@ -61,7 +61,7 @@ require(['physicsjs'], function(Physics){
 		    el: 'viewport',
 		    width: viewWidth,
 		    height: viewHeight,
-		    meta: false, // don't display meta data
+		    meta: false/*, // don't display meta data
 		    styles: {
 		        // set colors for the circle bodies
 		        'circle' : {
@@ -74,9 +74,9 @@ require(['physicsjs'], function(Physics){
 		        	fillStyle: '#cccc00',
 		        	angleIndicator: '#351024'
 		        }
-		    }
+		    }*/
 		});
-	  
+
 		// add the renderer
 		world.add(renderer);
 		// render on each step
@@ -97,6 +97,7 @@ require(['physicsjs'], function(Physics){
 		// constrain objects to these bounds
 		world.add(edgeBounce);
 
+
 		// resize events
 		window.addEventListener('resize', function () {
 	
@@ -114,9 +115,15 @@ require(['physicsjs'], function(Physics){
 	
 		}, true);
 
+
+
 		// enabling collision detection among bodies
 		world.add(Physics.behavior("body-collision-detection"));	  
 		world.add(Physics.behavior("sweep-prune"));
+		// ensure objects bounce when edge collision is detected
+		world.add( Physics.behavior('body-impulse-response') );
+		// add some gravity
+		world.add( Physics.behavior('constant-acceleration') );		
 
 		var circle=Physics.body('circle', {
 		        x: 50, // x-coordinate
@@ -127,15 +134,8 @@ require(['physicsjs'], function(Physics){
 		        name:'circle'
 		});
 
-
 		// add a circle
 		world.add(circle);
-
-		// ensure objects bounce when edge collision is detected
-		world.add( Physics.behavior('body-impulse-response') );
-
-		// add some gravity
-		world.add( Physics.behavior('constant-acceleration') );
 
 	    $("#viewport").click(function(e){
 	     	// checking canvas coordinates for the mouse click
@@ -300,6 +300,7 @@ require(['physicsjs'], function(Physics){
 		// subscribe to ticker to advance the simulation
 		Physics.util.ticker.on(function( time, dt ){
 		    world.step( time );
+		    world.wakeUpAll();
 
 		    //test making ball always face square
 	    	///////////////////
@@ -319,23 +320,21 @@ require(['physicsjs'], function(Physics){
 			    var scratch = Physics.scratchpad();
 			    // assuming your viewport is the whole screen
 			    var circlePos = scratch.vector().set(circle.state.pos.x, circle.state.pos.y); 
-			    circlePos.vsub( square.state.pos ); // get vector pointing towards mouse pos
+			    circlePos.vsub( square.state.pos ); // get vector pointing towards square
 
 				// get angle with respect to x axis
-				//TODO: possibly change this to a subjective measurement relative to circle,
-				//so it can re-use behavior it learned facing in one direction
 			    newAngle = circlePos.angle(); 
 				scratch.done();	
 			    circle.state.angular.vel=0;
 			    circle.state.angular.acc=0;
   				newAngle+=Math.PI;
-  				var xDir=Math.cos(newAngle);
-  				var yDir=Math.sin(newAngle);
+  				/*var xDir=Math.cos(newAngle);
+  				var yDir=Math.sin(newAngle);*/
 			    circle.state.angular.pos = newAngle;
 	    	}
 	    	//move circle
 	    	var dist, normalizedDist=100;
-	    	var normalizer = Math.sqrt(window.innerHeight*window.innerHeight + window.innerWidth*window.innerWidth);
+	    	var normalizer = Math.sqrt(viewHeight*viewHeight + viewWidth*viewWidth);
 	    	var td;
 	    	if(lastTime)
 	    		td=time-lastTime;
@@ -344,9 +343,12 @@ require(['physicsjs'], function(Physics){
 	    	lastTime=time;
 	    	if(newAngle){
 	    		//circle.state.vel.set(Math.cos(newAngle)*moveVel, Math.sin(newAngle)*moveVel);
-	    		var mx=(circle.state.pos.x+Math.cos(newAngle)*(td*(moveVel/1000)));
-	    		var my=(circle.state.pos.y+Math.sin(newAngle)*(td*(moveVel/1000)));
-				circle.state.pos.set(mx, my);
+	    		//var mx=(circle.state.pos.x+Math.cos(newAngle)*(td*(moveVel/1000)));
+	    		//var my=(circle.state.pos.y+Math.sin(newAngle)*(td*(moveVel/1000)));
+				//circle.state.pos.set(mx, my);
+	    		var mx=(circle.state.acc.x+Math.cos(newAngle)*((td/100)*(moveVel/1000)));
+	    		var my=(circle.state.acc.y+Math.sin(newAngle)*((td/100)*(moveVel/1000)));				
+				circle.state.acc.set(mx,my);
 				dist=circle.state.pos.dist(square.state.pos);
 				normalizedDist=(dist/normalizer)*100;
 			}
@@ -427,7 +429,7 @@ require(['physicsjs'], function(Physics){
 
 		// start the ticker
 		Physics.util.ticker.start();
-		$('canvas').prop({width: window.innerWidth, height: window.innerHeight});		
+		//$('canvas').prop({width: viewWidth, height: viewHeight});		
 	});
 
 
