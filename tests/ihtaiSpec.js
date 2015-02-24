@@ -60,6 +60,22 @@ describe('ihtai', function(){
 			console.log('findNearestCluster time: '+timeDiff);
 			expect(res.id).toBe(0); //cluster 0 is specifically given this value during initialization
 		});
+
+		it('should order cluster keys', function(){
+			var c2 = new Clusters(10, 1), ctr=0;
+			c2.orderKeys();
+
+			function inorder(node){
+				if (node==null)
+					return;
+				inorder(node.left);
+				expect(node.value.id).toEqual(ctr++);
+				inorder(node.right);
+			}
+
+			inorder(c2.getClusterTree().getRoot());			
+
+		});
 	});
 
 	describe('Memorizer', function(){

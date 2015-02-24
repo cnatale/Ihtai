@@ -334,7 +334,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				if(level[i].series.hasOwnProperty(buffer[startState].id)){
 					/*
 					If same first and second states are the same, store the memory
-					as weighted average of the two (same firstState and secondState, endState drive values become
+					as weighted average of the two memories(same firstState and secondState, endState drive values become
 					weighted average)
 
 					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
@@ -490,9 +490,28 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 		return clusterTree;
 	}
 
+	/*
+	WARNING: order cluster id's by inorder traversal. Only run before Ihtai starts 
+	memorizing or else the keys won't match up with their associated memory height arrays anymore.
+	*/
+	function orderKeys(){
+		var ctr=0, node=clusterTree.getRoot();
+
+		function inorder(node){
+			if (node==null)
+				return;
+			inorder(node.left);
+			node.value.id=ctr++;
+			inorder(node.right);
+		}
+
+		inorder(node);
+	}	
+
 	return {
 		findNearestCluster: findNearestCluster,
-		getClusterTree: getClusterTree
+		getClusterTree: getClusterTree,
+		orderKeys: orderKeys
 	};
 });
 
