@@ -1,4 +1,5 @@
-var IhtaiUtils ={};
+if(typeof IhtaiUtils == "undefined")
+	var IhtaiUtils={};
 
 String.prototype.escapeSpecialChars = function() {
     return this.replace(new RegExp("\n", "g"), "\\n")

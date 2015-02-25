@@ -1,4 +1,3 @@
-// contents of main.js:
 require.config({
     paths: {
         /*foo: 'libs/foo-1.1.3'*/
@@ -200,7 +199,7 @@ require(['physicsjs'], function(Physics){
 		//window.setTimeout(dropBox, Math.random()*30000);
 
 	    ///////// init Ihtai /////////////
-	    //TODO:add tiredness drive, add behavior that when tiredness=100, stop moving (to 'seed'
+	    // add tiredness drive, add behavior that when tiredness=100, stop moving (to 'seed'
 	   	// conservation of motion).
 		var hungerDrive={
 			hunger:100,
