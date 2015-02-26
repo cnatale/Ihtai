@@ -46,6 +46,8 @@ var Ihtai = (function(bundle){
 			inflatedDrives[i]=d;
 		}
 		drives = new Drives(inflatedDrives);
+		drives.setAvgDriveValue(parsedFile.avgDriveValue);
+		drives.setAvgDriveCtr(parsedFile.avgDriveCtr);
 
 		//inflate memorizer	
 		var buffer=parsedFile.memorizer.buffer;
@@ -174,6 +176,8 @@ var Ihtai = (function(bundle){
 			deflatedDrives[i]=d;
 		}
 		deflated.drives=deflatedDrives;
+		deflated.avgDriveValue = drives.getAvgDriveValue();
+		deflated.avgDriveCtr = drives.getAvgDriveCtr();
 
 		//save reflexes
 		var reflexFns=reflexes.getReflexes(),deflatedReflexes=[],r;
@@ -523,20 +527,25 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 	@params drives: Array. An array of drive methods. Each drive takes form {init:function, cycle:function}
 */
 var Drives = (function(_drives){
-	var drives = _drives;
+	var drives = _drives; avgDriveValue=[];avgDriveCtr=0;
 	function init(){
 		for(var i=0;i<drives.length;i++){
 			drives[i].init();
+			avgDriveValue[i]=0;
 		}
 	}
 	init();
 
 	function cycle(ioStim){
 		var response=[];
+		avgDriveCtr++;
 		for(var i=0;i<drives.length;i++){
 			//execute each method in drives once per cycle
-			response.push(drives[i].cycle(ioStim)); //expects each drives method to return a Number 0-100
+			var r=drives[i].cycle(ioStim);
+			response.push(r); //expects each drives method to return a Number 0-100
+			avgDriveValue[i]= (avgDriveValue[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
 		}
+		//keep track of average drive value. todo: make useful when some drive states don't have goals of 0
 		return response;
 	}
 
@@ -552,10 +561,27 @@ var Drives = (function(_drives){
 		return goals;
 	}
 
+	function getAvgDriveValue(){
+		return avgDriveValue;
+	}
+	function setAvgDriveValue(v){
+		avgDriveValue=v;
+	}
+	function getAvgDriveCtr(){
+		return avgDriveCtr;
+	}
+	function setAvgDriveCtr(c){
+		avgDriveCtr=c;
+	}
+
 	return {
 		cycle:cycle,
 		getDrives:getDrives,
-		getGoals:getGoals
+		getGoals:getGoals,
+		getAvgDriveValue:getAvgDriveValue,
+		getAvgDriveCtr:getAvgDriveCtr,
+		setAvgDriveValue:setAvgDriveValue,
+		setAvgDriveCtr:setAvgDriveCtr
 	};
 });
 

@@ -5,7 +5,7 @@
 	<style>
 		html, body { height: 100%; 
 			margin: 0; 
-			color:#fff;
+			color:#ccc;
 		}
 		/*body {
 			background-color: #fff;
@@ -20,7 +20,8 @@
 			font-family: monospace;
 		}
 		#viewport { position: relative; 
-			height: 100%; 
+			width:640px;
+			height:480px;
 			background: #1d1f20; 
 		}		
 	</style>
@@ -34,14 +35,12 @@
 <!--<button id="turnOffMemBtn" style="position:absolute;top:50px;left:0;z-index:999">Disable memories</button>-->
 <div id="hunger" style="position:absolute;top:0;right:0;z-index:999"></div>
 <div id="tiredness" style="position:absolute;top:30px;right:0;z-index:999"></div>
-<div id="avgHunger" style="position:absolute;top:60px;right:0;z-index:999"></div>
-<div id="avgTiredness" style="position:absolute;top:90px;right:0;z-index:999"></div>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 <script src="js/external/pixi.dev.js"></script>
 <script src="js/external/Queue.js"></script>
 <script src="js/ihtai/ihtai.js"></script>
 <script src="js/ihtai/utils.js"></script>
-<script data-main="js/saveloaddemo" src="js/external/require.js"></script>	
+<script data-main="js/visiondemo" src="js/external/require.js"></script>	
 <script src="js/external/download.js"></script>
 <div id="viewport"></div>
 </body>

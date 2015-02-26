@@ -53,8 +53,8 @@ require(['physicsjs'], function(Physics){
 
 
 	Physics(function(world){
-	    var viewWidth = window.innerWidth;
-	    var viewHeight = window.innerHeight;
+	    var viewWidth = /*window.innerWidth*/640;
+	    var viewHeight = /*window.innerHeight*/480;
 
 	    var renderer = Physics.renderer('canvas', {
 		    el: 'viewport',
@@ -98,7 +98,7 @@ require(['physicsjs'], function(Physics){
 
 
 		// resize events
-		window.addEventListener('resize', function () {
+		/*window.addEventListener('resize', function () {
 	
 			viewWidth = parent.innerWidth;
 			viewHeight = parent.innerHeight;
@@ -113,6 +113,7 @@ require(['physicsjs'], function(Physics){
 			edgeBounce.setAABB(viewportBounds);
 	
 		}, true);
+		*/
 
 
 
@@ -224,7 +225,6 @@ require(['physicsjs'], function(Physics){
 
 				
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
-				$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));	
 				return this.hunger;
 			},
 			targetValue:0 //the goal value for hunger
@@ -251,7 +251,6 @@ require(['physicsjs'], function(Physics){
 					}
 
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));	
-				$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));	
 				return this.tiredness;
 			},
 			targetValue:0 //the goal value for hunger
@@ -352,6 +351,11 @@ require(['physicsjs'], function(Physics){
 	    	if(newAngle){
 	    		normalizedAngle=newAngle*(100/(2*Math.PI));
 	    	}
+
+	    	/*
+			TODO:pass in a 20x20 grayscale bitmap as a 400 dim vector in addition to other data.
+	    	*/
+
 	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist]);
 	    	//returns {reflexOutput:~, memorizerOutput:~}
 

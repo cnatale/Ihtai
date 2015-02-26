@@ -153,7 +153,8 @@ require([], function(){
 	    	var b = d[i+2];
 	   		// CIE luminance for the RGB
 	    	// The human eye is bad at seeing red and blue, so we de-emphasize them.
-	    	var v = 0.2126*r + 0.7152*g + 0.0722*b;
+	    	//var v = 0.2126*r + 0.7152*g + 0.0722*b;
+	    	var v = (r + g + b)/3; //trying a simpler approach first
 	    	output.push(v);
 	  	}
 		return output;
