@@ -14,7 +14,7 @@ require.config({
 
 require(['physicsjs'], function(Physics){
 	//application starting point
-	var ihtai, c, ctx, prevBrightness=0, eyePos={x:0,y:0}, prevEyePos={x:0,y:0}, focusWidth, focusHeight;
+	var ihtai, c, ctx, prevBrightness=0, eyePos={x:0,y:0}, prevEyePos={x:0,y:0}, focusWidth=20, focusHeight=20;
 
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -364,14 +364,14 @@ require(['physicsjs'], function(Physics){
 			TODO:pass in a 20x20 grayscale bitmap as a 400 dim vector in addition to other data.
 	    	*/
 			function setEyePos(prevBrightness){
-				if(prevBrightness > 128){
+				if(prevBrightness > 10){
 					//enter fixate mode: decrease random range of next eye pos by 50%
-					eyePos.x=eyePos.x + (Math.random()*viewWidth)/2 - viewWidth/4;
-					eyePos.y=eyePos.y + (Math.random()*viewHeight)/2 - viewHeight/4;			
+					eyePos.x=eyePos.x + (Math.random()*viewWidth)/4 - viewWidth/8;
+					eyePos.y=eyePos.y + (Math.random()*viewHeight)/4 - viewHeight/8;			
 				}
 				else{
-					eyePos.x=eyePos.x + Math.random()*viewWidth - viewWidth;
-					eyePos.y=eyePos.y + Math.random()*viewHeight - viewHeight;
+					eyePos.x=eyePos.x + Math.random()*viewWidth - viewWidth/2;
+					eyePos.y=eyePos.y + Math.random()*viewHeight - viewHeight/2;
 				}
 
 				//constrain within bitmap
@@ -391,16 +391,16 @@ require(['physicsjs'], function(Physics){
 			}
 			eyePos = setEyePos(prevBrightness);
 
-			var imageData = ctx.getImageData(eyePos.x, eyePos.y, 20, 20);
+			var imageData = ctx.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
 			var data=imageData.data;
-			
+
 			var grayscale = function(d) {
 				var output=[],ctr=0,sum=0;
 			    for (var i = 0; i < d.length; i += 4) {
 			    	var avg = (d[i] + d[i +1] + d[i +2]) / 3;
-			    	d[i]     = avg; // red
-			    	d[i + 1] = avg; // green
-			    	d[i + 2] = avg; // blue
+			    	d[i]     = 255/*avg*/; // red
+			    	d[i + 1] = 255/*avg*/; // green
+			    	d[i + 2] = 255/*avg*/; // blue
 			    	d[i + 3] = 255;
 			    	output.push(avg);
 			    	ctr++;
@@ -408,6 +408,7 @@ require(['physicsjs'], function(Physics){
 			    }
 			    ctx.putImageData(imageData, eyePos.x, eyePos.y);
 			    prevBrightness = sum/ctr;
+			    console.log(prevBrightness);
 			    return output;
 			};			
 
