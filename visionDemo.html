@@ -7,11 +7,12 @@
 			margin: 0; 
 			color:#ccc;
 		}
-		/*body {
-			background-color: #fff;
-			margin: 0;
-			overflow: hidden;
-		}*/
+		#avgHunger,#avgTiredness{
+			color:#bdb;
+		}
+		canvas{
+			/*background-color:#3333aa;*/
+		}
 		.pjs-meta {
 			position: absolute;
 			bottom: 0;
@@ -35,6 +36,8 @@
 <!--<button id="turnOffMemBtn" style="position:absolute;top:50px;left:0;z-index:999">Disable memories</button>-->
 <div id="hunger" style="position:absolute;top:0;right:0;z-index:999"></div>
 <div id="tiredness" style="position:absolute;top:30px;right:0;z-index:999"></div>
+<div id="avgHunger" style="position:absolute;top:60px;right:0;z-index:999"></div>
+<div id="avgTiredness" style="position:absolute;top:90px;right:0;z-index:999"></div>
 <script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
 <script src="js/external/pixi.dev.js"></script>
 <script src="js/external/Queue.js"></script>

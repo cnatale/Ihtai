@@ -14,7 +14,7 @@ require.config({
 
 require(['physicsjs'], function(Physics){
 	//application starting point
-	var ihtai;
+	var ihtai, c, ctx, prevBrightness=0, eyePos={x:0,y:0}, prevEyePos={x:0,y:0}, focusWidth, focusHeight;
 
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -22,7 +22,7 @@ require(['physicsjs'], function(Physics){
 	} else {
 	  alert('The File APIs are not fully supported in this browser.');
 	}
-
+/*
     function handleFileSelect(evt) {
 	    var files = evt.target.files; // FileList object
 	    var file= files[0];
@@ -34,11 +34,11 @@ require(['physicsjs'], function(Physics){
 				var ihtaiJsonString=e.target.result;
 				//runApp(res);
 
-				/*TODO: 
-				-remove any circles currently in scene. (maybe not necessary since we're just
-				replacing its brain?)
-				-associate ihtai variable with new ihtai instance created through json string
-				*/
+				//TODO: 
+				//-remove any circles currently in scene. (maybe not necessary since we're just
+				//replacing its brain?)
+				//-associate ihtai variable with new ihtai instance created through json string
+				
 				//instantiate ihtai with loaded file
 				ihtai= new Ihtai(ihtaiJsonString);
         	};
@@ -48,8 +48,8 @@ require(['physicsjs'], function(Physics){
     }
 
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
+    */
     //////////////////////////////////////////////////////
-
 
 
 	Physics(function(world){
@@ -207,17 +207,17 @@ require(['physicsjs'], function(Physics){
 			init:function(){
 				return this.hunger;
 			},
-			cycle:function(stimuli){
+			cycle:function(stimuli, dt){
 				if(stimuli[3] < 10){
 					if(this.hunger>0){
-						this.hunger--;
+						this.hunger-= .01 * dt;
 					}
 					else
 						this.hunger=0;
 				}
 				else
 					if(this.hunger<100){
-						this.hunger+=.1;
+						this.hunger+= .01 * dt;
 					}
 					else{
 						this.hunger=100;
@@ -225,6 +225,7 @@ require(['physicsjs'], function(Physics){
 
 				
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
+				$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 				return this.hunger;
 			},
 			targetValue:0 //the goal value for hunger
@@ -234,23 +235,24 @@ require(['physicsjs'], function(Physics){
 			init:function(){
 				return this.tiredness;
 			},
-			cycle:function(stimuli){
+			cycle:function(stimuli, dt){
 				if(stimuli[2] <= 50){
 					if(this.tiredness>0){
-						this.tiredness-=.1;
+						this.tiredness-= .01 * dt;
 					}
 					else
 						this.tiredness=0;
 				}
 				else
 					if(this.tiredness<100){
-						this.tiredness+=.1;
+						this.tiredness+= .01 * dt;
 					}
 					else{
 						this.tiredness=100;
 					}
 
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));	
+				$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 				return this.tiredness;
 			},
 			targetValue:0 //the goal value for hunger
@@ -288,13 +290,18 @@ require(['physicsjs'], function(Physics){
 
 	    ihtai = new Ihtai({
 			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-			vectorDim:6,/*number of iostimuli values + drives*/
+			vectorDim:406,/*number of iostimuli values + drives*/
 			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:600/*acceptable range for optimal stimuli is in square dist*/
-		});
+			acceptableRange:2000/*600*//*acceptable range for optimal stimuli is in square dist*/
+		});		
 	    /////////////////////////////////
+	    //get canvas and context reference
+    	c=document.getElementsByClassName(' pjs-layer-main');
+    	ctx= c[0].getContext("2d");
+
+
 	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;
 		// subscribe to ticker to advance the simulation
 		Physics.util.ticker.on(function( time, dt ){
@@ -352,11 +359,65 @@ require(['physicsjs'], function(Physics){
 	    		normalizedAngle=newAngle*(100/(2*Math.PI));
 	    	}
 
+	    	////////////////////// vision test /////////////////////
 	    	/*
 			TODO:pass in a 20x20 grayscale bitmap as a 400 dim vector in addition to other data.
 	    	*/
+			function setEyePos(prevBrightness){
+				if(prevBrightness > 128){
+					//enter fixate mode: decrease random range of next eye pos by 50%
+					eyePos.x=eyePos.x + (Math.random()*viewWidth)/2 - viewWidth/4;
+					eyePos.y=eyePos.y + (Math.random()*viewHeight)/2 - viewHeight/4;			
+				}
+				else{
+					eyePos.x=eyePos.x + Math.random()*viewWidth - viewWidth;
+					eyePos.y=eyePos.y + Math.random()*viewHeight - viewHeight;
+				}
 
-	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist]);
+				//constrain within bitmap
+				if(eyePos.x < 0)
+					eyePos.x=0;
+				if(eyePos.x + focusWidth > viewWidth)
+					eyePos.x = viewWidth - focusWidth;
+
+				if(eyePos.y < 0)
+					eyePos.y=0;
+				if(eyePos.y + focusHeight > viewHeight)
+					eyePos.y = viewHeight - focusHeight;		
+
+				prevEyePos.x=eyePos.x;
+				prevEyePos.y=eyePos.y;
+				return eyePos;
+			}
+			eyePos = setEyePos(prevBrightness);
+
+			var imageData = ctx.getImageData(eyePos.x, eyePos.y, 20, 20);
+			var data=imageData.data;
+			
+			var grayscale = function(d) {
+				var output=[],ctr=0,sum=0;
+			    for (var i = 0; i < d.length; i += 4) {
+			    	var avg = (d[i] + d[i +1] + d[i +2]) / 3;
+			    	d[i]     = avg; // red
+			    	d[i + 1] = avg; // green
+			    	d[i + 2] = avg; // blue
+			    	d[i + 3] = 255;
+			    	output.push(avg);
+			    	ctr++;
+			    	sum+=avg;
+			    }
+			    ctx.putImageData(imageData, eyePos.x, eyePos.y);
+			    prevBrightness = sum/ctr;
+			    return output;
+			};			
+
+			var grayscaleImgData= grayscale(data);
+			//canvas, ctx
+
+			////////////////////////////////////////////////////////	    
+			var cycleArr=[square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist];
+			cycleArr = cycleArr.concat(grayscaleImgData);
+	    	var res=ihtai.cycle(cycleArr, td);
 	    	//returns {reflexOutput:~, memorizerOutput:~}
 
 	    	//use memorizer and reflex pellet recognition output to move circle 
@@ -370,7 +431,7 @@ require(['physicsjs'], function(Physics){
 	    			else{
 	    				moveVel=0;
 	    			}
-	    			//console.log('memorizer');
+	    			console.log('memorizer');
 	    	}
 	    	else if(ihtai.areReflexesEnabled()){
 		    	if(res.reflexOutput){
@@ -380,7 +441,7 @@ require(['physicsjs'], function(Physics){
 		    		else{
 		    			moveVel=0;
 		    		}
-		    		//console.log('reflexes')
+		    		console.log('reflexes')
 		    	}    		
 	    	}
 	    	else{
@@ -390,13 +451,13 @@ require(['physicsjs'], function(Physics){
 	    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
 
 	    	if (res.drivesOutput!=null){
-	    		if(res.drivesOutput[1]==100){
+	    		if(res.drivesOutput[1]>=100){
 	    			sleepMode=true;
 	    		}
-	    		if(res.drivesOutput[1]==0){ //circle has gotten enough sleep. wake it back up.
+	    		if(res.drivesOutput[1]<=0){ //circle has gotten enough sleep. wake it back up.
 	    			sleepMode=false;
 	    		}
-	    		if(res.drivesOutput[0]==100){
+	    		if(res.drivesOutput[0]>=100){
 	    			isRavenous=true;
 	    		}
 	    		if(res.drivesOutput[0]<=50){
@@ -428,7 +489,6 @@ require(['physicsjs'], function(Physics){
 
 		// start the ticker
 		Physics.util.ticker.start();
-		//$('canvas').prop({width: viewWidth, height: viewHeight});		
 	});
 
 

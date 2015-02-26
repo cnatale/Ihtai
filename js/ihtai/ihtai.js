@@ -95,11 +95,11 @@ var Ihtai = (function(bundle){
 	init(bundle);
 	}
 
-	function cycle(ioStimuli){
+	function cycle(ioStimuli, dt){
 		var combinedStimuli, curCluster;
 
 		//cycle drives
-		var drivesOutput=drives.cycle(ioStimuli);
+		var drivesOutput=drives.cycle(ioStimuli, dt);
 
 		//merge ioStimuli and drives output
 		combinedStimuli = ioStimuli.concat(drivesOutput);
@@ -110,7 +110,7 @@ var Ihtai = (function(bundle){
 		//cycle reflexes
 		var reflexOutput;
 		if(_enableReflexes){
-			reflexOutput=reflexes.cycle(curCluster);
+			reflexOutput=reflexes.cycle(curCluster, dt);
 		}
 		else{
 			reflexOutput=[];
@@ -536,12 +536,12 @@ var Drives = (function(_drives){
 	}
 	init();
 
-	function cycle(ioStim){
+	function cycle(ioStim, dt){
 		var response=[];
 		avgDriveCtr++;
 		for(var i=0;i<drives.length;i++){
 			//execute each method in drives once per cycle
-			var r=drives[i].cycle(ioStim);
+			var r=drives[i].cycle(ioStim, dt);
 			response.push(r); //expects each drives method to return a Number 0-100
 			avgDriveValue[i]= (avgDriveValue[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
 		}
@@ -604,12 +604,12 @@ var Reflexes = (function(_reflexes){
 	}	
 	init();
 
-	function cycle(cluster){
+	function cycle(cluster, dt){
 		var output=[], matcher, response, indices, stimuli=cluster.stimuli, ctr;
 		//cluster has properties: id, stimuli
 		for(var i=0; i<reflexes.length;i++){
 			matcher=reflexes[i].matcher;
-			if(matcher(stimuli))
+			if(matcher(stimuli, dt))
 				output.push(reflexes[i].response(stimuli));
 		}
 

@@ -53,8 +53,8 @@ require(['physicsjs'], function(Physics){
 
 
 	Physics(function(world){
-	    var viewWidth = window.innerWidth;
-	    var viewHeight = window.innerHeight;
+	    var viewWidth = /*window.innerWidth*/640;
+	    var viewHeight = /*window.innerHeight*/480;
 
 	    var renderer = Physics.renderer('canvas', {
 		    el: 'viewport',
@@ -98,7 +98,7 @@ require(['physicsjs'], function(Physics){
 
 
 		// resize events
-		window.addEventListener('resize', function () {
+		/*window.addEventListener('resize', function () {
 	
 			viewWidth = parent.innerWidth;
 			viewHeight = parent.innerHeight;
@@ -112,7 +112,7 @@ require(['physicsjs'], function(Physics){
 			viewportBounds = Physics.aabb(0, 0, viewWidth, viewHeight);
 			edgeBounce.setAABB(viewportBounds);
 	
-		}, true);
+		}, true);*/
 
 
 
@@ -423,8 +423,7 @@ require(['physicsjs'], function(Physics){
 		});
 
 		// start the ticker
-		Physics.util.ticker.start();
-		//$('canvas').prop({width: viewWidth, height: viewHeight});		
+		Physics.util.ticker.start();		
 	});
 
 
