@@ -50,8 +50,6 @@ IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap, comparisonFn){
 		}
 	}
 
-	//var newTree= IhtaiUtils.KdTree(root, comparisonFn, true);
-
 	return root;
 });
 
