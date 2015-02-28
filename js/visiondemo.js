@@ -14,7 +14,7 @@ require.config({
 
 require(['physicsjs'], function(Physics){
 	//application starting point
-	var ihtai, c, ctx, prevBrightness=0, eyePos={x:0,y:0}, prevEyePos={x:0,y:0}, focusWidth=20, focusHeight=20;
+	var ihtai, c, ctx, prevBrightness=0, eyePos={x:0,y:0}, prevEyePos={x:0,y:0}, focusWidth=10, focusHeight=10;
 
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -22,7 +22,7 @@ require(['physicsjs'], function(Physics){
 	} else {
 	  alert('The File APIs are not fully supported in this browser.');
 	}
-/*
+
     function handleFileSelect(evt) {
 	    var files = evt.target.files; // FileList object
 	    var file= files[0];
@@ -48,7 +48,7 @@ require(['physicsjs'], function(Physics){
     }
 
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
-    */
+   
     //////////////////////////////////////////////////////
 
 
@@ -95,27 +95,6 @@ require(['physicsjs'], function(Physics){
 
 		// constrain objects to these bounds
 		world.add(edgeBounce);
-
-
-		// resize events
-		/*window.addEventListener('resize', function () {
-	
-			viewWidth = parent.innerWidth;
-			viewHeight = parent.innerHeight;
-	
-			renderer.el.width = viewWidth;
-			renderer.el.height = viewHeight;
-	
-			renderer.options.width = viewWidth;
-			renderer.options.height = viewHeight;
-	
-			viewportBounds = Physics.aabb(0, 0, viewWidth, viewHeight);
-			edgeBounce.setAABB(viewportBounds);
-	
-		}, true);
-		*/
-
-
 
 		// enabling collision detection among bodies
 		world.add(Physics.behavior("body-collision-detection"));	  
@@ -223,7 +202,9 @@ require(['physicsjs'], function(Physics){
 						this.hunger=100;
 					}
 
-				
+				//clamp vals
+				this.hunger=Math.min(this.hunger, 100);
+				this.hunger=Math.max(this.hunger, 0);
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
 				$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 				return this.hunger;
@@ -243,19 +224,23 @@ require(['physicsjs'], function(Physics){
 					else
 						this.tiredness=0;
 				}
-				else
+				else{
 					if(this.tiredness<100){
 						this.tiredness+= .01 * dt;
 					}
 					else{
 						this.tiredness=100;
 					}
+				}
 
+				//clamp vals
+				this.tiredness=Math.min(this.tiredness, 100);
+				this.tiredness=Math.max(this.tiredness, 0);
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));	
 				$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 				return this.tiredness;
 			},
-			targetValue:0 //the goal value for hunger
+			targetValue:0 //the goal value for tiredness
 		};
 		drives=[hungerDrive, tiredDrive];
 
@@ -289,12 +274,12 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-			vectorDim:406,/*number of iostimuli values + drives*/
-			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+			clusterCount:80000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			vectorDim:108,/*number of iostimuli values + drives*/
+			memoryHeight:800,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:2000/*600*//*acceptable range for optimal stimuli is in square dist*/
+			acceptableRange:600/*600*//*acceptable range for optimal stimuli is in square dist*/
 		});		
 	    /////////////////////////////////
 	    //get canvas and context reference
@@ -361,35 +346,9 @@ require(['physicsjs'], function(Physics){
 
 	    	////////////////////// vision test /////////////////////
 	    	/*
-			TODO:pass in a 20x20 grayscale bitmap as a 400 dim vector in addition to other data.
+			pass in a X by Y grayscale bitmap as a X * Y dim vector in addition to other data.
 	    	*/
-			function setEyePos(prevBrightness){
-				if(prevBrightness > 10){
-					//enter fixate mode: decrease random range of next eye pos by 50%
-					eyePos.x=eyePos.x + (Math.random()*viewWidth)/4 - viewWidth/8;
-					eyePos.y=eyePos.y + (Math.random()*viewHeight)/4 - viewHeight/8;			
-				}
-				else{
-					eyePos.x=eyePos.x + Math.random()*viewWidth - viewWidth/2;
-					eyePos.y=eyePos.y + Math.random()*viewHeight - viewHeight/2;
-				}
 
-				//constrain within bitmap
-				if(eyePos.x < 0)
-					eyePos.x=0;
-				if(eyePos.x + focusWidth > viewWidth)
-					eyePos.x = viewWidth - focusWidth;
-
-				if(eyePos.y < 0)
-					eyePos.y=0;
-				if(eyePos.y + focusHeight > viewHeight)
-					eyePos.y = viewHeight - focusHeight;		
-
-				prevEyePos.x=eyePos.x;
-				prevEyePos.y=eyePos.y;
-				return eyePos;
-			}
-			eyePos = setEyePos(prevBrightness);
 
 			var imageData = ctx.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
 			var data=imageData.data;
@@ -402,13 +361,13 @@ require(['physicsjs'], function(Physics){
 			    	d[i + 1] = 255/*avg*/; // green
 			    	d[i + 2] = 255/*avg*/; // blue
 			    	d[i + 3] = 255;
-			    	output.push(avg);
+			    	output.push(avg/2.55); //the 2.55 is a normalizer to scale 0-255 to 0-100
 			    	ctr++;
 			    	sum+=avg;
 			    }
 			    ctx.putImageData(imageData, eyePos.x, eyePos.y);
 			    prevBrightness = sum/ctr;
-			    console.log(prevBrightness);
+			    //console.log(prevBrightness);
 			    return output;
 			};			
 
@@ -416,13 +375,14 @@ require(['physicsjs'], function(Physics){
 			//canvas, ctx
 
 			////////////////////////////////////////////////////////	    
-			var cycleArr=[square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist];
+			var cycleArr=[square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist, eyePos.x/viewWidth*100, eyePos.y/viewHeight*100];
 			cycleArr = cycleArr.concat(grayscaleImgData);
 	    	var res=ihtai.cycle(cycleArr, td);
 	    	//returns {reflexOutput:~, memorizerOutput:~}
 
 	    	//use memorizer and reflex pellet recognition output to move circle 
 	    	if(res.memorizerOutput != null && !isRavenous){
+	    	//BUG: res.memorizerOutput[0] is falling below 0 when it shouldn't
 	    			if(res.memorizerOutput[0]>50){ //has a pellet been detected?
 	    				moveVel=res.memorizerOutput[2];
 	    				//sometimes the above value will not come back as 0 or 100 due to compression.
@@ -448,6 +408,8 @@ require(['physicsjs'], function(Physics){
 	    	else{
 	    		moveVel=0;
 	    	}
+	    	//BUG:while in reflexes mode, reflexes don't trigger movement like they should, 
+	    	//and eyePos doesn't change like it should
 
 	    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
 
@@ -469,6 +431,46 @@ require(['physicsjs'], function(Physics){
 	    		moveVel=0;
 	    	}
 	    	
+
+	    	/*
+			TODO:pass in a 20x20 grayscale bitmap as a 400 dim vector in addition to other data.
+	    	*/
+	    	//eyePos x memorizer index=4, eyePos y memorizer index=5
+	    	//bug eyepos sticks
+			function setEyePos(prevBrightness){
+				if(res.memorizerOutput != null && !isRavenous){
+					eyePos.x=res.memorizerOutput[4]/100*viewWidth;
+					eyePos.y=res.memorizerOutput[5]/100*viewHeight;
+				}
+				else{
+					if(prevBrightness > 10){
+						//enter fixate mode: decrease random range of next eye pos by 50%
+						eyePos.x=eyePos.x + (Math.random()*viewWidth)/32 - viewWidth/64;
+						eyePos.y=eyePos.y + (Math.random()*viewHeight)/32 - viewHeight/64;			
+					}
+					else{
+						eyePos.x=eyePos.x + Math.random()*viewWidth - viewWidth/2;
+						eyePos.y=eyePos.y + Math.random()*viewHeight - viewHeight/2;
+					}
+				}
+				//constrain within bitmap
+				if(eyePos.x < 0)
+					eyePos.x=0;
+				if(eyePos.x + focusWidth > viewWidth)
+					eyePos.x = viewWidth - focusWidth;
+
+				if(eyePos.y < 0)
+					eyePos.y=0;
+				if(eyePos.y + focusHeight > viewHeight)
+					eyePos.y = viewHeight - focusHeight;		
+				eyePos.x=Math.floor(eyePos.x);
+				eyePos.y=Math.floor(eyePos.y);
+				prevEyePos.x=eyePos.x;
+				prevEyePos.y=eyePos.y;
+
+				return eyePos;
+			}
+			eyePos = setEyePos(prevBrightness);	    	
 
 		});
 

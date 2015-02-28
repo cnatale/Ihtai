@@ -289,7 +289,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				sd = sqDist(level[i].series[cluster.id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
 				if(sd <= acceptableRange){
 					outputStimuli = level[i].series[cluster.id].secondState;
-					//console.log('output stimuli lvl:'+ i);
+					console.log('output stimuli lvl:'+ i);
 					break;
 				}
 			}
