@@ -2,6 +2,7 @@ var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
 	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
+	var backMemCt=0;
 	var outputStimuli =[]; //the output stimuli buffer;
 
 	if(typeof bundle=="string"){ //load from stringified json instead of default initialization
@@ -10,6 +11,7 @@ var Ihtai = (function(bundle){
 		clusterCount= parsedFile.clusterCount;
 		vectorDim=parsedFile.vectorDim;
 		memoryHeight=parsedFile.memoryHeight;
+		backMemCt=parsedFile.backMemCt;
 		acceptableRange=parsedFile.acceptableRange;
 
 		//rebuild kd-tree from binary heap
@@ -17,7 +19,7 @@ var Ihtai = (function(bundle){
 		var treeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
 		//inflate clusters
-		clusters = new Clusters(clusterCount, vectorDim, treeRoot);
+		clusters = new Clusters(clusterCount, vectorDim, backMemCt, treeRoot);
 
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
@@ -86,8 +88,12 @@ var Ihtai = (function(bundle){
 				acceptableRange=bundle.acceptableRange;
 			else
 				acceptableRange=null;
+			if(bundle.backMemCt)
+				backMemCt=bundle.backMemCt;
 
-			clusters = new Clusters(clusterCount, vectorDim);
+
+
+			clusters = new Clusters(clusterCount, vectorDim, backMemCt);
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
 			memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);		
@@ -160,6 +166,7 @@ var Ihtai = (function(bundle){
 		deflated.clusterCount=clusterCount;
 		deflated.vectorDim=vectorDim;
 		deflated.memoryHeight=memoryHeight;
+		deflated.backMemCt=backMemCt;
 		deflated.acceptableRange=acceptableRange;
 
 		//save drives
@@ -427,13 +434,15 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 //clusters are 'buckets' that n-dimensional stimuli moments are placed inside
 //_kdTree is an optional param
-var Clusters = (function(_numClusters, _vectorDim, _kdTree){
+var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 	var vectorDim=_vectorDim, clusterTree;
 	var numClusters = _numClusters	
 	/**
 		Individual clusters have the following properties:
 		id: a unique id
 		stimuli: a vector representing stimuli
+		backMem: (array) the array of back-memories that combine with id cluster value to make a key 
+		combinedSignal: (function) returns an array representing all back-memory signals plus stimuli signal
 	*/
 
 	/**
@@ -448,11 +457,23 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 		pseudo-random uniform distribution.
 		*/
 
+		//note that this function will be appended to indiv. clusters, meaning the backMems and
+		//stimuli variables will be relative to said cluster.
+		var combinedSignal = function(){
+			var combinedSignal=[];
+			for(var i=0;i<backMem.length;i++){
+				combinedSignal= combinedSignal.combinedSignal.concat(backMem[i].stimuli);
+			}
+			combinedSignal.concat(stimuli);
+
+			return combinedSignal;
+		}			
+
 		if(typeof _kdTree == "undefined"){
 			var clusters=[];
 			//create clusters with id(needs to be unique) and stimuli properties
 			for(var i=0;i<numClusters;i++){
-				clusters[i]={id:i, stimuli:[]};
+				clusters[i]={id:i, stimuli:[], backMem:[], combinedSignal: combinedSignal};
 				//map clusters to random points in n-dimensional space 
 				for(var j=0;j<vectorDim;j++){
 					//assumes vectors are normalized to a 0-100 scale
@@ -462,8 +483,12 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 					else{
 						clusters[i].stimuli[j]=Math.random()*100;
 					}
-					
 				}
+
+				//randomly assign back-memory cluster ids
+				for(j=0; j<backMemCt; j++){
+					backMem[j]= Math.random()*(numClusters-1);
+				} 
 			}
 
 			//populate kd-tree
@@ -472,6 +497,7 @@ var Clusters = (function(_numClusters, _vectorDim, _kdTree){
 		else{
 			clusterTree= new IhtaiUtils.KdTree(_kdTree, "stimuli", true);
 		}
+	
 	}
 	init(_kdTree);
 

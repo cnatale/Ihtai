@@ -97,7 +97,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 
 		//each node contains the following properties: left, right, and value		
 
-		var root=createNode(data,0); //this will build the entire kd-tree, with reference to root
+		var root=createNode(data,0); //this will recursively build the entire kd-tree, with reference to root
 		return root;
 
 		function createNode(data, lvl){
@@ -121,6 +121,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				var sortedData=IhtaiUtils.mergeSort(data, function(a, b){
 					var comparison;
 					if(typeof comparisonProp==="string"){
+						//when comparisonProp represents a hash key
 						comparison=a[comparisonProp][dim] < b[comparisonProp][dim];
 					}
 					else
