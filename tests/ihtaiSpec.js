@@ -294,7 +294,6 @@ describe('ihtai', function(){
 						
 			expect(rebuiltRes.memorizerOutput).toEqual(origRes.memorizerOutput);			
 
-			//TODO:test back-memory behavior after re-inflation
 		});
 
 		it('should create an Ihtai instance with back-stimuli', function(){
@@ -314,7 +313,39 @@ describe('ihtai', function(){
 		});
 
 		it('should implement back-stimuli correctly on re-inflated Ihtai instances', function(){
+			var ihtai = new Ihtai({
+				clusterCount:1000,
+				vectorDim:10,
+				memoryHeight:100,
+				drivesList:drives,
+				reflexList:reflexes,
+				acceptableRange:100000,
+				backStimCt:1
+			});
 
+			var resp=ihtai.toJsonString('ihtaiSave');
+			var rebuiltIhtai=new Ihtai(resp);
+			//re-inflated Ihtai should be identical to original instance
+			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
+
+			//compare cycle results from orig and rebuilt ihtai
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			var rebuiltRes=rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			var origRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+					
+			expect(rebuiltRes.memorizerOutput).toEqual(origRes.memorizerOutput);	
 		});
 	})
 });
