@@ -300,7 +300,7 @@ require(['physicsjs'], function(Physics){
 			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:600,/*acceptable range for optimal stimuli is in square dist*/
+			acceptableRange:/*600*/2500,/*acceptable range for optimal stimuli is in square dist*/
 			backStimCt:1
 		});
 	    /////////////////////////////////
@@ -374,7 +374,7 @@ require(['physicsjs'], function(Physics){
 	    			else{
 	    				moveVel=0;
 	    			}
-	    			//console.log('memorizer');
+	    			console.log('memorizer');
 	    	}
 	    	else if(ihtai.areReflexesEnabled()){
 		    	if(res.reflexOutput){
@@ -384,7 +384,7 @@ require(['physicsjs'], function(Physics){
 		    		else{
 		    			moveVel=0;
 		    		}
-		    		//console.log('reflexes')
+		    		console.log('reflexes')
 		    	}    		
 	    	}
 	    	else{

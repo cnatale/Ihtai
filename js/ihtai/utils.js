@@ -55,7 +55,7 @@ IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap){
 
 IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	var comparisonProp=_comparisonProp;
-	var data=_data;
+	var data=_data,	cache=[];
 	var root;
 
 	function init(){
@@ -98,6 +98,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		//each node contains the following properties: left, right, and value		
 
 		var root=createNode(data,0); //this will recursively build the entire kd-tree, with reference to root
+		//cache=[];
 		return root;
 
 		function createNode(data, lvl){
@@ -121,7 +122,14 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				var sortedData=IhtaiUtils.mergeSort(data, function(a, b){
 					var comparison;
 					if(typeof comparisonProp==="string"){
-						comparison=a[comparisonProp]() < b[comparisonProp]();
+						if(!cache[a.id])
+							cache[a.id]=a[comparisonProp]();
+						var av=cache[a.id];
+						if(!cache[b.id])
+							cache[b.id]=b[comparisonProp]();
+						var bv=cache[b.id];					
+
+						comparison=av < bv;
 					}
 					else
 						comparison=a[dim] < b[dim];
@@ -163,11 +171,11 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	@param v the vector to use when performing nearest neighbor search
 	nodes have properties left, right, and value
 	*/
-	var cache=[];
 	function nearestNeighbor(pt){
 		var bestPt, bestDist=Infinity;
 	
 		nn(root, 0);
+		//cache=[];
 		return bestPt;
 
 		function nn(node, lvl){
@@ -223,6 +231,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 					nn(node.left, lvl+1);
 				}
 			}
+
 		}
 	}
 
