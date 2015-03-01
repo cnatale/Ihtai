@@ -188,6 +188,11 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 
 			//check if current node is closer than current best
+			
+			/*TODO: distSq is returning NaN for back-mem comparisons
+			This is because the comparisonProp value is the combined back-mem plus value signal,
+			which is longer than node.value(only one memory)
+			*/
 			var d=distSq((typeof comparisonProp=="string" ? node.value[comparisonProp]() : node.value), pt);
 			if(d<bestDist){
 				bestDist=d;
@@ -198,6 +203,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			Whichever way we went, check other child node to see if it could be closer.
 			If so, descend.
 			*/
+
 			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bestPt[comparisonProp]()[dim]: bestPt[dim]),2);
 			if(dir==left){
 				//check right

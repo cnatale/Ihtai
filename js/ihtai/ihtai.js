@@ -2,7 +2,7 @@ var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
 	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
-	var backMemCt=0;
+	var backMemCt=0, prevStimuli=[];
 	var outputStimuli =[]; //the output stimuli buffer;
 
 	if(typeof bundle=="string"){ //load from stringified json instead of default initialization
@@ -110,27 +110,40 @@ var Ihtai = (function(bundle){
 		//merge ioStimuli and drives output
 		combinedStimuli = ioStimuli.concat(drivesOutput);
 
-		//get nearest cluster for combined stimuli
-		curCluster= clusters.findNearestCluster(combinedStimuli);
+		/*
+		TODO: Keep track of last backMemCt stimuli, Array.concat combinedStimuli onto
+		aforementioned stimuli. Set combinedStimuli to this value instead.
 
-		//cycle reflexes
-		var reflexOutput;
-		if(_enableReflexes){
-			reflexOutput=reflexes.cycle(curCluster, dt);
-		}
-		else{
-			reflexOutput=[];
+		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
+		if we have last backMemCt stimuli in memory (dependent on curCluster)
+		*/		
+
+		var reflexOutput=[], memorizerOutput=null;
+		if(prevStimuli.length === backMemCt){ //wait for prevStimuli buffer to fill up
+			var backAndCurrentStimuli=[];
+			for(var i=0;i<prevStimuli.length;i++){
+				backAndCurrentStimuli= backAndCurrentStimuli.concat(prevStimuli[i]);
+			}
+			backAndCurrentStimuli=backAndCurrentStimuli.concat(combinedStimuli);
+
+			//get nearest cluster for combined stimuli
+			curCluster= clusters.findNearestCluster(backAndCurrentStimuli);
+
+			//cycle reflexes
+			if(_enableReflexes)
+				reflexOutput=reflexes.cycle(curCluster, dt);
+
+			//cycle memorizer	
+			if(_enableMemories){
+				memorizerOutput=memorizer.query(curCluster);
+				memorizer.memorize(curCluster);
+			}
 		}
 
-		//cycle memorizer
-		var memorizerOutput;		
-		if(_enableMemories){
-			memorizerOutput=memorizer.query(curCluster);
-		}
-		else{
-			memorizerOutput=null;
-		}
-		memorizer.memorize(curCluster);
+		//update previous stimuli buffer
+		prevStimuli.push(combinedStimuli);
+		if(prevStimuli.length>backMemCt)
+			prevStimuli.shift();
 	
 		//send reflex output and memorizer output back to ai agent
 		return {

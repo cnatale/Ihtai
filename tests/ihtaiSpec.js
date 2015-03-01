@@ -286,8 +286,8 @@ describe('ihtai', function(){
 			//TODO:test back-memory behavior after re-inflation
 		});
 
-		it('should create an Ihtia instance with back-memory', function(){
-			ihtai = new Ihtai({
+		it('should create an Ihtai instance with back-memory', function(){
+			var ihtai2 = new Ihtai({
 				clusterCount:1000,
 				vectorDim:10,
 				memoryHeight:100,
@@ -296,6 +296,10 @@ describe('ihtai', function(){
 				acceptableRange:80,
 				backMemCt:1
 			});
+
+			debugger;
+			ihtai2.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai2.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
 		});
 	})
 });
