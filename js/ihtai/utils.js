@@ -29,7 +29,7 @@ the standard kd-tree builder algorithm without the data already ordered.
 
 Each element in the heap param contains a kd-tree's .value property
 */
-IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap, comparisonFn){
+IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap){
 	var root,node, parent;
 	for(var i=0;i<heap.length;i++){
 		if(heap[i]!=null){
@@ -121,8 +121,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				var sortedData=IhtaiUtils.mergeSort(data, function(a, b){
 					var comparison;
 					if(typeof comparisonProp==="string"){
-						//when comparisonProp represents a hash key
-						comparison=a[comparisonProp][dim] < b[comparisonProp][dim];
+						comparison=a[comparisonProp]() < b[comparisonProp]();
 					}
 					else
 						comparison=a[dim] < b[dim];
@@ -177,7 +176,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			if(node==null)
 				return;
 
-			if(pt[dim]< (typeof comparisonProp=="string" ? node.value[comparisonProp][dim] : node.value[dim])){
+			if(pt[dim]< (typeof comparisonProp=="string" ? node.value[comparisonProp]()[dim] : node.value[dim])){
 				//descend left
 				nn(node.left, lvl+1);
 				dir=left;
@@ -189,7 +188,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 
 			//check if current node is closer than current best
-			var d=distSq((typeof comparisonProp=="string" ? node.value[comparisonProp] : node.value), pt);
+			var d=distSq((typeof comparisonProp=="string" ? node.value[comparisonProp]() : node.value), pt);
 			if(d<bestDist){
 				bestDist=d;
 				bestPt=node.value;
@@ -199,7 +198,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			Whichever way we went, check other child node to see if it could be closer.
 			If so, descend.
 			*/
-			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bestPt[comparisonProp][dim]: bestPt[dim]),2);
+			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bestPt[comparisonProp]()[dim]: bestPt[dim]),2);
 			if(dir==left){
 				//check right
 				if(d<bestDist){

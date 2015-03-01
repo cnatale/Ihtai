@@ -460,13 +460,12 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 		//note that this function will be appended to indiv. clusters, meaning the backMems and
 		//stimuli variables will be relative to said cluster.
 		var combinedSignal = function(){
-			var combinedSignal=[];
-			for(var i=0;i<backMem.length;i++){
-				combinedSignal= combinedSignal.combinedSignal.concat(backMem[i].stimuli);
+			var output=[];
+			for(var i=0;i<this.backMem.length;i++){
+				output= output.concat(this.backMem[i].stimuli);
 			}
-			combinedSignal.concat(stimuli);
-
-			return combinedSignal;
+			output=output.concat(this.stimuli);
+			return output;
 		}			
 
 		if(typeof _kdTree == "undefined"){
@@ -492,10 +491,23 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 			}
 
 			//populate kd-tree
-			clusterTree= new IhtaiUtils.KdTree(clusters, "stimuli");
+			clusterTree= new IhtaiUtils.KdTree(clusters, "combinedSignal");
 		}
 		else{
-			clusterTree= new IhtaiUtils.KdTree(_kdTree, "stimuli", true);
+			clusterTree= new IhtaiUtils.KdTree(_kdTree, "combinedSignal", true);
+			//TODO:since function objects are ignored in json, clusters combinedSignal is stripped
+			//and needs to be added back to every object
+			node=clusterTree.getRoot();
+
+			function inorder(node){
+				if (node==null)
+					return;
+				inorder(node.left);
+				node.value.combinedSignal = combinedSignal;
+				inorder(node.right);
+			}
+
+			inorder(node);
 		}
 	
 	}

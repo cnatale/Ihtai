@@ -274,13 +274,13 @@ describe('ihtai', function(){
 		});	
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
-			
+			debugger;
 			var resp=ihtai.toJsonString('ihtaiSave');
 			var rebuiltIhtai=new Ihtai(resp);
 			//re-inflated Ihtai should be identical to original instance
 			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
 			//make sure it still works
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0]);
+			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
 			//TODO:compare cycle results from orig and rebuilt ihtai
 		});
 	})
