@@ -206,25 +206,28 @@ require(['physicsjs'], function(Physics){
 			init:function(){
 				return this.hunger;
 			},
-			cycle:function(stimuli){
+			cycle:function(stimuli, dt){
 				if(stimuli[3] < 10){
 					if(this.hunger>0){
-						this.hunger--;
+						this.hunger-= .01 * dt;
 					}
 					else
 						this.hunger=0;
 				}
-				else
+				else{
 					if(this.hunger<100){
-						this.hunger+=.1;
+						this.hunger+= .01 * dt;
 					}
 					else{
 						this.hunger=100;
 					}
+				}
 
-				
+				//clamp vals
+				this.hunger=Math.min(this.hunger, 100);
+				this.hunger=Math.max(this.hunger, 0);
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
-				$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));	
+				$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 				return this.hunger;
 			},
 			targetValue:0 //the goal value for hunger
@@ -234,24 +237,28 @@ require(['physicsjs'], function(Physics){
 			init:function(){
 				return this.tiredness;
 			},
-			cycle:function(stimuli){
+			cycle:function(stimuli,dt){
 				if(stimuli[2] <= 50){
 					if(this.tiredness>0){
-						this.tiredness-=.1;
+						this.tiredness-= .01 * dt;
 					}
 					else
 						this.tiredness=0;
 				}
-				else
+				else{
 					if(this.tiredness<100){
-						this.tiredness+=.1;
+						this.tiredness+= .01 * dt;
 					}
 					else{
 						this.tiredness=100;
 					}
+				}
 
+				//clamp vals
+				this.tiredness=Math.min(this.tiredness, 100);
+				this.tiredness=Math.max(this.tiredness, 0);
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));	
-				$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));	
+				$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 				return this.tiredness;
 			},
 			targetValue:0 //the goal value for hunger
@@ -293,7 +300,8 @@ require(['physicsjs'], function(Physics){
 			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:600/*acceptable range for optimal stimuli is in square dist*/
+			acceptableRange:600,/*acceptable range for optimal stimuli is in square dist*/
+			backStimCt:1
 		});
 	    /////////////////////////////////
 	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;
@@ -352,7 +360,7 @@ require(['physicsjs'], function(Physics){
 	    	if(newAngle){
 	    		normalizedAngle=newAngle*(100/(2*Math.PI));
 	    	}
-	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist]);
+	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist], td);
 	    	//returns {reflexOutput:~, memorizerOutput:~}
 
 	    	//use memorizer and reflex pellet recognition output to move circle 

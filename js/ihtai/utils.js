@@ -163,6 +163,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	@param v the vector to use when performing nearest neighbor search
 	nodes have properties left, right, and value
 	*/
+	var cache=[];
 	function nearestNeighbor(pt){
 		var bestPt, bestDist=Infinity;
 	
@@ -176,7 +177,12 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			if(node==null)
 				return;
 
-			if(pt[dim]< (typeof comparisonProp=="string" ? node.value[comparisonProp]()[dim] : node.value[dim])){
+			if(!cache[node.value.id])
+				cache[node.value.id]=node.value[comparisonProp]();
+			var nv=cache[node.value.id];
+
+
+			if(pt[dim]< (typeof comparisonProp=="string" ? nv[dim] : node.value[dim])){
 				//descend left
 				nn(node.left, lvl+1);
 				dir=left;
@@ -188,7 +194,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 
 			//check if current node is closer than current best
-			var d=distSq((typeof comparisonProp=="string" ? node.value[comparisonProp]() : node.value), pt);
+			var d=distSq((typeof comparisonProp=="string" ? nv : node.value), pt);
 			if(d<bestDist){
 				bestDist=d;
 				bestPt=node.value;
@@ -198,7 +204,11 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			Whichever way we went, check other child node to see if it could be closer.
 			If so, descend.
 			*/
-			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bestPt[comparisonProp]()[dim]: bestPt[dim]),2);
+			if(!cache[bestPt.id])
+				cache[bestPt.id]=bestPt[comparisonProp]();
+			var bpv=cache[bestPt.id];
+			
+			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bpv[dim]: bestPt[dim]),2);
 			if(dir==left){
 				//check right
 				if(d<bestDist){
