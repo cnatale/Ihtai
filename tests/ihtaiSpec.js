@@ -50,7 +50,6 @@ describe('ihtai', function(){
 
 
 		it('should find nearest cluster for a vector', function(){
-			//TODO: always returns cluster 333 regardless of input. figure out why.
 			clusters= new Clusters(1000, 5);
 			var startDate=new Date();
 			var res=clusters.findNearestCluster([50,50,50,50,50]);

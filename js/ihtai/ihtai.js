@@ -111,7 +111,7 @@ var Ihtai = (function(bundle){
 		combinedStimuli = ioStimuli.concat(drivesOutput);
 
 		/*
-		TODO: Keep track of last backStimCt stimuli, Array.concat combinedStimuli onto
+		Keep track of last backStimCt stimuli, Array.concat combinedStimuli onto
 		aforementioned stimuli. Set combinedStimuli to this value instead.
 
 		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
