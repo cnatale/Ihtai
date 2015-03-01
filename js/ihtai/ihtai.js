@@ -2,7 +2,7 @@ var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
 	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
-	var backMemCt=0, prevStimuli=[];
+	var backStimCt=0, prevStimuli=[];
 	var outputStimuli =[]; //the output stimuli buffer;
 
 	if(typeof bundle=="string"){ //load from stringified json instead of default initialization
@@ -11,7 +11,7 @@ var Ihtai = (function(bundle){
 		clusterCount= parsedFile.clusterCount;
 		vectorDim=parsedFile.vectorDim;
 		memoryHeight=parsedFile.memoryHeight;
-		backMemCt=parsedFile.backMemCt;
+		backStimCt=parsedFile.backStimCt;
 		acceptableRange=parsedFile.acceptableRange;
 
 		//rebuild kd-tree from binary heap
@@ -19,7 +19,7 @@ var Ihtai = (function(bundle){
 		var treeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
 		//inflate clusters
-		clusters = new Clusters(clusterCount, vectorDim, backMemCt, treeRoot);
+		clusters = new Clusters(clusterCount, vectorDim, backStimCt, treeRoot);
 
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
@@ -88,12 +88,12 @@ var Ihtai = (function(bundle){
 				acceptableRange=bundle.acceptableRange;
 			else
 				acceptableRange=null;
-			if(bundle.backMemCt)
-				backMemCt=bundle.backMemCt;
+			if(bundle.backStimCt)
+				backStimCt=bundle.backStimCt;
 
 
 
-			clusters = new Clusters(clusterCount, vectorDim, backMemCt);
+			clusters = new Clusters(clusterCount, vectorDim, backStimCt);
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
 			memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);		
@@ -111,15 +111,15 @@ var Ihtai = (function(bundle){
 		combinedStimuli = ioStimuli.concat(drivesOutput);
 
 		/*
-		TODO: Keep track of last backMemCt stimuli, Array.concat combinedStimuli onto
+		TODO: Keep track of last backStimCt stimuli, Array.concat combinedStimuli onto
 		aforementioned stimuli. Set combinedStimuli to this value instead.
 
 		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
-		if we have last backMemCt stimuli in memory (dependent on curCluster)
+		if we have last backStimCt stimuli in memory (dependent on curCluster)
 		*/		
 
 		var reflexOutput=[], memorizerOutput=null;
-		if(prevStimuli.length === backMemCt){ //wait for prevStimuli buffer to fill up
+		if(prevStimuli.length === backStimCt){ //wait for prevStimuli buffer to fill up
 			var backAndCurrentStimuli=[];
 			for(var i=0;i<prevStimuli.length;i++){
 				backAndCurrentStimuli= backAndCurrentStimuli.concat(prevStimuli[i]);
@@ -142,7 +142,7 @@ var Ihtai = (function(bundle){
 
 		//update previous stimuli buffer
 		prevStimuli.push(combinedStimuli);
-		if(prevStimuli.length>backMemCt)
+		if(prevStimuli.length>backStimCt)
 			prevStimuli.shift();
 	
 		//send reflex output and memorizer output back to ai agent
@@ -179,7 +179,7 @@ var Ihtai = (function(bundle){
 		deflated.clusterCount=clusterCount;
 		deflated.vectorDim=vectorDim;
 		deflated.memoryHeight=memoryHeight;
-		deflated.backMemCt=backMemCt;
+		deflated.backStimCt=backStimCt;
 		deflated.acceptableRange=acceptableRange;
 
 		//save drives
@@ -447,14 +447,14 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 //clusters are 'buckets' that n-dimensional stimuli moments are placed inside
 //_kdTree is an optional param
-var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
+var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 	var vectorDim=_vectorDim, clusterTree;
 	var numClusters = _numClusters	
 	/**
 		Individual clusters have the following properties:
 		id: a unique id
 		stimuli: a vector representing stimuli
-		backMem: (array) the array of back-memories' indices/id that combine with id cluster value to make a key 
+		backStim: (array) the array of back-memories' indices/id that combine with id cluster value to make a key 
 		combinedSignal: (function) returns an array representing all back-memory signals plus stimuli signal
 	*/
 
@@ -470,12 +470,12 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 		pseudo-random uniform distribution.
 		*/
 
-		//note that this function will be appended to indiv. clusters, meaning the backMems and
+		//note that this function will be appended to indiv. clusters, meaning the backStims and
 		//stimuli variables will be relative to said cluster.
 		var combinedSignal = function(){
 			var output=[];
-			for(var i=0;i<this.backMem.length;i++){
-				output= output.concat(clusters[this.backMem[i]].stimuli);
+			for(var i=0;i<this.backStim.length;i++){
+				output= output.concat(clusters[this.backStim[i]].stimuli);
 			}
 			output=output.concat(this.stimuli);
 			return output;
@@ -485,7 +485,7 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 		if(typeof _kdTree == "undefined"){
 			//create clusters with id(needs to be unique) and stimuli properties
 			for(var i=0;i<numClusters;i++){
-				clusters[i]={id:i, stimuli:[], backMem:[], combinedSignal: combinedSignal};
+				clusters[i]={id:i, stimuli:[], backStim:[], combinedSignal: combinedSignal};
 				//map clusters to random points in n-dimensional space 
 				for(var j=0;j<vectorDim;j++){
 					//assumes vectors are normalized to a 0-100 scale
@@ -498,8 +498,8 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 				}
 
 				//randomly assign back-memory cluster ids
-				for(j=0; j<backMemCt; j++){
-					clusters[i].backMem[j]= Math.floor(Math.random()*(numClusters-1));
+				for(j=0; j<backStimCt; j++){
+					clusters[i].backStim[j]= Math.floor(Math.random()*(numClusters-1));
 				} 
 			}
 
@@ -512,7 +512,7 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 			//and needs to be added back to every object
 
 			//rebuild clusters array b/c that's the only way to efficiently search for
-			//backMem ids by key			
+			//backStim ids by key			
 			node=clusterTree.getRoot();
 
 			function inorder(node){
@@ -521,7 +521,7 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 				inorder(node.left);
 
 				node.value.combinedSignal = combinedSignal;
-				clusters[node.value.id]=node.value; //rebuild clusters array to use as lookup table for backMem
+				clusters[node.value.id]=node.value; //rebuild clusters array to use as lookup table for backStim
 
 				inorder(node.right);
 			}
