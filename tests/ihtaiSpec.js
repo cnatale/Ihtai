@@ -216,9 +216,9 @@ describe('ihtai', function(){
 	});
 
 	describe('ihtai core', function(){
-		var ihtai, drives, reflexList;
+		var ihtai, drives, reflexList, drive, reflexes;
 		beforeEach(function(){
-			var drive={
+			drive={
 				v:5,
 				init:function(){
 					this.v=5;
@@ -235,7 +235,7 @@ describe('ihtai', function(){
 			};
 			drives=[drive];
 
-			var reflexes = [{
+			reflexes = [{
 				matcher: function(stimuli){
 					if(stimuli[3]===40)
 						return true;
@@ -274,14 +274,28 @@ describe('ihtai', function(){
 		});	
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
-			debugger;
 			var resp=ihtai.toJsonString('ihtaiSave');
 			var rebuiltIhtai=new Ihtai(resp);
 			//re-inflated Ihtai should be identical to original instance
 			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
 			//make sure it still works
 			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			
 			//TODO:compare cycle results from orig and rebuilt ihtai
+
+			//TODO:test back-memory behavior after re-inflation
+		});
+
+		it('should create an Ihtia instance with back-memory', function(){
+			ihtai = new Ihtai({
+				clusterCount:1000,
+				vectorDim:10,
+				memoryHeight:100,
+				drivesList:drives,
+				reflexList:reflexes,
+				acceptableRange:80,
+				backMemCt:1
+			});
 		});
 	})
 });

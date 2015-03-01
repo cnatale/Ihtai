@@ -441,7 +441,7 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 		Individual clusters have the following properties:
 		id: a unique id
 		stimuli: a vector representing stimuli
-		backMem: (array) the array of back-memories that combine with id cluster value to make a key 
+		backMem: (array) the array of back-memories' indices/id that combine with id cluster value to make a key 
 		combinedSignal: (function) returns an array representing all back-memory signals plus stimuli signal
 	*/
 
@@ -462,14 +462,14 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 		var combinedSignal = function(){
 			var output=[];
 			for(var i=0;i<this.backMem.length;i++){
-				output= output.concat(this.backMem[i].stimuli);
+				output= output.concat(clusters[this.backMem[i]].stimuli);
 			}
 			output=output.concat(this.stimuli);
 			return output;
 		}			
 
+		var clusters=[];
 		if(typeof _kdTree == "undefined"){
-			var clusters=[];
 			//create clusters with id(needs to be unique) and stimuli properties
 			for(var i=0;i<numClusters;i++){
 				clusters[i]={id:i, stimuli:[], backMem:[], combinedSignal: combinedSignal};
@@ -486,7 +486,7 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 
 				//randomly assign back-memory cluster ids
 				for(j=0; j<backMemCt; j++){
-					backMem[j]= Math.random()*(numClusters-1);
+					clusters[i].backMem[j]= Math.floor(Math.random()*(numClusters-1));
 				} 
 			}
 
@@ -495,19 +495,26 @@ var Clusters = (function(_numClusters, _vectorDim, backMemCt, _kdTree){
 		}
 		else{
 			clusterTree= new IhtaiUtils.KdTree(_kdTree, "combinedSignal", true);
-			//TODO:since function objects are ignored in json, clusters combinedSignal is stripped
+			//since function objects are ignored in json, clusters combinedSignal is stripped
 			//and needs to be added back to every object
+
+			//rebuild clusters array b/c that's the only way to efficiently search for
+			//backMem ids by key			
 			node=clusterTree.getRoot();
 
 			function inorder(node){
 				if (node==null)
 					return;
 				inorder(node.left);
+
 				node.value.combinedSignal = combinedSignal;
+				clusters[node.value.id]=node.value; //rebuild clusters array to use as lookup table for backMem
+
 				inorder(node.right);
 			}
 
 			inorder(node);
+
 		}
 	
 	}
