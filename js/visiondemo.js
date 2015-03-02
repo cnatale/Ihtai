@@ -274,12 +274,13 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:80000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:10000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:108,/*number of iostimuli values + drives*/
 			memoryHeight:800,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:600/*600*//*acceptable range for optimal stimuli is in square dist*/
+			acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
+			backStimCt:1
 		});		
 	    /////////////////////////////////
 	    //get canvas and context reference

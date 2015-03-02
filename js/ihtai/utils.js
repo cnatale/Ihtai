@@ -97,12 +97,13 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 
 		//each node contains the following properties: left, right, and value		
 
+		//TODO: this net line is the entirety of poor load performance
 		var root=createNode(data,0); //this will recursively build the entire kd-tree, with reference to root
-		//cache=[];
 		return root;
 
 		function createNode(data, lvl){
 			var node;
+
 			if(data.length<2){
 				//base case. don't do any more splitting. 
 				//create node, return node. stop recursion.
@@ -121,6 +122,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				//sort array by current dimension
 				var sortedData=IhtaiUtils.mergeSort(data, function(a, b){
 					var comparison;
+					//debugger
 					if(typeof comparisonProp==="string"){
 						if(!cache[a.id])
 							cache[a.id]=a[comparisonProp]();

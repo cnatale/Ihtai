@@ -40,6 +40,7 @@ require(['physicsjs'], function(Physics){
 				-associate ihtai variable with new ihtai instance created through json string
 				*/
 				//instantiate ihtai with loaded file
+				debugger;
 				ihtai= new Ihtai(ihtaiJsonString);
         	};
 	  	})(file);
