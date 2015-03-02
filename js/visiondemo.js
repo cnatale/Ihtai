@@ -194,13 +194,14 @@ require(['physicsjs'], function(Physics){
 					else
 						this.hunger=0;
 				}
-				else
+				else{
 					if(this.hunger<100){
 						this.hunger+= .01 * dt;
 					}
 					else{
 						this.hunger=100;
 					}
+				}
 
 				//clamp vals
 				this.hunger=Math.min(this.hunger, 100);
@@ -216,7 +217,7 @@ require(['physicsjs'], function(Physics){
 			init:function(){
 				return this.tiredness;
 			},
-			cycle:function(stimuli, dt){
+			cycle:function(stimuli,dt){
 				if(stimuli[2] <= 50){
 					if(this.tiredness>0){
 						this.tiredness-= .01 * dt;
@@ -274,8 +275,8 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:10000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-			vectorDim:11/*108*/,/*number of iostimuli values + drives*/
+			clusterCount:80000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			vectorDim:15/*108*/,/*number of iostimuli values + drives*/
 			memoryHeight:800,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
@@ -376,7 +377,7 @@ require(['physicsjs'], function(Physics){
 			//canvas, ctx
 
 			////////////////////////////////////////////////////////	    
-			var cycleArr=[eyePos.x/viewWidth*100, eyePos.y/viewHeight*100];
+			var cycleArr=[eyePos.x/viewWidth*100, eyePos.y/viewHeight*100,moveVel,normalizedDist];
 			//var cycleArr=[square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist, eyePos.x/viewWidth*100, eyePos.y/viewHeight*100];
 			cycleArr = cycleArr.concat(grayscaleImgData);
 	    	var res=ihtai.cycle(cycleArr, td);
