@@ -55,7 +55,7 @@ IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap){
 
 IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	var comparisonProp=_comparisonProp;
-	var data=_data,	cache=[];
+	var data=_data, cache=[];
 	var root;
 
 	function init(){
@@ -122,16 +122,19 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				//sort array by current dimension
 				var sortedData=IhtaiUtils.mergeSort(data, function(a, b){
 					var comparison;
-					//debugger
-					if(typeof comparisonProp==="string"){
+
+					if(typeof comparisonProp==="function"){
 						if(!cache[a.id])
-							cache[a.id]=a[comparisonProp]();
+							cache[a.id]=comparisonProp.call(a);
 						var av=cache[a.id];
 						if(!cache[b.id])
-							cache[b.id]=b[comparisonProp]();
+							cache[b.id]=comparisonProp.call(b);
 						var bv=cache[b.id];					
 
-						comparison=av < bv;
+						comparison=av[dim] < bv[dim];
+					}
+					else if(typeof comparisonProp==="string"){
+						comparison=a[comparisonProp][dim] < b[comparisonProp][dim];
 					}
 					else
 						comparison=a[dim] < b[dim];
@@ -187,12 +190,20 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			if(node==null)
 				return;
 
-			if(!cache[node.value.id])
-				cache[node.value.id]=node.value[comparisonProp]();
-			var nv=cache[node.value.id];
+			var nv;
+			if(typeof comparisonProp==="function"){
+				if(!cache[node.value.id])
+					cache[node.value.id]=comparisonProp.call(node.value);
+				nv=cache[node.value.id];	
+			}
+			else if(typeof comparisonProp=="string"){
+				nv=node.value[comparisonProp]
+			}
+			else{
+				nv=node.value;
+			}
 
-
-			if(pt[dim]< (typeof comparisonProp=="string" ? nv[dim] : node.value[dim])){
+			if(pt[dim] < nv[dim]){
 				//descend left
 				nn(node.left, lvl+1);
 				dir=left;
@@ -204,7 +215,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 
 			//check if current node is closer than current best
-			var d=distSq((typeof comparisonProp=="string" ? nv : node.value), pt);
+			var d=distSq(nv, pt);
 			if(d<bestDist){
 				bestDist=d;
 				bestPt=node.value;
@@ -214,11 +225,20 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			Whichever way we went, check other child node to see if it could be closer.
 			If so, descend.
 			*/
-			if(!cache[bestPt.id])
-				cache[bestPt.id]=bestPt[comparisonProp]();
-			var bpv=cache[bestPt.id];
+			var bpv;
+			if(typeof comparisonProp==="function"){
+				if(!cache[bestPt.id])
+					cache[bestPt.id]=comparisonProp.call(bestPt);
+				var bpv=cache[bestPt.id];
+			}
+			else if(typeof comparisonProp=="string"){
+				bpv=bestPt[comparisonProp];
+			}
+			else{
+				bpv=bestPt
+			}
 			
-			d=Math.pow(pt[dim]- (typeof comparisonProp=="string" ? bpv[dim]: bestPt[dim]),2);
+			d=Math.pow(pt[dim] - bpv[dim],2);
 			if(dir==left){
 				//check right
 				if(d<bestDist){

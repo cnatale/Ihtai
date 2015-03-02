@@ -91,8 +91,6 @@ var Ihtai = (function(bundle){
 			if(bundle.backStimCt)
 				backStimCt=bundle.backStimCt;
 
-
-
 			clusters = new Clusters(clusterCount, vectorDim, backStimCt);
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
@@ -309,7 +307,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				sd = sqDist(level[i].series[cluster.id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
 				if(sd <= acceptableRange){
 					outputStimuli = level[i].series[cluster.id].secondState;
-					console.log('output stimuli lvl:'+ i);
+					//console.log('output stimuli lvl:'+ i);
 					break;
 				}
 			}
@@ -449,13 +447,13 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 //_kdTree is an optional param
 var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 	var vectorDim=_vectorDim, clusterTree;
-	var numClusters = _numClusters	
+	var numClusters = _numClusters;	
 	/**
 		Individual clusters have the following properties:
 		id: a unique id
 		stimuli: a vector representing stimuli
 		backStim: (array) the array of back-memories' indices/id that combine with id cluster value to make a key 
-		combinedSignal: (function) returns an array representing all back-memory signals plus stimuli signal
+		combinedSignal: (function) returns an array representing all back-memory signals plus stimuli signal		
 	*/
 
 	/**
@@ -463,6 +461,7 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 		@param {number} k
 	*/
 	function init(_kdTree){	
+		var clusters=[];
 		/*
 		TODO: think about distributing points using a low-discrepancy sequence instead of randomly
 		(http://stackoverflow.com/questions/10644154/uniform-distribution-of-points)
@@ -481,11 +480,10 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 			return output;
 		}			
 
-		var clusters=[];
 		if(typeof _kdTree == "undefined"){
 			//create clusters with id(needs to be unique) and stimuli properties
 			for(var i=0;i<numClusters;i++){
-				clusters[i]={id:i, stimuli:[], backStim:[], combinedSignal: combinedSignal};
+				clusters[i]={id:i, stimuli:[], backStim:[]};
 				//map clusters to random points in n-dimensional space 
 				for(var j=0;j<vectorDim;j++){
 					//assumes vectors are normalized to a 0-100 scale
@@ -495,19 +493,21 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 					else{
 						clusters[i].stimuli[j]=Math.random()*100;
 					}
+					
 				}
 
 				//randomly assign back-memory cluster ids
 				for(j=0; j<backStimCt; j++){
 					clusters[i].backStim[j]= Math.floor(Math.random()*(numClusters-1));
-				} 
+				} 				
 			}
 
 			//populate kd-tree
-			clusterTree= new IhtaiUtils.KdTree(clusters, "combinedSignal");
+			clusterTree= new IhtaiUtils.KdTree(clusters, combinedSignal);
 		}
 		else{
-			clusterTree= new IhtaiUtils.KdTree(_kdTree, "combinedSignal", true);
+			clusterTree= new IhtaiUtils.KdTree(_kdTree, combinedSignal, true);
+
 			//since function objects are ignored in json, clusters combinedSignal is stripped
 			//and needs to be added back to every object
 
@@ -520,16 +520,13 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 					return;
 				inorder(node.left);
 
-				node.value.combinedSignal = combinedSignal;
 				clusters[node.value.id]=node.value; //rebuild clusters array to use as lookup table for backStim
 
 				inorder(node.right);
 			}
 
 			inorder(node);
-
 		}
-	
 	}
 	init(_kdTree);
 

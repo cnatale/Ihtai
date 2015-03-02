@@ -391,6 +391,7 @@ describe('ihtai utils', function(){
 		});
 
 		it('should find the nearest neighbor to a vector', function(){
+		
 			nearestNeighbor = kdTree.nearestNeighbor([60, 61, 58, 57, 77]);
 			expect(nearestNeighbor).toEqual([60, 61, 58, 57, 77]);
 			var nn = kdTree.nearestNeighbor([1,1,1,1,1]);

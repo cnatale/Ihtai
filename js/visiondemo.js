@@ -14,7 +14,7 @@ require.config({
 
 require(['physicsjs'], function(Physics){
 	//application starting point
-	var ihtai, c, ctx, prevBrightness=0, eyePos={x:0,y:0}, prevEyePos={x:0,y:0}, focusWidth=10, focusHeight=10;
+	var ihtai, c, ctx, prevBrightness=0, eyePos={x:0,y:0}, prevEyePos={x:0,y:0}, focusWidth=3, focusHeight=3;
 
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -275,11 +275,11 @@ require(['physicsjs'], function(Physics){
 
 	    ihtai = new Ihtai({
 			clusterCount:10000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-			vectorDim:108,/*number of iostimuli values + drives*/
+			vectorDim:11/*108*/,/*number of iostimuli values + drives*/
 			memoryHeight:800,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
+			acceptableRange:3000,/*600*//*acceptable range for optimal stimuli is in square dist*/
 			backStimCt:1
 		});		
 	    /////////////////////////////////
@@ -376,7 +376,8 @@ require(['physicsjs'], function(Physics){
 			//canvas, ctx
 
 			////////////////////////////////////////////////////////	    
-			var cycleArr=[square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist, eyePos.x/viewWidth*100, eyePos.y/viewHeight*100];
+			var cycleArr=[eyePos.x/viewWidth*100, eyePos.y/viewHeight*100];
+			//var cycleArr=[square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist, eyePos.x/viewWidth*100, eyePos.y/viewHeight*100];
 			cycleArr = cycleArr.concat(grayscaleImgData);
 	    	var res=ihtai.cycle(cycleArr, td);
 	    	//returns {reflexOutput:~, memorizerOutput:~}
