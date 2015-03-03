@@ -3,44 +3,49 @@
 <head>
 	<meta charset="utf-8">
 	<style>
-		html, body { height: 100%; 
-			margin: 0; 
-			color:#fff;
-		}
-		/*body {
-			background-color: #fff;
-			margin: 0;
-			overflow: hidden;
-		}*/
-		.pjs-meta {
-			position: absolute;
-			bottom: 0;
-			right: 0;
-			font-size: 20px;
-			font-family: monospace;
-		}
-		#viewport { position: relative; 
-			height: 100%; 
-			background: #1d1f20; 
-		}		
+      #canvas { border:1px solid black; top:0px; left:0px; }
+      .button { position:absolute; border:1px solid black; }
+      #left-controls { position:absolute; left:1px; bottom:0px; display:none; }
+      #right-controls { position:absolute; right:1px; bottom:0px; display:none; }
+      #up { width:200px; height:100px; bottom:100px;}
+      #left { width:100px; height:100px; bottom:0px;}
+      #right { width:100px; height:100px; bottom:0px; left:100px; }
+      #space { width:200px; height:200px; bottom:0px; right:0px; }	
 	</style>
 </head>
 <body>
 
-<!-- TODO: add save file button -->
-<button id="saveBtn" style="position:absolute;top:0;left:0;z-index:999">Save Ihtai</button>
-<input type="file" id="files" name="files[]" style="position:absolute;top:0;left:100px;z-index:999"/>
-<!--<button id="turnOffBtn" style="position:absolute;top:0;left:0;z-index:999">Disable reflexes</button>-->
-<!--<button id="turnOffMemBtn" style="position:absolute;top:50px;left:0;z-index:999">Disable memories</button>-->
-<div id="hunger" style="position:absolute;top:0;right:0;z-index:999"></div>
-<div id="tiredness" style="position:absolute;top:30px;right:0;z-index:999"></div>
-<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
-<script src="js/external/pixi.dev.js"></script>
-<script src="js/external/Queue.js"></script>
-<script src="js/ihtai/ihtai.js"></script>
-<script src="js/ihtai/utils.js"></script>
-<script data-main="js/gamerdemo" src="js/external/require.js"></script>	
-<script src="js/external/download.js"></script>
-<div id="viewport"></div>
+	<!-- TODO: add save file button -->
+	<button id="saveBtn" style="position:absolute;top:0;left:0;z-index:999">Save Ihtai</button>
+	<input type="file" id="files" name="files[]" style="position:absolute;top:0;left:100px;z-index:999"/>
+	<div id="pleasure" style="position:absolute;top:0;right:0;z-index:999"></div>
+	<div id="pain" style="position:absolute;top:30px;right:0;z-index:999"></div>
+
+
+    <div id="game-container">
+      <canvas id="canvas" width="780" height="540"></canvas>
+      <div id="left-controls">
+        <div id="up" class='button'>THRUST</div>
+        <div id="left" class='button'>LEFT</div>
+        <div id="right" class='button'>RIGHT</div>
+      </div>
+      <div id="right-controls">
+        <div id="space" class='button'>FIRE</div>
+      </div>
+    </div>
+
+
+	<!-- includes -->
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.js"></script>	
+	<script src="js/external/Queue.js"></script>
+	<script src="js/ihtai/ihtai.js"></script>
+	<script src="js/ihtai/utils.js"></script>
+	<script data-main="js/gamerdemo" src="js/external/require.js"></script>	
+	<script src="js/external/download.js"></script>
+
+	<script src="js/external/asteroids/game.js"></script>	
+	<script src="js/external/asteroids/vector_battle_regular.typeface.js"></script>
+	<div id="viewport"></div>
 </body>
 </html>
