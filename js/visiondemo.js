@@ -280,7 +280,7 @@ require(['physicsjs'], function(Physics){
 			memoryHeight:800,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:3000,/*600*//*acceptable range for optimal stimuli is in square dist*/
+			acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
 			backStimCt:1
 		});		
 	    /////////////////////////////////
