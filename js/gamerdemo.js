@@ -111,16 +111,30 @@ require([], function(){
 	var intervalID = window.setInterval(updateIhtai, 33);
 
 
+	/*
+	TODO: add listeners for up, left, right char codes, space bar
+	When a key is detected, set associated signal to correct state for that cycle.
+	Remember to turn off again after said cycle.
+
+	JavaScript key codes:
+	http://www.cambiaresearch.com/articles/15/javascript-char-codes-key-codes
+
+	TODO: Edit Asteroids code so that it publishes events when score increases and
+	player loses a life. Add subscribers here for each. When either is detected, 
+	set associated signal to correct state for that cycle. Remember to turn off again
+	after said cycle.
+	*/
+
 	function updateIhtai(){
 		/*
-		signal 0: score increase
-		signal 1: death
+		signal 0: score increase (less than 50 means no, over 50 means yes)
+		signal 1: death (less than 50 means no death, over 50 means death)
 		signal 2: joystick (either left, up down by splitting 0-100 signal in thirds)
-		signal 3: fire button (space bar)
+		signal 3: fire button (space bar, less than...)
 		remaining signals: grayscale image data 
 		*/
 
-		
+
 
 	}
 });
