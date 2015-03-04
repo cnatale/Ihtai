@@ -463,6 +463,11 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 	function init(_kdTree){	
 		var clusters=[];
 		/*
+		TODO: add ability to distribute random n-dimensional values by weighted range,
+		as in rejection sampling: http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
+		*/
+
+		/*
 		TODO: think about distributing points using a low-discrepancy sequence instead of randomly
 		(http://stackoverflow.com/questions/10644154/uniform-distribution-of-points)
 		It seems like there are significant gaps in mapping space even with cluster values of 100,000 with

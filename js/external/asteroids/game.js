@@ -443,6 +443,8 @@ Ship = function () {
     this.currentNode.leave(this);
     this.currentNode = null;
     Game.lives--;
+    //TODO:add death event trigger here    
+    $("#canvas").trigger( "death", [] );  
   };
 
 };
@@ -553,6 +555,8 @@ BigAlien = function () {
     Game.explosionAt(other.x, other.y);
     this.visible = false;
     this.newPosition();
+    //TODO: add score increase event trigger here 
+    $("#canvas").trigger( "scoreIncrease", [] );    
   };
 
   this.postMove = function () {
@@ -656,7 +660,11 @@ Asteroid = function () {
 
   this.collision = function (other) {
     SFX.explosion();
-    if (other.name == "bullet") Game.score += 120 / this.scale;
+    if (other.name == "bullet"){
+      Game.score += 120 / this.scale;
+      //TODO: add score increase event trigger here
+      $("#canvas").trigger( "scoreIncrease", [] ); 
+    }
     this.scale /= 3;
     if (this.scale > 0.5) {
       // break into fragments
