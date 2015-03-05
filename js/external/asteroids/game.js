@@ -23,13 +23,15 @@ for (code in KEY_CODES) {
 
 $(window).keydown(function (e) {
   KEY_STATUS.keyDown = true;
-  if (KEY_CODES[e.keyCode]) {
-    e.preventDefault();
-    KEY_STATUS[KEY_CODES[e.keyCode]] = true;
+  if (KEY_CODES[e.keyCode]||KEY_CODES[e.which]) {
+    for(var c in KEY_CODES){
+      KEY_STATUS[KEY_CODES[c]]=false;
+    }
+    KEY_STATUS[KEY_CODES[/*e.keyCode*/e.which]] = true;
   }
 }).keyup(function (e) {
   KEY_STATUS.keyDown = false;
-  if (KEY_CODES[e.keyCode]) {
+  if (KEY_CODES[e.keyCode]||KEY_CODES[e.which]) {
     e.preventDefault();
     KEY_STATUS[KEY_CODES[e.keyCode]] = false;
   }
@@ -926,6 +928,7 @@ Game = {
     },
     waiting: function () {
       Text.renderText(window.ipad ? 'Touch Screen to Start' : 'Press Space to Start', 36, Game.canvasWidth/2 - 270, Game.canvasHeight/2);
+
       if (KEY_STATUS.space || window.gameStart) {
         KEY_STATUS.space = false; // hack so we don't shoot right away
         window.gameStart = false;
@@ -1193,6 +1196,24 @@ $(function () {
       frameCount = 0;
     }
 
+    ///////////
+    /*if(typeof eyePos != "undefined"){
+      var imageData = context.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
+      var data=imageData.data;
+
+      var showEyePos = function(d) {
+          for (var i = 0; i < d.length; i += 4) {
+            d[i]     = 255; // red
+            d[i + 1] = 0; // green
+            d[i + 2] = 0; // blue
+            d[i + 3] = 255;
+          }
+          context.putImageData(imageData, eyePos.x, eyePos.y);
+      };     
+      showEyePos(data); 
+    }
+    */
+
     if (paused) {
       Text.renderText('PAUSED', 72, Game.canvasWidth/2 - 160, 120);
     } else {
@@ -1200,6 +1221,7 @@ $(function () {
     }
   };
 
+  //////////
   mainLoop();
 
   $(window).keydown(function (e) {

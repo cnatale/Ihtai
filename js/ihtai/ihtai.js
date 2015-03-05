@@ -373,6 +373,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);
 						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
 						level[i].series[buffer[startState].id].collisions++;
+						if(level[i].series[buffer[startState].id].collisions>1000)level[i].series[buffer[startState].id].collisions=1000;
+
 						for(var j=0;j<bufferGoalDist.length;j++){
 							var collisions=level[i].series[buffer[startState].id].collisions;
 							endStateGoalDist[j]= ((endStateGoalDist[j]*collisions)+bufferGoalDist[j])/(collisions+1);
