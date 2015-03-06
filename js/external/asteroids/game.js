@@ -442,7 +442,7 @@ Ship = function () {
     Game.explosionAt(other.x, other.y);
     Game.FSM.state = 'player_died';
     this.visible = false;
-    this.currentNode.leave(this);
+    if(this.currentNode)this.currentNode.leave(this);
     this.currentNode = null;
     Game.lives--;
     //TODO:add death event trigger here    
@@ -552,13 +552,15 @@ BigAlien = function () {
   };
 
   BigAlien.prototype.collision = function (other) {
-    if (other.name == "bullet") Game.score += 200;
+    if (other.name == "bullet"){
+      Game.score += 200;
+      //TODO: add score increase event trigger here 
+      $("#canvas").trigger( "scoreIncrease", [] );         
+    }
     SFX.explosion();
     Game.explosionAt(other.x, other.y);
     this.visible = false;
-    this.newPosition();
-    //TODO: add score increase event trigger here 
-    $("#canvas").trigger( "scoreIncrease", [] );    
+    this.newPosition(); 
   };
 
   this.postMove = function () {
@@ -1197,7 +1199,8 @@ $(function () {
     }
 
     ///////////
-    /*if(typeof eyePos != "undefined"){
+    /*
+    if(typeof eyePos != "undefined"){
       var imageData = context.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
       var data=imageData.data;
 
