@@ -116,9 +116,9 @@ require([], function(){
 
 	var reflexes = [{
 		init:function(){
-		    var weightedFire=[];
+		    this.weightedFire=[];
 		    for(var i=0;i<100;i++){
-		    	weightedFire[i]=Number(IhtaiUtils.weightedRand({0:.25, 100:.75}));
+		    	this.weightedFire[i]=Number(IhtaiUtils.weightedRand({0:.25, 100:.75}));
 		    }
 		},
 		matcher: function(stimuli){ /*randomly press fire button*/
@@ -127,15 +127,15 @@ require([], function(){
 		response: function(stimuli){
 			return {
 				indices:[0],
-				signal:[weightedFire[Math.floor(Math.random()*99)]]
+				signal:[this.weightedFire[Math.floor(Math.random()*99)]]
 			}
 		}
 	},
 	{
 		init:function(){
-		    var weightedDirection=[];
+		    this.weightedDirection=[];
 		    for(var i=0;i<100;i++){
-		    	weightedDirection[i]=Number(IhtaiUtils.weightedRand({15:0.01, 35:0.25, 60:0.24, 85:.5}));
+		    	this.weightedDirection[i]=Number(IhtaiUtils.weightedRand({15:0.01, 35:0.25, 60:0.24, 85:.5}));
 		    }
 		},
 		matcher: function(stimuli){ /*randomly select an arrow key*/
@@ -144,7 +144,7 @@ require([], function(){
 		response: function(stimuli){
 			return {
 				indices:[1],
-				signal:[weightedDirection[Math.floor(Math.random()*99)]]
+				signal:[this.weightedDirection[Math.floor(Math.random()*99)]]
 			}
 		}
 	}];
