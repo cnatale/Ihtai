@@ -28,6 +28,7 @@ var Ihtai = (function(bundle){
 		for(var i=0;i<deflatedReflexes.length;i++){
 			//convert functions to strings for storage
 			r={
+				init:eval(deflatedReflexes[i].matcher),
 				matcher:eval(deflatedReflexes[i].matcher),
 				response:eval(deflatedReflexes[i].response)
 			}
@@ -201,9 +202,11 @@ var Ihtai = (function(bundle){
 		var reflexFns=reflexes.getReflexes(),deflatedReflexes=[],r;
 		for(var i=0;i<reflexFns.length;i++){
 			//convert functions to strings for storage
+			var init='('+String(reflexFns[i].init)+')'.escapeSpecialChars();
 			var matcher='('+String(reflexFns[i].matcher)+')'.escapeSpecialChars();
 			var response='('+String(reflexFns[i].response)+')'.escapeSpecialChars();
 			r={
+				init:init,
 				matcher:matcher,
 				response:response
 			}

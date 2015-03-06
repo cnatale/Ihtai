@@ -51,11 +51,6 @@ require([], function(){
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
    
     //////////////////////////////////////////////////////
-    var weightedFire=[],weightedDirection=[]
-    for(var i=0;i<100;i++){
-    	weightedFire[i]=Number(IhtaiUtils.weightedRand({0:.25, 100:.75}));
-    	weightedDirection[i]=Number(IhtaiUtils.weightedRand({15:0.01, 35:0.25, 60:0.24, 85:.5}));
-    }
 
 	var /*eyePos={x:0,y:0},*/ prevBrightness=0,/*focusWidth=3, focusHeight=3,*/ lastTime;
 	var fireKeySignal=0, directionKeySignal=0;
@@ -120,6 +115,12 @@ require([], function(){
 
 
 	var reflexes = [{
+		init:function(){
+		    var weightedFire=[];
+		    for(var i=0;i<100;i++){
+		    	weightedFire[i]=Number(IhtaiUtils.weightedRand({0:.25, 100:.75}));
+		    }
+		},
 		matcher: function(stimuli){ /*randomly press fire button*/
 			return true; //always return a potential random action
 		}, 
@@ -138,6 +139,12 @@ require([], function(){
 		}
 	},
 	{
+		init:function(){
+		    var weightedDirection=[];
+		    for(var i=0;i<100;i++){
+		    	weightedDirection[i]=Number(IhtaiUtils.weightedRand({15:0.01, 35:0.25, 60:0.24, 85:.5}));
+		    }
+		},
 		matcher: function(stimuli){ /*randomly select an arrow key*/
 			return true; //always return a potential random action
 		}, 
