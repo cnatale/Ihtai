@@ -244,15 +244,9 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			*/
 			var bpv;
 			if(typeof comparisonProp==="function"){
-				try{
-					if(!cache[bestPt.id])
-						cache[bestPt.id]=comparisonProp.call(bestPt);
-					var bpv=cache[bestPt.id];
-				}
-				catch(err){
-					//debugger;
-					console.log('crasheroo');
-				}
+				if(!cache[bestPt.id])
+					cache[bestPt.id]=comparisonProp.call(bestPt);
+				var bpv=cache[bestPt.id];
 			}
 			else if(typeof comparisonProp=="string"){
 				bpv=bestPt[comparisonProp];

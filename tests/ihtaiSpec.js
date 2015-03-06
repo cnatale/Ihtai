@@ -135,6 +135,7 @@ describe('ihtai', function(){
 		beforeEach(function(){
 			var input=[];
 			reflexes = new Reflexes([{
+				init:function(){},
 				matcher: function(stimuli){
 					if(stimuli[3]===40)
 						return true;
@@ -235,6 +236,7 @@ describe('ihtai', function(){
 			drives=[drive];
 
 			reflexes = [{
+				init: function(){},
 				matcher: function(stimuli){
 					if(stimuli[3]===40)
 						return true;
@@ -391,7 +393,7 @@ describe('ihtai utils', function(){
 		});
 
 		it('should find the nearest neighbor to a vector', function(){
-		
+
 			nearestNeighbor = kdTree.nearestNeighbor([60, 61, 58, 57, 77]);
 			expect(nearestNeighbor).toEqual([60, 61, 58, 57, 77]);
 			var nn = kdTree.nearestNeighbor([1,1,1,1,1]);

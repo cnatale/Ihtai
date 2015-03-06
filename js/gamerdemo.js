@@ -125,17 +125,10 @@ require([], function(){
 			return true; //always return a potential random action
 		}, 
 		response: function(stimuli){
-			try{
-				return {
-					indices:[0],
-					signal:[/*weightedFire[Math.floor(Math.random()*99)]*/Math.random()*99]
-				}
+			return {
+				indices:[0],
+				signal:[weightedFire[Math.floor(Math.random()*99)]]
 			}
-			catch(e){
-				debugger;
-				console.log('errrrror')
-			}
-
 		}
 	},
 	{
@@ -151,7 +144,7 @@ require([], function(){
 		response: function(stimuli){
 			return {
 				indices:[1],
-				signal:[/*weightedDirection[Math.floor(Math.random()*99)]*/Math.random()*99]
+				signal:[weightedDirection[Math.floor(Math.random()*99)]]
 			}
 		}
 	}];

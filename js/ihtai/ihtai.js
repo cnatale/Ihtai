@@ -28,7 +28,7 @@ var Ihtai = (function(bundle){
 		for(var i=0;i<deflatedReflexes.length;i++){
 			//convert functions to strings for storage
 			r={
-				init:eval(deflatedReflexes[i].matcher),
+				init:eval(deflatedReflexes[i].init),
 				matcher:eval(deflatedReflexes[i].matcher),
 				response:eval(deflatedReflexes[i].response)
 			}
@@ -667,6 +667,9 @@ var Reflexes = (function(_reflexes){
 	*/
 	var reflexes = _reflexes;
 	function init(){
+		for(var i=0;i<reflexes.length;i++){
+			reflexes[i].init();
+		}
 	}	
 	init();
 
