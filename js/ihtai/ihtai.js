@@ -374,6 +374,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					averaging step is weighted towards the existing drive endState. This requires storing an 
 					extra number holding the secondState collision count, reset every time new secondState and endState
 					is selected (as opposed to non-weighted average).
+
+					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
+					by reference to clusters is more memory efficient, editing the cluster values was breaking the kd tree.
 					*/		
 					if(sqDist(buffer[secondState].stimuli, level[i].series[buffer[startState].id].secondState) === 0){
 						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);
@@ -397,9 +400,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						if(sd1 < sd2){
 							//add memory series to level. Hash based on starting state cluster id.
 							level[i].series[buffer[startState].id]={
-								startState: buffer[startState].stimuli, 
-								secondState: buffer[secondState].stimuli,
-								endState: buffer[endState].stimuli,
+								startState: buffer[startState].stimuli.slice(), 
+								secondState: buffer[secondState].stimuli.slice(),
+								endState: buffer[endState].stimuli.slice(),
 								collisions:0
 							};
 						}	
@@ -409,9 +412,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					level[i].series[buffer[startState].id]={
-						startState: buffer[startState].stimuli, 
-						secondState: buffer[secondState].stimuli,
-						endState: buffer[endState].stimuli,
+						startState: buffer[startState].stimuli.slice(), 
+						secondState: buffer[secondState].stimuli.slice(),
+						endState: buffer[endState].stimuli.slice(),
 						collisions:0
 					};					
 				}
