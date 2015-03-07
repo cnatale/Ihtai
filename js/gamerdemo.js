@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=10, focusHeight=10, ihtaiPaused=false;
+var eyePos={x:0,y:0}, focusWidth=20, focusHeight=20, ihtaiPaused=false;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -25,13 +25,6 @@ require([], function(){
 	    	//call runapp with the content passed as param
 			return function(e) {
 				var ihtaiJsonString=e.target.result;
-				//runApp(res);
-
-				//TODO: 
-				//-remove any circles currently in scene. (maybe not necessary since we're just
-				//replacing its brain?)
-				//-associate ihtai variable with new ihtai instance created through json string
-				
 				//instantiate ihtai with loaded file
 				ihtai= new Ihtai(ihtaiJsonString);
 				ihtaiPaused=false;
@@ -52,17 +45,17 @@ require([], function(){
    
     //////////////////////////////////////////////////////
 
-	var /*eyePos={x:0,y:0},*/ prevBrightness=0,/*focusWidth=3, focusHeight=3,*/ lastTime;
+	var prevBrightness=0, lastTime;
 	var fireKeySignal=0, directionKeySignal=0;
-    var viewWidth = /*window.innerWidth*/800;
-    var viewHeight = /*window.innerHeight*/600;	
+    var viewWidth = 800;
+    var viewHeight = 600;	
 	var pleasureDrive={
 		init:function(){
 			this.pleasure=0;
 			return this.pleasure;
 		},
 		cycle:function(stimuli, dt){
-			//TODO: update pleasure on score increase, slowly decrement over time
+			//update pleasure on score increase, slowly decrement over time
 			if(stimuli[2] > 50){
 				if(this.pleasure<100){
 					this.pleasure+= 100 /** dt*/;
@@ -150,17 +143,15 @@ require([], function(){
 	}];
 
     ihtai = new Ihtai({
-		clusterCount:10,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:8+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
-		acceptableRange:3000,/*600*//*acceptable range for optimal stimuli is in square dist*/
+		acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
 		backStimCt:1
 	});		
 
-
-	//TODO: add asteroids
 	var intervalID = window.setInterval(updateIhtai, 33);
 
 
@@ -215,6 +206,7 @@ require([], function(){
 			signal 3: fire button (space bar, less than...)
 			remaining signals: grayscale image data 
 			*/
+			
 			var imageData = ctx.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
 			var data=imageData.data;
 
@@ -223,9 +215,9 @@ require([], function(){
 			    for (var i = 0; i < d.length; i += 4) {
 			    	//var avg = (d[i] + d[i +1] + d[i +2]) / 3;		    	
 			    	var avg=d[i+3];
-			    	//d[i]     = 255//*avg*/; // red
-			    	//d[i + 1] = 0/*255*//*avg*/; // green
-			    	//d[i + 2] = 0/*255*//*avg*/; // blue
+			    	//d[i]     = 255; // red
+			    	//d[i + 1] = 0; // green
+			    	//d[i + 2] = 0; // blue
 			    	//d[i + 3] = 255;
 			    	output.push(avg/2.55); //the 2.55 is a normalizer to scale 0-255 to 0-100
 			    	ctr++;
@@ -238,10 +230,7 @@ require([], function(){
 			};			
 
 			var grayscaleImgData= grayscale(data);
-
-			//TODO:calculate td
-			//TODO:assemble cycleArr with:
-			//pleasureVal, painVal, lastDirectionKeypress, lastSpacebarKeyPress,image data
+			
 			var cycleArr=[fireKeySignal,directionKeySignal,feelingPleasure?100:0,feelingPain?100:0,eyePos.x/viewWidth*100, eyePos.y/viewHeight*100]
 			cycleArr = cycleArr.concat(grayscaleImgData);
 
@@ -352,7 +341,7 @@ require([], function(){
 
 				return eyePos;
 			}
-			eyePos = setEyePos(prevBrightness);	    	
+			eyePos = setEyePos(prevBrightness);	   	
 			//console.log('eyepos'+ eyePos.x+', '+eyePos.y)
 		
 			feelingPleasure=false;feelingPain=false;

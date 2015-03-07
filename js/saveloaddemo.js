@@ -42,7 +42,6 @@ require(['physicsjs'], function(Physics){
 				//instantiate ihtai with loaded file
 			
 				ihtai= new Ihtai(ihtaiJsonString);
-				debugger;
         	};
 	  	})(file);
 
@@ -268,6 +267,7 @@ require(['physicsjs'], function(Physics){
 		drives=[hungerDrive, tiredDrive];
 
 		var reflexes = [{
+			init:function(){},
 			matcher: function(stimuli){ /*move if pellet it detected*/
 				if(stimuli[0]>=50)
 					return true;
@@ -282,6 +282,7 @@ require(['physicsjs'], function(Physics){
 			}
 		},
 		{
+			init:function(){},
 			matcher: function(stimuli){ /*dont' move if no pellet is detected*/
 				if(stimuli[0]<50)
 					return true;
@@ -302,8 +303,8 @@ require(['physicsjs'], function(Physics){
 			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:/*600*/2500,/*acceptable range for optimal stimuli is in square dist*/
-			backStimCt:1
+			acceptableRange:600,/*acceptable range for optimal stimuli is in square dist*/
+			backStimCt:0
 		});
 	    /////////////////////////////////
 	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;

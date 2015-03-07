@@ -313,6 +313,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					//console.log('output stimuli lvl:'+ i);
 					break;
 				}
+				//console.log('query distance:'+sd);
 			}
 			//if no match is within acceptable range, go to next level
 		}
@@ -363,9 +364,11 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					weighted average)
 
 					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
-					should raise its cost for future queries. Also if a marginally optimal outcome becomes more optimal,
-					increase fitness. It also simulates how behavior "hardens" as it is carried out more and more often.
+					should raise its cost for future queries. Also if a less optimal outcome becomes more optimal,
+					increase fitness. 
 
+					It also simulates how behavior "hardens" as it is carried out more and more often
+					by using a weighted average that increases with number of collisions.
 					The averaging step is weighted in favor of the existing drive endstate,
 					based on how many secondState collisions have occurred. The more collisions, the more the
 					averaging step is weighted towards the existing drive endState. This requires storing an 
@@ -376,8 +379,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);
 						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
 						level[i].series[buffer[startState].id].collisions++;
-						//clamp upper bound at 1000
-						if(level[i].series[buffer[startState].id].collisions>1000)level[i].series[buffer[startState].id].collisions=1000;
+						//clamp upper bound at 1000 ***warning this seems to break learning. investigate***
+						//if(level[i].series[buffer[startState].id].collisions>1000)level[i].series[buffer[startState].id].collisions=1000;
 
 						for(var j=0;j<bufferGoalDist.length;j++){
 							var collisions=level[i].series[buffer[startState].id].collisions;
