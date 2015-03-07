@@ -14,7 +14,7 @@ require.config({
 
 require(['physicsjs'], function(Physics){
 	//application starting point
-	var ihtai;
+	var ihtai, ihtaiPaused=false;
 
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -23,29 +23,33 @@ require(['physicsjs'], function(Physics){
 	  alert('The File APIs are not fully supported in this browser.');
 	}
 
-    function handleFileSelect(evt) {
-	    var files = evt.target.files; // FileList object
-	    var file= files[0];
+
+
+
+	var shouldOpenFile=false;
+	var file;
+	function openFile(){
 	    var reader = new FileReader();
-	    reader.onload= 
 	  	reader.onload=(function(theFile){
 	    	//call runapp with the content passed as param
 			return function(e) {
 				var ihtaiJsonString=e.target.result;
-				//runApp(res);
-
-				/*TODO: 
-				-remove any circles currently in scene. (maybe not necessary since we're just
-				replacing its brain?)
-				-associate ihtai variable with new ihtai instance created through json string
-				*/
 				//instantiate ihtai with loaded file
-			
+				debugger;
+				ihtai=null;
 				ihtai= new Ihtai(ihtaiJsonString);
+				ihtaiPaused=false;
+				console.log('ihtai loaded');
         	};
 	  	})(file);
 
 	  	reader.readAsText(file);
+	}
+
+    function handleFileSelect(evt) {
+	    var files = evt.target.files; // FileList object
+	    file= files[0];
+	    shouldOpenFile=true;
     }
 
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
@@ -298,7 +302,7 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:100,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostimuli values + drives*/
 			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
@@ -310,111 +314,121 @@ require(['physicsjs'], function(Physics){
 	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;
 		// subscribe to ticker to advance the simulation
 		Physics.util.ticker.on(function( time, dt ){
-		    world.step( time );
-		    world.wakeUpAll();
+			if(!ihtaiPaused){
+				if(shouldOpenFile){
+					debugger;
+					ihtaiPaused=true;
+					openFile();
+					shouldOpenFile=false;	
+					return;	
+				}
 
-		    //test making ball always face square
-	    	///////////////////
-	    	//get the circle
-	    	var queryFn = Physics.query({
-	    		name:'circle'
-	    	});
-	    	var circle=world.findOne(queryFn);
 
-	    	//get a square if one exists
-	    	queryFn = Physics.query({
-	    		name:'square'
-	    	});
-	    	var square=world.findOne(queryFn), newAngle;
+			    world.step( time );
+			    world.wakeUpAll();
 
-	    	if(circle && square){
-			    var scratch = Physics.scratchpad();
-			    // assuming your viewport is the whole screen
-			    var circlePos = scratch.vector().set(circle.state.pos.x, circle.state.pos.y); 
-			    circlePos.vsub( square.state.pos ); // get vector pointing towards square
+			    //test making ball always face square
+		    	///////////////////
+		    	//get the circle
+		    	var queryFn = Physics.query({
+		    		name:'circle'
+		    	});
+		    	var circle=world.findOne(queryFn);
 
-				// get angle with respect to x axis
-			    newAngle = circlePos.angle(); 
-				scratch.done();	
-			    circle.state.angular.vel=0;
-			    circle.state.angular.acc=0;
-  				newAngle+=Math.PI;
-			    circle.state.angular.pos = newAngle;
-	    	}
-	    	//move circle
-	    	var dist, normalizedDist=100;
-	    	var normalizer = Math.sqrt(viewHeight*viewHeight + viewWidth*viewWidth);
-	    	var td;
-	    	if(lastTime)
-	    		td=time-lastTime;
-	    	else
-	    		td=0;
-	    	lastTime=time;
-	    	if(newAngle){
-	    		//todo:instead of dividing td by a constant, change the moveVel denom. constant
-	    		var mx=(circle.state.acc.x+Math.cos(newAngle)*((td/200)*(moveVel/1000)));
-	    		var my=(circle.state.acc.y+Math.sin(newAngle)*((td/200)*(moveVel/1000)));				
-				circle.state.acc.set(mx,my);
-				dist=circle.state.pos.dist(square.state.pos);
-				normalizedDist=(dist/normalizer)*100;
-			}
-	    	//////////////////////
-	    	var normalizedAngle;
-	    	if(newAngle){
-	    		normalizedAngle=newAngle*(100/(2*Math.PI));
-	    	}
-	    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist], td);
-	    	//returns {reflexOutput:~, memorizerOutput:~}
+		    	//get a square if one exists
+		    	queryFn = Physics.query({
+		    		name:'square'
+		    	});
+		    	var square=world.findOne(queryFn), newAngle;
 
-	    	//use memorizer and reflex pellet recognition output to move circle 
-	    	if(res.memorizerOutput != null && !isRavenous){
-	    			if(res.memorizerOutput[0]>50){ //has a pellet been detected?
-	    				moveVel=res.memorizerOutput[2];
-	    				//sometimes the above value will not come back as 0 or 100 due to compression.
-	    				//bracket signal to 0 or 100
-	    				moveVel=Math.round(moveVel/100)*100;
-	    			}
-	    			else{
-	    				moveVel=0;
-	    			}
-	    			console.log('memorizer');
-	    	}
-	    	else if(ihtai.areReflexesEnabled()){
-		    	if(res.reflexOutput){
-		    		if(res.reflexOutput.length==1){
-		    			moveVel=res.reflexOutput[0].signal[0];
+		    	if(circle && square){
+				    var scratch = Physics.scratchpad();
+				    // assuming your viewport is the whole screen
+				    var circlePos = scratch.vector().set(circle.state.pos.x, circle.state.pos.y); 
+				    circlePos.vsub( square.state.pos ); // get vector pointing towards square
+
+					// get angle with respect to x axis
+				    newAngle = circlePos.angle(); 
+					scratch.done();	
+				    circle.state.angular.vel=0;
+				    circle.state.angular.acc=0;
+	  				newAngle+=Math.PI;
+				    circle.state.angular.pos = newAngle;
+		    	}
+		    	//move circle
+		    	var dist, normalizedDist=100;
+		    	var normalizer = Math.sqrt(viewHeight*viewHeight + viewWidth*viewWidth);
+		    	var td;
+		    	if(lastTime)
+		    		td=time-lastTime;
+		    	else
+		    		td=0;
+		    	lastTime=time;
+		    	if(newAngle){
+		    		//todo:instead of dividing td by a constant, change the moveVel denom. constant
+		    		var mx=(circle.state.acc.x+Math.cos(newAngle)*((td/200)*(moveVel/1000)));
+		    		var my=(circle.state.acc.y+Math.sin(newAngle)*((td/200)*(moveVel/1000)));				
+					circle.state.acc.set(mx,my);
+					dist=circle.state.pos.dist(square.state.pos);
+					normalizedDist=(dist/normalizer)*100;
+				}
+		    	//////////////////////
+		    	var normalizedAngle;
+		    	if(newAngle){
+		    		normalizedAngle=newAngle*(100/(2*Math.PI));
+		    	}
+		    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist], td);
+		    	//returns {reflexOutput:~, memorizerOutput:~}
+
+		    	//use memorizer and reflex pellet recognition output to move circle 
+		    	if(res.memorizerOutput != null && !isRavenous){
+		    			if(res.memorizerOutput[0]>50 && Math.random() > .1){ //has a pellet been detected?
+		    				moveVel=res.memorizerOutput[2];
+		    				//sometimes the above value will not come back as 0 or 100 due to compression.
+		    				//bracket signal to 0 or 100
+		    				moveVel=Math.round(moveVel/100)*100;
+		    			}
+		    			else{
+		    				moveVel=0;
+		    			}
+		    			console.log('memorizer');
+		    	}
+		    	else if(ihtai.areReflexesEnabled()){
+			    	if(res.reflexOutput){
+			    		if(res.reflexOutput.length==1){
+			    			moveVel=res.reflexOutput[0].signal[0];
+			    		}
+			    		else{
+			    			moveVel=0;
+			    		}
+			    		console.log('reflexes')
+			    	}    		
+		    	}
+		    	else{
+		    		moveVel=0;
+		    	}
+
+		    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
+
+		    	if (res.drivesOutput!=null){
+		    		if(res.drivesOutput[1]==100){
+		    			sleepMode=true;
 		    		}
-		    		else{
-		    			moveVel=0;
+		    		if(res.drivesOutput[1]==0){ //circle has gotten enough sleep. wake it back up.
+		    			sleepMode=false;
 		    		}
-		    		console.log('reflexes')
-		    	}    		
-	    	}
-	    	else{
-	    		moveVel=0;
-	    	}
-
-	    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
-
-	    	if (res.drivesOutput!=null){
-	    		if(res.drivesOutput[1]==100){
-	    			sleepMode=true;
-	    		}
-	    		if(res.drivesOutput[1]==0){ //circle has gotten enough sleep. wake it back up.
-	    			sleepMode=false;
-	    		}
-	    		if(res.drivesOutput[0]==100){
-	    			isRavenous=true;
-	    		}
-	    		if(res.drivesOutput[0]<=50){
-	    			isRavenous=false;
-	    		}
-	    	}
-	    	if(sleepMode){
-	    		moveVel=0;
-	    	}
-	    	
-
+		    		if(res.drivesOutput[0]==100){
+		    			isRavenous=true;
+		    		}
+		    		if(res.drivesOutput[0]<=50){
+		    			isRavenous=false;
+		    		}
+		    	}
+		    	if(sleepMode){
+		    		moveVel=0;
+		    	}
+		    	
+		    }
 		});
 
 		$("#saveBtn").click(function(e){

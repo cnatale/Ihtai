@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=20, focusHeight=20, ihtaiPaused=false;
+var eyePos={x:0,y:0}, focusWidth=15, focusHeight=15, ihtaiPaused=false;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -143,9 +143,9 @@ require([], function(){
 	}];
 
     ihtai = new Ihtai({
-		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+		clusterCount:90000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:8+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:900,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
@@ -189,7 +189,8 @@ require([], function(){
 			if(shouldOpenFile){
 				ihtaiPaused=true;
 				openFile();
-				shouldOpenFile=false;		
+				shouldOpenFile=false;	
+				return;	
 			}
 
 	    	var td;
@@ -236,7 +237,7 @@ require([], function(){
 
 			var res=ihtai.cycle(cycleArr, td);
 
-			if(res.memorizerOutput != null){
+			if(res.memorizerOutput != null && Math.random() > .1/*keep from overfitting*/){
 				//read res keypad signals, and trigger keyboard events per signal output
 				fireKeySignal=res.memorizerOutput[0];
 				directionKeySignal=res.memorizerOutput[1];

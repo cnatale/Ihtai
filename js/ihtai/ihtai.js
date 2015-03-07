@@ -383,7 +383,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
 						level[i].series[buffer[startState].id].collisions++;
 						//clamp upper bound at 1000 ***warning this seems to break learning. investigate***
-						//if(level[i].series[buffer[startState].id].collisions>1000)level[i].series[buffer[startState].id].collisions=1000;
+						if(level[i].series[buffer[startState].id].collisions>1000)level[i].series[buffer[startState].id].collisions=1000;
 
 						for(var j=0;j<bufferGoalDist.length;j++){
 							var collisions=level[i].series[buffer[startState].id].collisions;
