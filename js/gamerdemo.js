@@ -143,7 +143,7 @@ require([], function(){
 	}];
 
     ihtai = new Ihtai({
-		clusterCount:90000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+		clusterCount:1000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:8+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
 		memoryHeight:900,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,

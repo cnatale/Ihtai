@@ -23,9 +23,6 @@ require(['physicsjs'], function(Physics){
 	  alert('The File APIs are not fully supported in this browser.');
 	}
 
-
-
-
 	var shouldOpenFile=false;
 	var file;
 	function openFile(){
@@ -35,7 +32,6 @@ require(['physicsjs'], function(Physics){
 			return function(e) {
 				var ihtaiJsonString=e.target.result;
 				//instantiate ihtai with loaded file
-				debugger;
 				ihtai=null;
 				ihtai= new Ihtai(ihtaiJsonString);
 				ihtaiPaused=false;
@@ -100,26 +96,6 @@ require(['physicsjs'], function(Physics){
 
 		// constrain objects to these bounds
 		world.add(edgeBounce);
-
-
-		// resize events
-		/*window.addEventListener('resize', function () {
-	
-			viewWidth = parent.innerWidth;
-			viewHeight = parent.innerHeight;
-	
-			renderer.el.width = viewWidth;
-			renderer.el.height = viewHeight;
-	
-			renderer.options.width = viewWidth;
-			renderer.options.height = viewHeight;
-	
-			viewportBounds = Physics.aabb(0, 0, viewWidth, viewHeight);
-			edgeBounce.setAABB(viewportBounds);
-	
-		}, true);*/
-
-
 
 		// enabling collision detection among bodies
 		world.add(Physics.behavior("body-collision-detection"));	  
@@ -232,7 +208,8 @@ require(['physicsjs'], function(Physics){
 				this.hunger=Math.min(this.hunger, 100);
 				this.hunger=Math.max(this.hunger, 0);
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
-				$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
+				//important: this next line will cause an ihtai loaded from file to crash due to the ihtai ref
+				//$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 				return this.hunger;
 			},
 			targetValue:0 //the goal value for hunger
@@ -262,8 +239,9 @@ require(['physicsjs'], function(Physics){
 				//clamp vals
 				this.tiredness=Math.min(this.tiredness, 100);
 				this.tiredness=Math.max(this.tiredness, 0);
-				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));	
-				$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
+				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));
+				//important: this next line will cause an ihtai loaded from file to crash due to the ihtai ref					
+				//$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 				return this.tiredness;
 			},
 			targetValue:0 //the goal value for hunger
@@ -302,7 +280,7 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:100,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostimuli values + drives*/
 			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 			drivesList:drives,
@@ -316,7 +294,6 @@ require(['physicsjs'], function(Physics){
 		Physics.util.ticker.on(function( time, dt ){
 			if(!ihtaiPaused){
 				if(shouldOpenFile){
-					debugger;
 					ihtaiPaused=true;
 					openFile();
 					shouldOpenFile=false;	
