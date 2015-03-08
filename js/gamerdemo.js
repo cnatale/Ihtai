@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=15, focusHeight=15, ihtaiPaused=false;
+var eyePos={x:0,y:0}, focusWidth=10, focusHeight=10, ihtaiPaused=false;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -143,17 +143,17 @@ require([], function(){
 	}];
 
     ihtai = new Ihtai({
-		clusterCount:1000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:8+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:900,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:800,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
 		backStimCt:1
 	});		
 
-	var intervalID = window.setInterval(updateIhtai, 33);
-
+	//var intervalID = window.setInterval(updateIhtai, 33);
+	window.updateIhtai=updateIhtai;
 
 	/*
 	TODO: add listeners for up, left, right char codes, space bar
@@ -215,14 +215,14 @@ require([], function(){
 				var output=[],ctr=0,sum=0;
 			    for (var i = 0; i < d.length; i += 4) {
 			    	//var avg = (d[i] + d[i +1] + d[i +2]) / 3;		    	
-			    	var avg=d[i+3];
+			    	var gray=d[i+3];
 			    	//d[i]     = 255; // red
 			    	//d[i + 1] = 0; // green
-			    	//d[i + 2] = 0; // blue
-			    	//d[i + 3] = 255;
-			    	output.push(avg/2.55); //the 2.55 is a normalizer to scale 0-255 to 0-100
+			    	d[i + 2] = 255; // blue
+			    	d[i + 3] = 255;
+			    	output.push(gray/2.55); //the 2.55 is a normalizer to scale 0-255 to 0-100
 			    	ctr++;
-			    	sum+=avg;
+			    	sum+=gray;
 			    }
 			    ctx.putImageData(imageData, eyePos.x, eyePos.y);
 			    prevBrightness = sum/ctr; //avg brightness for this bitmap chunk

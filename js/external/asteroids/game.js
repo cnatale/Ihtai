@@ -1198,24 +1198,11 @@ $(function () {
       frameCount = 0;
     }
 
-    ///////////
-    /*
-    if(typeof eyePos != "undefined"){
-      var imageData = context.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
-      var data=imageData.data;
-
-      var showEyePos = function(d) {
-          for (var i = 0; i < d.length; i += 4) {
-            d[i]     = 255; // red
-            d[i + 1] = 0; // green
-            d[i + 2] = 0; // blue
-            d[i + 3] = 255;
-          }
-          context.putImageData(imageData, eyePos.x, eyePos.y);
-      };     
-      showEyePos(data); 
+    //// calling ihtai loop from here so it's synchronized with graphics loop ////
+    if(typeof window.updateIhtai != 'undefined'){
+      window.updateIhtai();
     }
-    */
+    ///////////////////////////////////////////////////////////////////////////////
 
     if (paused) {
       Text.renderText('PAUSED', 72, Game.canvasWidth/2 - 160, 120);

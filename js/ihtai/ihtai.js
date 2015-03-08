@@ -508,7 +508,7 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 						clusters[i].stimuli[j]=50;
 					}
 					else{
-						clusters[i].stimuli[j]=Math.random()*100;
+						clusters[i].stimuli[j]=Math.round(Math.random()*100);
 					}
 					
 				}

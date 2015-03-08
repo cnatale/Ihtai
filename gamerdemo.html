@@ -4,7 +4,8 @@
 	<meta charset="utf-8">
 	<style>
 	  body{background-color:#cc6666;}
-      #canvas { border:1px solid black; top:0px; left:0px; }
+      #canvas, #canvasOverlay { position:absolute; border:1px solid black; top:0px; left:0px; }
+      #canvasOverlay{z-index:999;}
       .button { position:absolute; border:1px solid black; }
       #left-controls { position:absolute; left:1px; bottom:0px; display:none; }
       #right-controls { position:absolute; right:1px; bottom:0px; display:none; }
