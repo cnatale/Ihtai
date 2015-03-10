@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=10, focusHeight=10, ihtaiPaused=false;
+var eyePos={x:0,y:0}, focusWidth=9, focusHeight=7, ihtaiPaused=false;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -79,7 +79,7 @@ require([], function(){
 			//$("#avgPleasure").html("avg pleasure: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 			return this.pleasure;
 		},
-		targetValue:100 //the goal value for pleasure
+		targetval:100 //the goal value for pleasure
 	};
 	var painDrive={
 		init:function(){
@@ -102,7 +102,7 @@ require([], function(){
 			//$("#avgpain").html("avg pain: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 			return this.pain;
 		},
-		targetValue:0 //the goal value for pain
+		targetval:0 //the goal value for pain
 	};
 	drives=[pleasureDrive, painDrive];
 
@@ -145,11 +145,11 @@ require([], function(){
     ihtai = new Ihtai({
 		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:8+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
-		acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
-		backStimCt:1
+		acceptableRange:10000,/*600*//*acceptable range for optimal stimuli is in square dist*/
+		bStmCt:1
 	});		
 
 	//var intervalID = window.setInterval(updateIhtai, 33);

@@ -187,8 +187,8 @@ require(['physicsjs'], function(Physics){
 			init:function(){
 				return this.hunger;
 			},
-			cycle:function(stimuli, dt){
-				if(stimuli[3] < 10){
+			cycle:function(stm, dt){
+				if(stm[3] < 10){
 					if(this.hunger>0){
 						this.hunger-= .01 * dt;
 					}
@@ -212,15 +212,15 @@ require(['physicsjs'], function(Physics){
 				//$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 				return this.hunger;
 			},
-			targetValue:0 //the goal value for hunger
+			targetval:0 //the goal value for hunger
 		};
 		var tiredDrive={
 			tiredness:0,
 			init:function(){
 				return this.tiredness;
 			},
-			cycle:function(stimuli,dt){
-				if(stimuli[2] <= 50){
+			cycle:function(stm,dt){
+				if(stm[2] <= 50){
 					if(this.tiredness>0){
 						this.tiredness-= .01 * dt;
 					}
@@ -244,19 +244,19 @@ require(['physicsjs'], function(Physics){
 				//$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 				return this.tiredness;
 			},
-			targetValue:0 //the goal value for hunger
+			targetval:0 //the goal value for hunger
 		};
 		drives=[hungerDrive, tiredDrive];
 
 		var reflexes = [{
 			init:function(){},
-			matcher: function(stimuli){ /*move if pellet it detected*/
-				if(stimuli[0]>=50)
+			matcher: function(stm){ /*move if pellet it detected*/
+				if(stm[0]>=50)
 					return true;
 				else
 					return false;
 			}, 
-			response: function(stimuli){
+			response: function(stm){
 				return {
 					indices:[2],
 					signal:[100]
@@ -265,13 +265,13 @@ require(['physicsjs'], function(Physics){
 		},
 		{
 			init:function(){},
-			matcher: function(stimuli){ /*dont' move if no pellet is detected*/
-				if(stimuli[0]<50)
+			matcher: function(stm){ /*dont' move if no pellet is detected*/
+				if(stm[0]<50)
 					return true;
 				else
 					return false;
 			}, 
-			response: function(stimuli){
+			response: function(stm){
 				return {
 					indices:[2],
 					signal:[0]
@@ -281,12 +281,12 @@ require(['physicsjs'], function(Physics){
 
 	    ihtai = new Ihtai({
 			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-			vectorDim:6,/*number of iostimuli values + drives*/
-			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+			vectorDim:6,/*number of iostm values + drives*/
+			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:600,/*acceptable range for optimal stimuli is in square dist*/
-			backStimCt:0
+			acceptableRange:600,/*acceptable range for optimal stm is in square dist*/
+			backStimCt:1
 		});
 	    /////////////////////////////////
 	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;

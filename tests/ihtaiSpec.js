@@ -83,23 +83,23 @@ describe('ihtai', function(){
 			memorizer = new Memorizer(100);
 
 			memory=[10,20,30,40,50];
-			cluster = {id:0, stimuli:memory};
+			cluster = {id:0, stm:memory};
 			memorizer.memorize(cluster);
 			var memory2=[50,40,30,20,10];
-			var cluster2 = {id:1, stimuli:memory2};
+			var cluster2 = {id:1, stm:memory2};
 			memorizer.memorize(cluster2);
 			var memory3=[0,0,0,0,0];
-			var cluster3 = {id:2, stimuli:memory3};
+			var cluster3 = {id:2, stm:memory3};
 			memorizer.memorize(cluster3);
 
 			var memory4=[30,30,30,30,30];
-			var cluster4 = {id:3, stimuli:memory4};
+			var cluster4 = {id:3, stm:memory4};
 			memorizer.memorize(cluster4);
 			var memory5=[35,35,35,35,35];
-			var cluster5 = {id:4, stimuli:memory5};
+			var cluster5 = {id:4, stm:memory5};
 			memorizer.memorize(cluster5);
 			var memory6=[40,40,40,40,40];
-			var cluster6 = {id:5, stimuli:memory6};
+			var cluster6 = {id:5, stm:memory6};
 			memorizer.memorize(cluster6);			
 		});
 		afterEach(function(){
@@ -123,7 +123,7 @@ describe('ihtai', function(){
 			Explanation: the final memory in the series starting with cluster reaches perfect homeostasis
 			([0,0,0,0,0]). We expect res to equal the second vector in the series, [50,40,30,20,10]. This 
 			is the 'next step' that IHTAI thinks agent should take to get as close as possible to homeostasis
-			goal from current input stimuli.
+			goal from current input stm.
 			*/
 			expect(res).toEqual([50,40,30,20,10]);
 		})
@@ -136,13 +136,13 @@ describe('ihtai', function(){
 			var input=[];
 			reflexes = new Reflexes([{
 				init:function(){},
-				matcher: function(stimuli){
-					if(stimuli[3]===40)
+				matcher: function(stm){
+					if(stm[3]===40)
 						return true;
 					else
 						return false;
 				}, 
-				response: function(stimuli){
+				response: function(stm){
 					return {
 						indices:[4],
 						signal:[10]
@@ -157,7 +157,7 @@ describe('ihtai', function(){
 
 		it('should trigger reflexes', function(){
 			var memory=[10,20,30,40,50];
-			var cluster = {id:0, stimuli:memory};
+			var cluster = {id:0, stm:memory};
 			var res=reflexes.cycle(cluster);
 
 			expect(res.length).toBe(1);
@@ -178,8 +178,8 @@ describe('ihtai', function(){
 					this.v=5;
 					return this.v;
 				},
-				cycle:function(stimuli){
-					if(stimuli[0] > 50)
+				cycle:function(stm){
+					if(stm[0] > 50)
 						this.v=0;
 					else
 						this.v++;
@@ -224,8 +224,8 @@ describe('ihtai', function(){
 					this.v=5;
 					return this.v;
 				},
-				cycle:function(stimuli){
-					if(stimuli[0] > 50)
+				cycle:function(stm){
+					if(stm[0] > 50)
 						this.v=0;
 					else
 						this.v++;
@@ -237,13 +237,13 @@ describe('ihtai', function(){
 
 			reflexes = [{
 				init: function(){},
-				matcher: function(stimuli){
-					if(stimuli[3]===40)
+				matcher: function(stm){
+					if(stm[3]===40)
 						return true;
 					else
 						return false;
 				}, 
-				response: function(stimuli){
+				response: function(stm){
 					return {
 						indices:[4],
 						signal:[10]
@@ -265,7 +265,7 @@ describe('ihtai', function(){
 
 		});
 
-		it('should cycle when presented with io stimuli', function(){
+		it('should cycle when presented with io stm', function(){
 			//io array should be of length vectorDim - drivesList.length
 			ihtai.cycle([10, 20, 30, 40, 50, 60, 70, 80, 90]);
 			ihtai.cycle([90, 80, 70, 60, 50, 40, 30, 20, 10]);
@@ -297,7 +297,7 @@ describe('ihtai', function(){
 
 		});
 
-		it('should create an Ihtai instance with back-stimuli', function(){
+		it('should create an Ihtai instance with back-stm', function(){
 			var ihtai2 = new Ihtai({
 				clusterCount:1000,
 				vectorDim:10,
@@ -305,7 +305,7 @@ describe('ihtai', function(){
 				drivesList:drives,
 				reflexList:reflexes,
 				acceptableRange:80,
-				backStimCt:1
+				bStmCt:1
 			});
 
 			ihtai2.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
@@ -313,7 +313,7 @@ describe('ihtai', function(){
 			ihtai2.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50], 33);
 		});
 
-		it('should implement back-stimuli correctly on re-inflated Ihtai instances', function(){
+		it('should implement back-stm correctly on re-inflated Ihtai instances', function(){
 			var ihtai = new Ihtai({
 				clusterCount:1000,
 				vectorDim:10,
@@ -321,7 +321,7 @@ describe('ihtai', function(){
 				drivesList:drives,
 				reflexList:reflexes,
 				acceptableRange:100000,
-				backStimCt:1
+				bStmCt:1
 			});
 
 			var resp=ihtai.toJsonString('ihtaiSave');

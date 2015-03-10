@@ -2,8 +2,8 @@ var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
 	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
-	var backStimCt=0, prevStimuli=[];
-	var outputStimuli =[]; //the output stimuli buffer;
+	var bStmCt=0, prevstm=[];
+	var outputstm =[]; //the output stm buffer;
 
 	if(typeof bundle=="string"){ //load from stringified json instead of default initialization
 		var parsedFile=JSON.parse(bundle); 
@@ -11,7 +11,7 @@ var Ihtai = (function(bundle){
 		clusterCount= parsedFile.clusterCount;
 		vectorDim=parsedFile.vectorDim;
 		memoryHeight=parsedFile.memoryHeight;
-		backStimCt=parsedFile.backStimCt;
+		bStmCt=parsedFile.bStmCt;
 		acceptableRange=parsedFile.acceptableRange;
 
 		//rebuild kd-tree from binary heap
@@ -19,7 +19,7 @@ var Ihtai = (function(bundle){
 		var treeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
 		//inflate clusters
-		clusters = new Clusters(clusterCount, vectorDim, backStimCt, treeRoot);
+		clusters = new Clusters(clusterCount, vectorDim, bStmCt, treeRoot);
 
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
@@ -89,10 +89,10 @@ var Ihtai = (function(bundle){
 				acceptableRange=bundle.acceptableRange;
 			else
 				acceptableRange=null;
-			if(bundle.backStimCt)
-				backStimCt=bundle.backStimCt;
+			if(bundle.bStmCt)
+				bStmCt=bundle.bStmCt;
 
-			clusters = new Clusters(clusterCount, vectorDim, backStimCt);
+			clusters = new Clusters(clusterCount, vectorDim, bStmCt);
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
 			memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);		
@@ -100,33 +100,33 @@ var Ihtai = (function(bundle){
 	init(bundle);
 	}
 
-	function cycle(ioStimuli, dt){
-		var combinedStimuli, curCluster;
+	function cycle(iostm, dt){
+		var combinedstm, curCluster;
 
 		//cycle drives
-		var drivesOutput=drives.cycle(ioStimuli, dt);
+		var drivesOutput=drives.cycle(iostm, dt);
 
-		//merge ioStimuli and drives output
-		combinedStimuli = ioStimuli.concat(drivesOutput);
+		//merge iostm and drives output
+		combinedstm = iostm.concat(drivesOutput);
 
 		/*
-		Keep track of last backStimCt stimuli, Array.concat combinedStimuli onto
-		aforementioned stimuli. Set combinedStimuli to this val instead.
+		Keep track of last bStmCt stm, Array.concat combinedstm onto
+		aforementioned stm. Set combinedstm to this val instead.
 
 		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
-		if we have last backStimCt stimuli in memory (dependent on curCluster)
+		if we have last bStmCt stm in memory (dependent on curCluster)
 		*/		
 
 		var reflexOutput=[], memorizerOutput=null;
-		if(prevStimuli.length === backStimCt){ //wait for prevStimuli buffer to fill up
-			var backAndCurrentStimuli=[];
-			for(var i=0;i<prevStimuli.length;i++){
-				backAndCurrentStimuli= backAndCurrentStimuli.concat(prevStimuli[i]);
+		if(prevstm.length === bStmCt){ //wait for prevstm buffer to fill up
+			var backAndCurrentstm=[];
+			for(var i=0;i<prevstm.length;i++){
+				backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
 			}
-			backAndCurrentStimuli=backAndCurrentStimuli.concat(combinedStimuli);
+			backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
 
-			//get nearest cluster for combined stimuli
-			curCluster= clusters.findNearestCluster(backAndCurrentStimuli);
+			//get nearest cluster for combined stm
+			curCluster= clusters.findNearestCluster(backAndCurrentstm);
 
 			//cycle reflexes
 			if(_enableReflexes)
@@ -139,10 +139,10 @@ var Ihtai = (function(bundle){
 			}
 		}
 
-		//update previous stimuli buffer
-		prevStimuli.push(combinedStimuli);
-		if(prevStimuli.length>backStimCt)
-			prevStimuli.shift();
+		//update previous stm buffer
+		prevstm.push(combinedstm);
+		if(prevstm.length>bStmCt)
+			prevstm.shift();
 	
 		//send reflex output and memorizer output back to ai agent
 		return {
@@ -178,7 +178,7 @@ var Ihtai = (function(bundle){
 		deflated.clusterCount=clusterCount;
 		deflated.vectorDim=vectorDim;
 		deflated.memoryHeight=memoryHeight;
-		deflated.backStimCt=backStimCt;
+		deflated.bStmCt=bStmCt;
 		deflated.acceptableRange=acceptableRange;
 
 		//save drives
@@ -254,7 +254,7 @@ var Ihtai = (function(bundle){
 
 /**
 	The cerebral cortex of the a.i. Hierarchically, temporally memorizes
-	moments in time represented by vectors combining stimuli and drive states.
+	moments in time represented by vectors combining stm and drive states.
 */
 var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
@@ -291,26 +291,26 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 	init();
 
 	/**
-		Takes a cluster containing vector representing current i/o stimuli state combined with current 
+		Takes a cluster containing vector representing current i/o stm state combined with current 
 		drive state.
 		@returns A vector representing the next action agent should take to minimize homeostasis differential.
 		If no vector is within acceptable range, return null.
 	*/
 	function query(cluster){
-		var outputStimuli=null, stimDist, sd;
+		var outputstm=null, stimDist, sd;
 
 		/*TODO:this query could be improved to log(h) if the data was sorted according to dist from
 		homeostasis goal * some multiplier for height val (to disincentivize longer-term solutions)
 		*/
 		for(var i=0; i<height; i++){
 			//At each level, compare time series' end drive state with homeostasis goal.
-			//If result < acceptable range, return time series' starting ouput stimuli (what agent will act on).
+			//If result < acceptable range, return time series' starting ouput stm (what agent will act on).
 			
 			if(level[i].series.hasOwnProperty(cluster.id)){
 				sd = sqDist(level[i].series[cluster.id].es.slice(-homeostasisGoal.length), homeostasisGoal);
 				if(sd <= acceptableRange){
-					outputStimuli = level[i].series[cluster.id].ss;
-					//console.log('output stimuli lvl:'+ i);
+					outputstm = level[i].series[cluster.id].ss;
+					//console.log('output stm lvl:'+ i);
 					break;
 				}
 				//console.log('query distance:'+sd);
@@ -318,11 +318,11 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			//if no match is within acceptable range, go to next level
 		}
 
-		return outputStimuli;
+		return outputstm;
 	}
 
 	/**
-		Memorizes stimuli
+		Memorizes stm
 	*/
 	function memorize(cluster){
 		/*
@@ -332,7 +332,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			Every level has a counter, that is reset every time a new memory sequence starts. The memory
 			sequence counts to i+2	
 
-			Each vector is a reference to to a cluster's stimuli array, making this an efficient way
+			Each vector is a reference to to a cluster's stm array, making this an efficient way
 			to re-use the existing memory allocations (only need to store a pointer instead of the raw
 			vector data).
 		*/
@@ -379,11 +379,11 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
 					by reference to clusters is more memory efficient, editing the cluster vals was breaking the kd tree.
 					*/		
-					if(sqDist(buffer[ss].stimuli, level[i].series[buffer[fs].id].ss) === 0){
-						var bufferGoalDist = buffer[es].stimuli.slice(-homeostasisGoal.length);
+					if(sqDist(buffer[ss].stm, level[i].series[buffer[fs].id].ss) === 0){
+						var bufferGoalDist = buffer[es].stm.slice(-homeostasisGoal.length);
 						var esGoalDist = level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length);
 						level[i].series[buffer[fs].id].cs++;
-						//clamp upper bound at 1000 ***warning this seems to break learning. investigate***
+						//clamp upper bound at 1000 to keep memory from getting too 'stuck'
 						if(level[i].series[buffer[fs].id].cs>1000)level[i].series[buffer[fs].id].cs=1000;
 
 						for(var j=0;j<bufferGoalDist.length;j++){
@@ -394,16 +394,32 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						Array.prototype.splice.apply(level[i].series[buffer[fs].id].es, args);	
 					}
 					else{ 
-						//sss are different. Figure out which one leads to better outcome.
-						sd1 = sqDist(buffer[es].stimuli.slice(-homeostasisGoal.length), homeostasisGoal);
+						//second states are different. Figure out which one leads to better outcome.
+						sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
 
 						if(sd1 < sd2){
+							/*
+							TODO: 
+							-Use the sliced arrays to find nearest neighbor clusters. 
+							-Store nearest neighbor clusters. When an Ihtai is JSON stringified, store the
+							cluster id instead of the array. 
+							-When an ihtai is de-stringified, use the cluster id to reference the ihtai cluster value.
+							*/
+							/*
+							BUG:
+							These stored values are ignoring backMemory. Should use dynamic programming
+							access to Clusters.combinedSignal like the kd tree. Probably makes sense to 
+							use the same cache object from Ihtai.utils. All comparisons should be done
+							against this value, not a cluster's .stm property which only represents the
+							current moment in time (ignoring backMemory).
+							EDIT:actually I don't think i need to care about this in either memorization or query
+							*/
 							//add memory series to level. Hash based on starting state cluster id.
 							level[i].series[buffer[fs].id]={
-								fs: buffer[fs].stimuli.slice(), 
-								ss: buffer[ss].stimuli.slice(),
-								es: buffer[es].stimuli.slice(),
+								fs: buffer[fs].stm.slice(), 
+								ss: buffer[ss].stm.slice(),
+								es: buffer[es].stm.slice(),
 								cs:0
 							};
 						}	
@@ -413,9 +429,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					level[i].series[buffer[fs].id]={
-						fs: buffer[fs].stimuli.slice(), 
-						ss: buffer[ss].stimuli.slice(),
-						es: buffer[es].stimuli.slice(),
+						fs: buffer[fs].stm.slice(), 
+						ss: buffer[ss].stm.slice(),
+						es: buffer[es].stm.slice(),
 						cs:0
 					};					
 				}
@@ -456,17 +472,17 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 	}
 });
 
-//clusters are 'buckets' that n-dimensional stimuli moments are placed inside
+//clusters are 'buckets' that n-dimensional stm moments are placed inside
 //_kdTree is an optional param
-var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
+var Clusters = (function(_numClusters, _vectorDim, bStmCt, _kdTree){
 	var vectorDim=_vectorDim, clusterTree;
 	var numClusters = _numClusters;	
 	/**
 		Individual clusters have the following properties:
 		id: a unique id
-		stimuli: a vector representing stimuli
-		backStim: (array) the array of back-memories' indices/id that combine with id cluster val to make a key 
-		combinedSignal: (function) returns an array representing all back-memory signals plus stimuli signal		
+		stm: a vector representing stm
+		bStm: (array) the array of back-memories' indices/id that combine with id cluster val to make a key 
+		combinedSignal: (function) returns an array representing all back-memory signals plus stm signal		
 	*/
 
 	/**
@@ -487,36 +503,36 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 		pseudo-random uniform distribution.
 		*/
 
-		//note that this function will be appended to indiv. clusters, meaning the backStims and
-		//stimuli variables will be relative to said cluster.
+		//note that this function will be appended to indiv. clusters, meaning the bStms and
+		//stm variables will be relative to said cluster.
 		var combinedSignal = function(){
 			var output=[];
-			for(var i=0;i<this.backStim.length;i++){
-				output= output.concat(clusters[this.backStim[i]].stimuli);
+			for(var i=0;i<this.bStm.length;i++){
+				output= output.concat(clusters[this.bStm[i]].stm);
 			}
-			output=output.concat(this.stimuli);
+			output=output.concat(this.stm);
 			return output;
 		}			
 
 		if(typeof _kdTree == "undefined"){
-			//create clusters with id(needs to be unique) and stimuli properties
+			//create clusters with id(needs to be unique) and stm properties
 			for(var i=0;i<numClusters;i++){
-				clusters[i]={id:i, stimuli:[], backStim:[]};
+				clusters[i]={id:i, stm:[], bStm:[]};
 				//map clusters to random points in n-dimensional space 
 				for(var j=0;j<vectorDim;j++){
 					//assumes vectors are normalized to a 0-100 scale
 					if(i==0){ //test cluster
-						clusters[i].stimuli[j]=50;
+						clusters[i].stm[j]=50;
 					}
 					else{
-						clusters[i].stimuli[j]=Math.round(Math.random()*100);
+						clusters[i].stm[j]=Math.round(Math.random()*100);
 					}
 					
 				}
 
 				//randomly assign back-memory cluster ids
-				for(j=0; j<backStimCt; j++){
-					clusters[i].backStim[j]= Math.floor(Math.random()*(numClusters-1));
+				for(j=0; j<bStmCt; j++){
+					clusters[i].bStm[j]= Math.floor(Math.random()*(numClusters-1));
 				} 				
 			}
 
@@ -530,7 +546,7 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 			//and needs to be added back to every object
 
 			//rebuild clusters array b/c that's the only way to efficiently search for
-			//backStim ids by key			
+			//bStm ids by key			
 			node=clusterTree.getRoot();
 
 			function inorder(node){
@@ -538,7 +554,7 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 					return;
 				inorder(node.l);
 
-				clusters[node.val.id]=node.val; //rebuild clusters array to use as lookup table for backStim
+				clusters[node.val.id]=node.val; //rebuild clusters array to use as lookup table for bStm
 
 				inorder(node.r);
 			}
@@ -593,8 +609,8 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 });
 
 /**
-	Drives are internal stimuli with states determined by algorithms that take each other and external stimuli 
-	as inputs. Each drive contains a method which maps io stimuli and other drive states into an output
+	Drives are internal stm with states determined by algorithms that take each other and external stm 
+	as inputs. Each drive contains a method which maps io stm and other drive states into an output
 	drive state.
 
 	@params drives: Array. An array of drive methods. Each drive takes form {init:function, cycle:function}
@@ -659,7 +675,7 @@ var Drives = (function(_drives){
 });
 
 /**
-	Reflexes are actions that can be 'hot-triggered' every cycle. They map certain input stimuli vectors to set output responses,
+	Reflexes are actions that can be 'hot-triggered' every cycle. They map certain input stm vectors to set output responses,
 	Ex: a knee nerve stimulation of sufficient level triggers a kick reflex.
 
 	Reflexes also serve the purpose of seeding the Memorizer with behaviors that it can build on.
@@ -670,7 +686,7 @@ var Reflexes = (function(_reflexes){
 	matcher: vector indices to match against, in the form of {indices:[], signal:[]}
 	response: the reflex response, in the form of {indices:[], signal:[]}. The responseLevels part is a vector
 	of the dimensions described by the indices part. So a match containing only the second index would return
-	a 1-d vector signal, which would be sent as an output stimuli to the second index.
+	a 1-d vector signal, which would be sent as an output stm to the second index.
 	*/
 	var reflexes = _reflexes;
 	function init(){
@@ -681,12 +697,12 @@ var Reflexes = (function(_reflexes){
 	init();
 
 	function cycle(cluster, dt){
-		var output=[], matcher, response, indices, stimuli=cluster.stimuli, ctr;
-		//cluster has properties: id, stimuli
+		var output=[], matcher, response, indices, stm=cluster.stm, ctr;
+		//cluster has properties: id, stm
 		for(var i=0; i<reflexes.length;i++){
 			matcher=reflexes[i].matcher;
-			if(matcher(stimuli, dt))
-				output.push(reflexes[i].response(stimuli));
+			if(matcher(stm, dt))
+				output.push(reflexes[i].response(stm));
 		}
 
 		return output;

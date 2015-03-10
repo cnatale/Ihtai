@@ -193,8 +193,12 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	@param v the vector to use when performing nearest neighbor search
 	nodes have properties l, r, and val
 	*/
-	function nearestNeighbor(pt){
+	function nearestNeighbor(pt, cmpr){
 		var bestPt, bestDist=Infinity;
+		/*if(typeof cmpr !="undefined"){
+			//offers a way to overried default comparisonProp for kd tree
+			var comparisonProp = cmpr;
+		}*/
 	
 		nn(root, 0);
 		//cache=[];
