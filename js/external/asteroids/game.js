@@ -37,7 +37,7 @@ $(window).keydown(function (e) {
   }
 });
 
-GRID_SIZE = 60;
+GRID_SIZE = 30;
 
 Matrix = function (rows, columns) {
   var i, j;
@@ -380,24 +380,24 @@ Ship = function () {
                                3,  6]);
 
   this.bulletCounter = 0;
-
+  this.scale=.5;
   this.postMove = this.wrapPostMove;
 
   this.collidesWith = ["asteroid", "bigalien", "alienbullet"];
 
   this.preMove = function (delta) {
     if (KEY_STATUS.left) {
-      this.vel.rot = -6;
+      this.vel.rot = -3;
     } else if (KEY_STATUS.right) {
-      this.vel.rot = 6;
+      this.vel.rot = 3;
     } else {
       this.vel.rot = 0;
     }
 
     if (KEY_STATUS.up) {
       var rad = ((this.rot-90) * Math.PI)/180;
-      this.acc.x = 0.5 * Math.cos(rad);
-      this.acc.y = 0.5 * Math.sin(rad);
+      this.acc.x = 0.25 * Math.cos(rad);
+      this.acc.y = 0.25 * Math.sin(rad);
       this.children.exhaust.visible = Math.random() > 0.1;
     } else {
       this.acc.x = 0;
@@ -421,8 +421,8 @@ Ship = function () {
             // move to the nose of the ship
             bullet.x = this.x + vectorx * 4;
             bullet.y = this.y + vectory * 4;
-            bullet.vel.x = 6 * vectorx + this.vel.x;
-            bullet.vel.y = 6 * vectory + this.vel.y;
+            bullet.vel.x = 3 * vectorx + this.vel.x;
+            bullet.vel.y = 3 * vectory + this.vel.y;
             bullet.visible = true;
             break;
           }
@@ -432,8 +432,8 @@ Ship = function () {
 
     // limit the ship's speed
     if (Math.sqrt(this.vel.x * this.vel.x + this.vel.y * this.vel.y) > 8) {
-      this.vel.x *= 0.95;
-      this.vel.y *= 0.95;
+      this.vel.x *= 0.47;
+      this.vel.y *= 0.47;
     }
   };
 
@@ -463,6 +463,7 @@ BigAlien = function () {
              -20,   0,
               20,   0]);
 
+  this.scale = /*6*/.5;
   this.children.top = new Sprite();
   this.children.top.init("bigalien_top",
                          [-8, -4,
@@ -489,10 +490,10 @@ BigAlien = function () {
   this.newPosition = function () {
     if (Math.random() < 0.5) {
       this.x = -20;
-      this.vel.x = 1.5;
+      this.vel.x = .75;
     } else {
       this.x = Game.canvasWidth + 20;
-      this.vel.x = -1.5;
+      this.vel.x = -.75;
     }
     this.y = Math.random() * Game.canvasHeight;
   };
@@ -500,7 +501,7 @@ BigAlien = function () {
   this.setup = function () {
     this.newPosition();
 
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 2; i++) {
       var bull = new AlienBullet();
       this.bullets.push(bull);
       Game.sprites.push(bull);
@@ -522,16 +523,16 @@ BigAlien = function () {
     if (cn.south.west.nextSprite) bottomCount++;
 
     if (topCount > bottomCount) {
-      this.vel.y = 1;
+      this.vel.y = .5;
     } else if (topCount < bottomCount) {
-      this.vel.y = -1;
+      this.vel.y = -.5;
     } else if (Math.random() < 0.01) {
       this.vel.y = -this.vel.y;
     }
 
     this.bulletCounter -= delta;
     if (this.bulletCounter <= 0) {
-      this.bulletCounter = 22;
+      this.bulletCounter = 11;
       for (var i = 0; i < this.bullets.length; i++) {
         if (!this.bullets[i].visible) {
           bullet = this.bullets[i];
@@ -540,8 +541,8 @@ BigAlien = function () {
           var vectory = Math.sin(rad);
           bullet.x = this.x;
           bullet.y = this.y;
-          bullet.vel.x = 6 * vectorx;
-          bullet.vel.y = 6 * vectory;
+          bullet.vel.x = 3 * vectorx;
+          bullet.vel.y = 3 * vectory;
           bullet.visible = true;
           SFX.laser();
           break;
@@ -608,7 +609,7 @@ Bullet = function () {
     if (this.visible) {
       this.time += delta;
     }
-    if (this.time > 50) {
+    if (this.time > 25) {
       this.visible = false;
       this.time = 0;
     }
@@ -657,7 +658,7 @@ Asteroid = function () {
               -4,  -5]);
 
   this.visible = true;
-  this.scale = 6;
+  this.scale = /*6*/3;
   this.postMove = this.wrapPostMove;
 
   this.collidesWith = ["ship", "bullet", "bigalien", "alienbullet"];
@@ -674,13 +675,13 @@ Asteroid = function () {
       // break into fragments
       for (var i = 0; i < 3; i++) {
         var roid = $.extend(true, {}, this);
-        roid.vel.x = Math.random() * 6 - 3;
-        roid.vel.y = Math.random() * 6 - 3;
+        roid.vel.x = Math.random() * 3 - 1.5;
+        roid.vel.y = Math.random() * 3 - 1.5;
         if (Math.random() > 0.5) {
           roid.points.reverse();
         }
-        roid.vel.rot = Math.random() * 2 - 1;
-        roid.move(roid.scale * 3); // give them a little push
+        roid.vel.rot = Math.random() * 1 - .5;
+        roid.move(roid.scale * 1.5); // give them a little push
         Game.sprites.push(roid);
       }
     }
@@ -882,11 +883,11 @@ SFX.muted = true;
 
 Game = {
   score: 0,
-  totalAsteroids: 5,
+  totalAsteroids: /*5*/2,
   lives: 0,
 
-  canvasWidth: 800,
-  canvasHeight: 600,
+  canvasWidth: /*800*/320,
+  canvasHeight: /*600*/240,
 
   sprites: [],
   ship: null,
@@ -905,12 +906,12 @@ Game = {
         roid.x = Math.random() * this.canvasWidth;
         roid.y = Math.random() * this.canvasHeight;
       }
-      roid.vel.x = Math.random() * 4 - 2;
-      roid.vel.y = Math.random() * 4 - 2;
+      roid.vel.x = Math.random() * 2 - 1;
+      roid.vel.y = Math.random() * 2 - 1;
       if (Math.random() > 0.5) {
         roid.points.reverse();
       }
-      roid.vel.rot = Math.random() * 2 - 1;
+      roid.vel.rot = Math.random() * 1 - .5;
       Game.sprites.push(roid);
     }
   },
@@ -929,7 +930,7 @@ Game = {
       this.state = 'waiting';
     },
     waiting: function () {
-      Text.renderText(window.ipad ? 'Touch Screen to Start' : 'Press Space to Start', 36, Game.canvasWidth/2 - 270, Game.canvasHeight/2);
+      Text.renderText(window.ipad ? 'Touch Screen to Start' : 'Press Space to Start', 14, Game.canvasWidth/2 - 125, Game.canvasHeight/2);
 
       if (KEY_STATUS.space || window.gameStart) {
         KEY_STATUS.space = false; // hack so we don't shoot right away
@@ -990,7 +991,7 @@ Game = {
       if (Date.now() - this.timer > 1000) {
         this.timer = null;
         Game.totalAsteroids++;
-        if (Game.totalAsteroids > 12) Game.totalAsteroids = 12;
+        if (Game.totalAsteroids > /*12*/5) Game.totalAsteroids = /*12*/5;
         Game.spawnAsteroids();
         this.state = 'run';
       }
@@ -1010,7 +1011,7 @@ Game = {
       }
     },
     end_game: function () {
-      Text.renderText('GAME OVER', 50, Game.canvasWidth/2 - 160, Game.canvasHeight/2 + 10);
+      Text.renderText('GAME OVER', 14, Game.canvasWidth/2 - 70, Game.canvasHeight/2 + 10);
       if (this.timer == null) {
         this.timer = Date.now();
       }
@@ -1126,13 +1127,13 @@ $(function () {
   // shim layer with setTimeout fallback
   // from here:
   // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
-  window.requestAnimFrame = (function () {
-    return  window.requestAnimationFrame       ||
+  window.requestAnimFrame = (function (callback, element) {
+    return      window.requestAnimationFrame       ||
             window.webkitRequestAnimationFrame ||
             window.mozRequestAnimationFrame    ||
             window.oRequestAnimationFrame      ||
             window.msRequestAnimationFrame     ||
-            function (/* function */ callback, /* DOMElement */ element) {
+            function (callback, element) {
               window.setTimeout(callback, 1000 / 60);
             };
   })();
@@ -1187,7 +1188,7 @@ $(function () {
     }
 
     if (showFramerate) {
-      Text.renderText(''+avgFramerate, 24, Game.canvasWidth - 38, Game.canvasHeight - 2);
+      Text.renderText(''+avgFramerate, 18, Game.canvasWidth - 38, Game.canvasHeight - 2);
     }
 
     frameCount++;

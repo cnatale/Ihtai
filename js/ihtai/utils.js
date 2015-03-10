@@ -44,25 +44,25 @@ IhtaiUtils.loadFile = (function(fileStr){
 By implementing this using a binary heap array approach, we get O(n) tree load time vs. O(n*log(n)^2) for 
 the standard kd-tree builder algorithm without the data already ordered.
 
-Each element in the heap param contains a kd-tree's .value property
+Each element in the heap param contains a kd-tree's .val property
 */
 IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap){
 	var root,node, parent;
 	for(var i=0;i<heap.length;i++){
 		if(heap[i]!=null){
 			node={
-				value:heap[i]
+				val:heap[i]
 			}
-			heap[i]=node; //replace value with inflated object
+			heap[i]=node; //replace val with inflated object
 
 			if(i==0)
 				root=node;
 			else{
 				parent=heap[Math.floor((i-1)/2)];
-				if(!parent.hasOwnProperty('left'))
-					parent.left=node;
+				if(!parent.hasOwnProperty('l'))
+					parent.l=node;
 				else
-					parent.right=node;
+					parent.r=node;
 			}			
 		}
 	}
@@ -92,9 +92,9 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		while(queue.getLength()>0){
 			node=queue.dequeue();
 			if(node!=null){
-				queue.enqueue(node.left);
-				queue.enqueue(node.right);
-				output.push(node.value);
+				queue.enqueue(node.l);
+				queue.enqueue(node.r);
+				output.push(node.val);
 			}
 			else
 				output.push(node);
@@ -103,16 +103,16 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	}
 
 	/**
-		@param data: an array of n-dimensional values
+		@param data: an array of n-dimensional vals
 	*/
 	function buildKdTree(data){
 		/*
 		For each level l, split array of n-dimensional points along median of 
 		dimension l % d. Assign median point to node. Recursively perform operation on
-		left and right sub-arrays.
+		l and r sub-arrays.
 		*/
 
-		//each node contains the following properties: left, right, and value		
+		//each node contains the following properties: l, r, and val		
 
 		//TODO: this net line is the entirety of poor load performance
 		var root=createNode(data,0); //this will recursively build the entire kd-tree, with reference to root
@@ -125,14 +125,14 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				//base case. don't do any more splitting. 
 				//create node, return node. stop recursion.
 				node={
-					value:data[0],
-					left:null,
-					right:null
+					val:data[0],
+					l:null,
+					r:null
 				}
 				return node;
 			}
 			else{
-				var median, medianIndex, dimensionality, dim, left, right;
+				var median, medianIndex, dimensionality, dim, l, r;
 				dimensionality=data[0].length; //assumes all elements are of same dimension
 				dim = lvl % dimensionality;
 
@@ -161,25 +161,25 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 						return false;
 				});
 
-				//this prevents median and left from referencing same point if length=2 
+				//this prevents median and l from referencing same point if length=2 
 				if(sortedData.length==2){
 					node = {
-						value:sortedData[1],
-						left:createNode([sortedData[0]], lvl+1),
-						right:null
+						val:sortedData[1],
+						l:createNode([sortedData[0]], lvl+1),
+						r:null
 					}
 				}
 				else{
 					medianIndex=Math.floor(sortedData.length/2);
 					median=sortedData[medianIndex];
-					left=sortedData.slice(0,medianIndex);
-					right=sortedData.slice(medianIndex+1);
+					l=sortedData.slice(0,medianIndex);
+					r=sortedData.slice(medianIndex+1);
 
 					//create node.
 					node = {
-						value:median,
-						left:createNode(left, lvl+1),
-						right:createNode(right, lvl+1)
+						val:median,
+						l:createNode(l, lvl+1),
+						r:createNode(r, lvl+1)
 					}					
 				}
 
@@ -191,7 +191,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	/**
 	Perform nearest neighbor search on kd-tree.
 	@param v the vector to use when performing nearest neighbor search
-	nodes have properties left, right, and value
+	nodes have properties l, r, and val
 	*/
 	function nearestNeighbor(pt){
 		var bestPt, bestDist=Infinity;
@@ -201,7 +201,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		return bestPt;
 
 		function nn(node, lvl){
-			var left=1, right=-1, dir;
+			var l=1, r=-1, dir;
 			var dim=lvl % pt.length;
 
 			if(node==null)
@@ -209,33 +209,33 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 
 			var nv;
 			if(typeof comparisonProp==="function"){
-				if(!cache[node.value.id])
-					cache[node.value.id]=comparisonProp.call(node.value);
-				nv=cache[node.value.id];	
+				if(!cache[node.val.id])
+					cache[node.val.id]=comparisonProp.call(node.val);
+				nv=cache[node.val.id];	
 			}
 			else if(typeof comparisonProp=="string"){
-				nv=node.value[comparisonProp]
+				nv=node.val[comparisonProp]
 			}
 			else{
-				nv=node.value;
+				nv=node.val;
 			}
 
 			if(pt[dim] < nv[dim]){
-				//descend left
-				nn(node.left, lvl+1);
-				dir=left;
+				//descend l
+				nn(node.l, lvl+1);
+				dir=l;
 			}
 			else{
-				//descend right
-				nn(node.right, lvl+1);
-				dir=right;
+				//descend r
+				nn(node.r, lvl+1);
+				dir=r;
 			}
 
 			//check if current node is closer than current best
 			var d=distSq(nv, pt);
 			if(d<bestDist){
 				bestDist=d;
-				bestPt=node.value;
+				bestPt=node.val;
 			}
 
 			/*
@@ -256,18 +256,18 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 			
 			d=Math.pow(pt[dim] - bpv[dim],2);
-			if(dir==left){
-				//check right
+			if(dir==l){
+				//check r
 				if(d<bestDist){
-					//traverse right
-					nn(node.right, lvl+1);
+					//traverse r
+					nn(node.r, lvl+1);
 				}
 			}
 			else{
-				//check left
+				//check l
 				if(d<bestDist){
-					//traverse left
-					nn(node.left, lvl+1);
+					//traverse l
+					nn(node.l, lvl+1);
 				}
 			}
 
@@ -304,29 +304,29 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 });
 
 IhtaiUtils.mergeSort = function(data, f){
-	var left, right, split;
+	var l, r, split;
 	if(data.length < 2)
 		return data;
 
 	split = Math.floor(data.length/2);
-	left = data.slice(0,split);
-	right = data.slice(split);
+	l = data.slice(0,split);
+	r = data.slice(split);
 
-	var mergedArr = IhtaiUtils.merge(IhtaiUtils.mergeSort(left, f), IhtaiUtils.mergeSort(right, f), f);
+	var mergedArr = IhtaiUtils.merge(IhtaiUtils.mergeSort(l, f), IhtaiUtils.mergeSort(r, f), f);
 	//mergedArr.unshift(0, data.length);
 	//data.splice.apply(data, mergedArr);
 	return /*data*/ mergedArr;
 }
 
-IhtaiUtils.merge = function(left, right, f){
+IhtaiUtils.merge = function(l, r, f){
 	var il=0, ir=0, output=[];
 
-	while(il < left.length && ir < right.length){
-		if(f(left[il],right[ir]))
-			output.push(left[il++]);
+	while(il < l.length && ir < r.length){
+		if(f(l[il],r[ir]))
+			output.push(l[il++]);
 		else
-			output.push(right[ir++]);
+			output.push(r[ir++]);
 	}
 
-	return output.concat(left.slice(il)).concat(right.slice(ir));
+	return output.concat(l.slice(il)).concat(r.slice(ir));
 }

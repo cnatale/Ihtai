@@ -57,7 +57,7 @@ describe('ihtai', function(){
 		
 			var timeDiff=endDate.getTime()-startDate.getTime();
 			console.log('findNearestCluster time: '+timeDiff);
-			expect(res.id).toBe(0); //cluster 0 is specifically given this value during initialization
+			expect(res.id).toBe(0); //cluster 0 is specifically given this val during initialization
 		});
 
 		it('should order cluster keys', function(){
@@ -67,9 +67,9 @@ describe('ihtai', function(){
 			function inorder(node){
 				if (node==null)
 					return;
-				inorder(node.left);
-				expect(node.value.id).toEqual(ctr++);
-				inorder(node.right);
+				inorder(node.l);
+				expect(node.val.id).toEqual(ctr++);
+				inorder(node.r);
 			}
 
 			inorder(c2.getClusterTree().getRoot());			
@@ -112,9 +112,9 @@ describe('ihtai', function(){
 
 		it('should memorize vectors', function(){
 			var levels = memorizer.getLevels();
-			expect(levels[0].series["3"].startState).toEqual([30,30,30,30,30]);
-			expect(levels[0].series["3"].secondState).toEqual([35,35,35,35,35]);
-			expect(levels[0].series["3"].endState).toEqual([40,40,40,40,40]);
+			expect(levels[0].series["3"].fs).toEqual([30,30,30,30,30]);
+			expect(levels[0].series["3"].ss).toEqual([35,35,35,35,35]);
+			expect(levels[0].series["3"].es).toEqual([40,40,40,40,40]);
 		});		
 
 		it('given a cluster, should return vector representing next action agent should take to minimize homeostasis differential', function(){
@@ -185,7 +185,7 @@ describe('ihtai', function(){
 						this.v++;
 					return this.v;
 				},
-				targetValue:0
+				targetval:0
 			};
 			drives= new Drives([drive]);
 
@@ -231,7 +231,7 @@ describe('ihtai', function(){
 						this.v++;
 					return this.v;
 				},
-				targetValue:0
+				targetval:0
 			};
 			drives=[drive];
 
@@ -384,11 +384,11 @@ describe('ihtai utils', function(){
 		it('should create a tree', function(){
 
 
-			expect(root.value).toEqual([29,2,32,20,10]);
-			expect(root.left.value).toEqual([8,20,25,30,1]);
-			expect(root.right.value).toEqual([60,61,58,57,77]);
-			expect(root.left.left.value).toEqual([10,5,5,3,6]);
-			expect(root.right.left.value).toEqual([75,50,22,20,21]);
+			expect(root.val).toEqual([29,2,32,20,10]);
+			expect(root.l.val).toEqual([8,20,25,30,1]);
+			expect(root.r.val).toEqual([60,61,58,57,77]);
+			expect(root.l.l.val).toEqual([10,5,5,3,6]);
+			expect(root.r.l.val).toEqual([75,50,22,20,21]);
 
 		});
 
@@ -418,11 +418,11 @@ describe('ihtai utils', function(){
 		it('should convert a binary heap into a kd tree', function(){
 			var inflatedRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
-			expect(inflatedRoot.value).toEqual([29,2,32,20,10]);
-			expect(inflatedRoot.left.value).toEqual([8,20,25,30,1]);
-			expect(inflatedRoot.right.value).toEqual([60,61,58,57,77]);
-			expect(inflatedRoot.left.left.value).toEqual([10,5,5,3,6]);
-			expect(inflatedRoot.right.left.value).toEqual([75,50,22,20,21]);
+			expect(inflatedRoot.val).toEqual([29,2,32,20,10]);
+			expect(inflatedRoot.l.val).toEqual([8,20,25,30,1]);
+			expect(inflatedRoot.r.val).toEqual([60,61,58,57,77]);
+			expect(inflatedRoot.l.l.val).toEqual([10,5,5,3,6]);
+			expect(inflatedRoot.r.l.val).toEqual([75,50,22,20,21]);
 		});
 	});
 

@@ -47,8 +47,8 @@ require([], function(){
 
 	var prevBrightness=0, lastTime;
 	var fireKeySignal=0, directionKeySignal=0;
-    var viewWidth = 800;
-    var viewHeight = 600;	
+    var viewWidth = /*800*/320;
+    var viewHeight = /*600*/240;	
 	var pleasureDrive={
 		init:function(){
 			this.pleasure=0;
@@ -76,7 +76,7 @@ require([], function(){
 			this.pleasure=Math.min(this.pleasure, 100);
 			this.pleasure=Math.max(this.pleasure, 0);
 			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));	
-			$("#avgPleasure").html("avg pleasure: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
+			//$("#avgPleasure").html("avg pleasure: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 			return this.pleasure;
 		},
 		targetValue:100 //the goal value for pleasure
@@ -99,7 +99,7 @@ require([], function(){
 			this.pain=Math.min(this.pain, 100);
 			this.pain=Math.max(this.pain, 0);
 			$("#pain").html("pain: "+Math.floor(this.pain));	
-			$("#avgpain").html("avg pain: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
+			//$("#avgpain").html("avg pain: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 			return this.pain;
 		},
 		targetValue:0 //the goal value for pain
@@ -145,7 +145,7 @@ require([], function(){
     ihtai = new Ihtai({
 		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:8+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:800,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
@@ -312,20 +312,39 @@ require([], function(){
 	    	//eyePos x memorizer index=4, eyePos y memorizer index=5
 	    	//bug eyepos sticks
 			function setEyePos(prevBrightness){
-				if(res.memorizerOutput != null){
-					eyePos.x=res.memorizerOutput[4]/100*viewWidth;
-					eyePos.y=res.memorizerOutput[5]/100*viewHeight;
+				/*
+				TODO: eyepos still gets stuck at a particular coordinate. Due to rounding?
+				*/
+				var px=eyePos.x, py=eyePos.y;
+				if(res.memorizerOutput != null ){
+					eyePos.x=Math.floor(res.memorizerOutput[4]/100*viewWidth);
+					eyePos.y=Math.floor(res.memorizerOutput[5]/100*viewHeight);
+					while(eyePos.x==px && eyePos.y==py){
+						/*if(prevBrightness > 20){
+							//enter fixate mode: decrease random range of next eye pos by 50%
+							eyePos.x=eyePos.x + (Math.random()*viewWidth)/16 - viewWidth/32;
+							eyePos.y=eyePos.y + (Math.random()*viewHeight)/16 - viewHeight/32;			
+						}
+						else{*/
+							eyePos.x=/*eyePos.x +*/ Math.floor(Math.random()*viewWidth)/* - viewWidth/2*/;
+							eyePos.y=/*eyePos.y +*/Math.floor(Math.random()*viewHeight)/* - viewHeight/2*/;
+						//}						
+					}
 				}
 				else{
-					if(prevBrightness > 20){
+					/*if(prevBrightness > 20){
 						//enter fixate mode: decrease random range of next eye pos by 50%
 						eyePos.x=eyePos.x + (Math.random()*viewWidth)/16 - viewWidth/32;
 						eyePos.y=eyePos.y + (Math.random()*viewHeight)/16 - viewHeight/32;			
 					}
-					else{
-						eyePos.x=eyePos.x + Math.random()*viewWidth - viewWidth/2;
-						eyePos.y=eyePos.y + Math.random()*viewHeight - viewHeight/2;
-					}
+					else{*/
+						eyePos.x=/*eyePos.x +*/ Math.floor(Math.random()*viewWidth)/* - viewWidth/2*/;
+						eyePos.y=/*eyePos.y +*/ Math.floor(Math.random()*viewHeight)/* - viewHeight/2*/;
+						while(eyePos.x==px && eyePos.y==py){
+							eyePos.x=/*eyePos.x +*/ Math.floor(Math.random()*viewWidth)/* - viewWidth/2*/;
+							eyePos.y=/*eyePos.y +*/ Math.floor(Math.random()*viewHeight)/* - viewHeight/2*/;
+						}
+					//}
 				}
 				//constrain within bitmap
 				if(eyePos.x < 0)
@@ -337,12 +356,11 @@ require([], function(){
 					eyePos.y=0;
 				if(eyePos.y + focusHeight > viewHeight)
 					eyePos.y = viewHeight - focusHeight;		
-				eyePos.x=Math.floor(eyePos.x);
-				eyePos.y=Math.floor(eyePos.y);
-
-				return eyePos;
+				//eyePos.x=Math.floor(eyePos.x);
+				//eyePos.y=Math.floor(eyePos.y);
+				//return eyePos;
 			}
-			eyePos = setEyePos(prevBrightness);	   	
+			setEyePos(prevBrightness);	   	
 			//console.log('eyepos'+ eyePos.x+', '+eyePos.y)
 		
 			feelingPleasure=false;feelingPain=false;

@@ -44,12 +44,12 @@ var Ihtai = (function(bundle){
 			d={
 				init:eval(deflatedDrives[i].init),
 				cycle:eval(deflatedDrives[i].cycle),
-				targetValue:deflatedDrives[i].targetValue
+				targetval:deflatedDrives[i].targetval
 			};
 			inflatedDrives[i]=d;
 		}
 		drives = new Drives(inflatedDrives);
-		drives.setAvgDriveValue(parsedFile.avgDriveValue);
+		drives.setAvgDriveval(parsedFile.avgDriveval);
 		drives.setAvgDriveCtr(parsedFile.avgDriveCtr);
 
 		//inflate memorizer	
@@ -111,7 +111,7 @@ var Ihtai = (function(bundle){
 
 		/*
 		Keep track of last backStimCt stimuli, Array.concat combinedStimuli onto
-		aforementioned stimuli. Set combinedStimuli to this value instead.
+		aforementioned stimuli. Set combinedStimuli to this val instead.
 
 		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
 		if we have last backStimCt stimuli in memory (dependent on curCluster)
@@ -190,12 +190,12 @@ var Ihtai = (function(bundle){
 			d={
 				init:init,
 				cycle:cycle,
-				targetValue:driveFns[i].targetValue
+				targetval:driveFns[i].targetval
 			};
 			deflatedDrives[i]=d;
 		}
 		deflated.drives=deflatedDrives;
-		deflated.avgDriveValue = drives.getAvgDriveValue();
+		deflated.avgDriveval = drives.getAvgDriveval();
 		deflated.avgDriveCtr = drives.getAvgDriveCtr();
 
 		//save reflexes
@@ -281,7 +281,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			}
 		}
 
-		/*The default homeostasis goal value is for test purposes only. The _homeostasisGoal 
+		/*The default homeostasis goal val is for test purposes only. The _homeostasisGoal 
 		parameter should always be included when initializing Meorizer.*/
 		if(typeof _homeostasisGoal !== "undefined")
 			homeostasisGoal = _homeostasisGoal;
@@ -300,16 +300,16 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 		var outputStimuli=null, stimDist, sd;
 
 		/*TODO:this query could be improved to log(h) if the data was sorted according to dist from
-		homeostasis goal * some multiplier for height value (to disincentivize longer-term solutions)
+		homeostasis goal * some multiplier for height val (to disincentivize longer-term solutions)
 		*/
 		for(var i=0; i<height; i++){
 			//At each level, compare time series' end drive state with homeostasis goal.
 			//If result < acceptable range, return time series' starting ouput stimuli (what agent will act on).
 			
 			if(level[i].series.hasOwnProperty(cluster.id)){
-				sd = sqDist(level[i].series[cluster.id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
+				sd = sqDist(level[i].series[cluster.id].es.slice(-homeostasisGoal.length), homeostasisGoal);
 				if(sd <= acceptableRange){
-					outputStimuli = level[i].series[cluster.id].secondState;
+					outputStimuli = level[i].series[cluster.id].ss;
 					//console.log('output stimuli lvl:'+ i);
 					break;
 				}
@@ -336,7 +336,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			to re-use the existing memory allocations (only need to store a pointer instead of the raw
 			vector data).
 		*/
-		var sd1,sd2,size, startState, secondState, endState;
+		//fs=firstState, ss=secondState, es=endState
+		var sd1,sd2,size, fs, ss, es;
 
 		//update the buffer
 		buffer.push(cluster);
@@ -345,9 +346,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 		for(var i=0; i<height; i++){
 			size=i+3;
-			startState=buffer.length-size;
-			secondState=buffer.length-size+1;
-			endState=buffer.length-1;
+			fs=buffer.length-size;
+			ss=buffer.length-size+1;
+			es=buffer.length-1;
 
 			//Once we have a buffer full enough for this level, add a memory every cycle
 			if(buffer.length>=size){
@@ -357,10 +358,10 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				current series stored at this start state, overwrite. If no current series is stored
 				at this start state, store it regardless.
 				*/				
-				if(level[i].series.hasOwnProperty(buffer[startState].id)){
+				if(level[i].series.hasOwnProperty(buffer[fs].id)){
 					/*
 					If same first and second states are the same, store the memory
-					as weighted average of the two memories(same firstState and secondState, endState drive values become
+					as weighted average of the two memories(same firstState and ss, es drive vals become
 					weighted average)
 
 					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
@@ -368,42 +369,42 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					increase fitness. 
 
 					It also simulates how behavior "hardens" as it is carried out more and more often
-					by using a weighted average that increases with number of collisions.
-					The averaging step is weighted in favor of the existing drive endstate,
-					based on how many secondState collisions have occurred. The more collisions, the more the
-					averaging step is weighted towards the existing drive endState. This requires storing an 
-					extra number holding the secondState collision count, reset every time new secondState and endState
+					by using a weighted average that increases with number of cs (collisions).
+					The averaging step is weighted in favor of the existing drive es,
+					based on how many ss cs have occurred. The more cs, the more the
+					averaging step is weighted towards the existing drive es. This requires storing an 
+					extra number holding the ss collision count, reset every time new ss and es
 					is selected (as opposed to non-weighted average).
 
 					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
-					by reference to clusters is more memory efficient, editing the cluster values was breaking the kd tree.
+					by reference to clusters is more memory efficient, editing the cluster vals was breaking the kd tree.
 					*/		
-					if(sqDist(buffer[secondState].stimuli, level[i].series[buffer[startState].id].secondState) === 0){
-						var bufferGoalDist = buffer[endState].stimuli.slice(-homeostasisGoal.length);
-						var endStateGoalDist = level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length);
-						level[i].series[buffer[startState].id].collisions++;
+					if(sqDist(buffer[ss].stimuli, level[i].series[buffer[fs].id].ss) === 0){
+						var bufferGoalDist = buffer[es].stimuli.slice(-homeostasisGoal.length);
+						var esGoalDist = level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length);
+						level[i].series[buffer[fs].id].cs++;
 						//clamp upper bound at 1000 ***warning this seems to break learning. investigate***
-						if(level[i].series[buffer[startState].id].collisions>1000)level[i].series[buffer[startState].id].collisions=1000;
+						if(level[i].series[buffer[fs].id].cs>1000)level[i].series[buffer[fs].id].cs=1000;
 
 						for(var j=0;j<bufferGoalDist.length;j++){
-							var collisions=level[i].series[buffer[startState].id].collisions;
-							endStateGoalDist[j]= ((endStateGoalDist[j]*collisions)+bufferGoalDist[j])/(collisions+1);
+							var cs=level[i].series[buffer[fs].id].cs;
+							esGoalDist[j]= ((esGoalDist[j]*cs)+bufferGoalDist[j])/(cs+1);
 						}
-						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(endStateGoalDist);
-						Array.prototype.splice.apply(level[i].series[buffer[startState].id].endState, args);	
+						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(esGoalDist);
+						Array.prototype.splice.apply(level[i].series[buffer[fs].id].es, args);	
 					}
 					else{ 
-						//secondStates are different. Figure out which one leads to better outcome.
-						sd1 = sqDist(buffer[endState].stimuli.slice(-homeostasisGoal.length), homeostasisGoal);
-						sd2 = sqDist(level[i].series[buffer[startState].id].endState.slice(-homeostasisGoal.length), homeostasisGoal);
+						//sss are different. Figure out which one leads to better outcome.
+						sd1 = sqDist(buffer[es].stimuli.slice(-homeostasisGoal.length), homeostasisGoal);
+						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
 
 						if(sd1 < sd2){
 							//add memory series to level. Hash based on starting state cluster id.
-							level[i].series[buffer[startState].id]={
-								startState: buffer[startState].stimuli.slice(), 
-								secondState: buffer[secondState].stimuli.slice(),
-								endState: buffer[endState].stimuli.slice(),
-								collisions:0
+							level[i].series[buffer[fs].id]={
+								fs: buffer[fs].stimuli.slice(), 
+								ss: buffer[ss].stimuli.slice(),
+								es: buffer[es].stimuli.slice(),
+								cs:0
 							};
 						}	
 					}		
@@ -411,11 +412,11 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				else{
 					
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
-					level[i].series[buffer[startState].id]={
-						startState: buffer[startState].stimuli.slice(), 
-						secondState: buffer[secondState].stimuli.slice(),
-						endState: buffer[endState].stimuli.slice(),
-						collisions:0
+					level[i].series[buffer[fs].id]={
+						fs: buffer[fs].stimuli.slice(), 
+						ss: buffer[ss].stimuli.slice(),
+						es: buffer[es].stimuli.slice(),
+						cs:0
 					};					
 				}
 			}
@@ -464,7 +465,7 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 		Individual clusters have the following properties:
 		id: a unique id
 		stimuli: a vector representing stimuli
-		backStim: (array) the array of back-memories' indices/id that combine with id cluster value to make a key 
+		backStim: (array) the array of back-memories' indices/id that combine with id cluster val to make a key 
 		combinedSignal: (function) returns an array representing all back-memory signals plus stimuli signal		
 	*/
 
@@ -475,14 +476,14 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 	function init(_kdTree){	
 		var clusters=[];
 		/*
-		TODO: add ability to distribute random n-dimensional values by weighted range,
+		TODO: add ability to distribute random n-dimensional vals by weighted range,
 		as in rejection sampling: http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
 		*/
 
 		/*
 		TODO: think about distributing points using a low-discrepancy sequence instead of randomly
 		(http://stackoverflow.com/questions/10644154/uniform-distribution-of-points)
-		It seems like there are significant gaps in mapping space even with cluster values of 100,000 with
+		It seems like there are significant gaps in mapping space even with cluster vals of 100,000 with
 		pseudo-random uniform distribution.
 		*/
 
@@ -535,11 +536,11 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 			function inorder(node){
 				if (node==null)
 					return;
-				inorder(node.left);
+				inorder(node.l);
 
-				clusters[node.value.id]=node.value; //rebuild clusters array to use as lookup table for backStim
+				clusters[node.val.id]=node.val; //rebuild clusters array to use as lookup table for backStim
 
-				inorder(node.right);
+				inorder(node.r);
 			}
 
 			inorder(node);
@@ -576,9 +577,9 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 		function inorder(node){
 			if (node==null)
 				return;
-			inorder(node.left);
-			node.value.id=ctr++;
-			inorder(node.right);
+			inorder(node.l);
+			node.val.id=ctr++;
+			inorder(node.r);
 		}
 
 		inorder(node);
@@ -599,11 +600,11 @@ var Clusters = (function(_numClusters, _vectorDim, backStimCt, _kdTree){
 	@params drives: Array. An array of drive methods. Each drive takes form {init:function, cycle:function}
 */
 var Drives = (function(_drives){
-	var drives = _drives; avgDriveValue=[];avgDriveCtr=0;
+	var drives = _drives; avgDriveval=[];avgDriveCtr=0;
 	function init(){
 		for(var i=0;i<drives.length;i++){
 			drives[i].init();
-			avgDriveValue[i]=0;
+			avgDriveval[i]=0;
 		}
 	}
 	init();
@@ -615,9 +616,9 @@ var Drives = (function(_drives){
 			//execute each method in drives once per cycle
 			var r=drives[i].cycle(ioStim, dt);
 			response.push(r); //expects each drives method to return a Number 0-100
-			avgDriveValue[i]= (avgDriveValue[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
+			avgDriveval[i]= (avgDriveval[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
 		}
-		//keep track of average drive value. todo: make useful when some drive states don't have goals of 0
+		//keep track of average drive val. todo: make useful when some drive states don't have goals of 0
 		return response;
 	}
 
@@ -628,16 +629,16 @@ var Drives = (function(_drives){
 	function getGoals(){
 		var goals=[];
 		for(var i=0;i<drives.length;i++){
-			goals.push(drives[i].targetValue);
+			goals.push(drives[i].targetval);
 		}
 		return goals;
 	}
 
-	function getAvgDriveValue(){
-		return avgDriveValue;
+	function getAvgDriveval(){
+		return avgDriveval;
 	}
-	function setAvgDriveValue(v){
-		avgDriveValue=v;
+	function setAvgDriveval(v){
+		avgDriveval=v;
 	}
 	function getAvgDriveCtr(){
 		return avgDriveCtr;
@@ -650,9 +651,9 @@ var Drives = (function(_drives){
 		cycle:cycle,
 		getDrives:getDrives,
 		getGoals:getGoals,
-		getAvgDriveValue:getAvgDriveValue,
+		getAvgDriveval:getAvgDriveval,
 		getAvgDriveCtr:getAvgDriveCtr,
-		setAvgDriveValue:setAvgDriveValue,
+		setAvgDriveval:setAvgDriveval,
 		setAvgDriveCtr:setAvgDriveCtr
 	};
 });
