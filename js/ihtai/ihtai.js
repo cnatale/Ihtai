@@ -337,7 +337,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es;
+		var sd1,sd2,size, fs, ss, es, maxCollisions=100000;
 
 		//update the buffer
 		buffer.push(cluster);
@@ -383,8 +383,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						var bufferGoalDist = buffer[es].stm.slice(-homeostasisGoal.length);
 						var esGoalDist = level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length);
 						level[i].series[buffer[fs].id].cs++;
-						//clamp upper bound at 1000 to keep memory from getting too 'stuck'
-						if(level[i].series[buffer[fs].id].cs>1000)level[i].series[buffer[fs].id].cs=1000;
+						//clamp upper bound to keep memory from getting too 'stuck'
+						if(level[i].series[buffer[fs].id].cs>maxCollisions)level[i].series[buffer[fs].id].cs=maxCollisions;
 
 						for(var j=0;j<bufferGoalDist.length;j++){
 							var cs=level[i].series[buffer[fs].id].cs;
@@ -395,10 +395,13 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					}
 					else{ 
 						//second states are different. Figure out which one leads to better outcome.
+						//TODO:think about weighting the result in favor of sd1 based on cs property somehow,
+						//to simulate the stickiness of a memory
 						sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
-
-						if(sd1 < sd2){
+						//sd2 is the current memory, the following line makes it harder to 'unstick'
+						//the current memory the more it has been accessed
+						if(sd1 < sd2*(1/(1+level[i].series[buffer[fs].id].cs/maxCollisions))){
 							/*
 							TODO: 
 							-Use the sliced arrays to find nearest neighbor clusters. 

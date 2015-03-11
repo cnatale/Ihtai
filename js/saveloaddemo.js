@@ -286,7 +286,7 @@ require(['physicsjs'], function(Physics){
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:600,/*acceptable range for optimal stm is in square dist*/
-			backStimCt:1
+			backStimCt:0
 		});
 	    /////////////////////////////////
 	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;
