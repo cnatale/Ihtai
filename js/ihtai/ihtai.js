@@ -337,7 +337,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, maxCollisions=100000;
+		var sd1,sd2,size, fs, ss, es, maxCollisions=10000/*was 1000*/;
 
 		//update the buffer
 		buffer.push(cluster);

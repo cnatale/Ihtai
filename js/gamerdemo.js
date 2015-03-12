@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=9, focusHeight=7, ihtaiPaused=false;
+var eyePos={x:0,y:0}, focusWidth=20, focusHeight=20, ihtaiPaused=false;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -44,7 +44,10 @@ require([], function(){
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
    
     //////////////////////////////////////////////////////
-
+    var prevGrayscaleImgData=[];
+    for(var i=0;i<focusWidth*focusHeight;i++){
+    	prevGrayscaleImgData[i]=0;
+    }
 	var prevBrightness=0, lastTime;
 	var fireKeySignal=0, directionKeySignal=0;
     var viewWidth = /*800*/320;
@@ -66,7 +69,7 @@ require([], function(){
 			}
 			else{
 				if(this.pleasure>0){
-					this.pleasure-= .05 * dt;
+					this.pleasure-= .01 * dt;
 				}
 				else
 					this.pleasure=0;				
@@ -76,7 +79,6 @@ require([], function(){
 			this.pleasure=Math.min(this.pleasure, 100);
 			this.pleasure=Math.max(this.pleasure, 0);
 			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));	
-			//$("#avgPleasure").html("avg pleasure: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 			return this.pleasure;
 		},
 		targetval:100 //the goal value for pleasure
@@ -92,19 +94,57 @@ require([], function(){
 				this.pain+= 100 /** dt*/;
 			}
 			else{
-				this.pain-= 1 * dt;
+				this.pain-= .01 * dt;
 			}
 
 			//clamp vals
 			this.pain=Math.min(this.pain, 100);
 			this.pain=Math.max(this.pain, 0);
 			$("#pain").html("pain: "+Math.floor(this.pain));	
-			//$("#avgpain").html("avg pain: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 			return this.pain;
 		},
 		targetval:0 //the goal value for pain
 	};
-	drives=[pleasureDrive, painDrive];
+	var curiosityDrive={
+		init:function(){
+			this.curiosity=100;
+			return this.curiosity;
+		},
+		cycle:function(stimuli,dt){
+			this.curiosity+= .01 * dt
+
+			//curiosity is decreased when different images are seen from frame to frame
+			this.curiosity-=stimuli[6] * dt * .1;
+
+			//clamp vals
+			this.curiosity=Math.min(this.curiosity, 100);
+			this.curiosity=Math.max(this.curiosity, 0);
+			$("#curiosity").html("curiosity: "+Math.floor(this.curiosity));	
+			return this.curiosity;
+		},
+		targetval:0 //the goal value for pain
+	};	
+	var aggressionDrive={
+		init:function(){
+			this.aggression=0;
+			return this.aggression;
+		},
+		cycle:function(stimuli,dt){
+			this.aggression+= .01 * dt
+
+			//ship fired a shot
+			if(stimuli[0] > 50)
+				this.aggression-=stimuli[0] * dt * .001;
+
+			//clamp vals
+			this.aggression=Math.min(this.aggression, 100);
+			this.aggression=Math.max(this.aggression, 0);
+			$("#aggression").html("aggression: "+Math.floor(this.aggression));	
+			return this.aggression;
+		},
+		targetval:0 //the goal value for pain
+	};		
+	drives=[pleasureDrive, painDrive, curiosityDrive, aggressionDrive];
 
 
 	var reflexes = [{
@@ -143,13 +183,13 @@ require([], function(){
 	}];
 
     ihtai = new Ihtai({
-		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-		vectorDim:8+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		clusterCount:120000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+		vectorDim:11+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
+		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:10000,/*600*//*acceptable range for optimal stimuli is in square dist*/
-		bStmCt:1
+		bStmCt:0
 	});		
 
 	//var intervalID = window.setInterval(updateIhtai, 33);
@@ -231,8 +271,15 @@ require([], function(){
 			};			
 
 			var grayscaleImgData= grayscale(data);
+			/*compare curr grayscale data w/ grayscale data from last iteration*/	
+			var imgDiff=0;
+			for(var i=0;i<grayscaleImgData.length;i++){
+				imgDiff+=Math.abs(grayscaleImgData[i]-prevGrayscaleImgData[i]);
+			}		
+			imgDiff=imgDiff/grayscaleImgData.length; //the average difference value
+			prevGrayscaleImgData=grayscaleImgData;
 			
-			var cycleArr=[fireKeySignal,directionKeySignal,feelingPleasure?100:0,feelingPain?100:0,eyePos.x/viewWidth*100, eyePos.y/viewHeight*100]
+			var cycleArr=[fireKeySignal,directionKeySignal,feelingPleasure?100:0,feelingPain?100:0,eyePos.x/viewWidth*100, eyePos.y/viewHeight*100, imgDiff]
 			cycleArr = cycleArr.concat(grayscaleImgData);
 
 			var res=ihtai.cycle(cycleArr, td);
