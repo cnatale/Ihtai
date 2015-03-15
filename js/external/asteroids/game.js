@@ -409,6 +409,7 @@ Ship = function () {
       this.bulletCounter -= delta;
     }
     if (KEY_STATUS.space) {
+      //console.log('fire triggered in game');
       if (this.bulletCounter <= 0) {
         this.bulletCounter = 10;
         for (var i = 0; i < this.bullets.length; i++) {

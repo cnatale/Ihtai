@@ -24,7 +24,7 @@ IhtaiUtils.weightedRand = (function(spec) {
 		}
 	}
 
-	return table[Math.floor(Math.random() * table.length)];
+	return Number(table[Math.floor(Math.random() * table.length)]);
 });
 
 
@@ -248,9 +248,14 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			*/
 			var bpv;
 			if(typeof comparisonProp==="function"){
-				if(!cache[bestPt.id])
-					cache[bestPt.id]=comparisonProp.call(bestPt);
-				var bpv=cache[bestPt.id];
+				try{
+					if(!cache[bestPt.id])
+						cache[bestPt.id]=comparisonProp.call(bestPt);
+					var bpv=cache[bestPt.id];
+				}
+				catch(e){
+					debugger;
+				}
 			}
 			else if(typeof comparisonProp=="string"){
 				bpv=bestPt[comparisonProp];

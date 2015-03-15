@@ -258,7 +258,7 @@ var Ihtai = (function(bundle){
 */
 var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal;
+	var level, buffer, homeostasisGoal, maxCollisions=10000;
 
 	if(_acceptableRange)
 		acceptableRange=_acceptableRange;
@@ -308,7 +308,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			
 			if(level[i].series.hasOwnProperty(cluster.id)){
 				sd = sqDist(level[i].series[cluster.id].es.slice(-homeostasisGoal.length), homeostasisGoal);
-				if(sd <= acceptableRange){
+				if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
 					outputstm = level[i].series[cluster.id].ss;
 					//console.log('output stm lvl:'+ i);
 					break;
@@ -337,7 +337,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, maxCollisions=10000/*was 1000*/;
+		var sd1,sd2,size, fs, ss, es;
 
 		//update the buffer
 		buffer.push(cluster);
@@ -392,15 +392,14 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						}
 						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(esGoalDist);
 						Array.prototype.splice.apply(level[i].series[buffer[fs].id].es, args);	
+						//console.log('existing memory updated');
 					}
 					else{ 
 						//second states are different. Figure out which one leads to better outcome.
-						//TODO:think about weighting the result in favor of sd1 based on cs property somehow,
-						//to simulate the stickiness of a memory
 						sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
-						//the current memory the more it has been accessed
+						//the current memory the more it has been averaged
 						if(sd1 < sd2*(1/(1+level[i].series[buffer[fs].id].cs/maxCollisions))){
 							/*
 							TODO: 
@@ -409,16 +408,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 							cluster id instead of the array. 
 							-When an ihtai is de-stringified, use the cluster id to reference the ihtai cluster value.
 							*/
-							/*
-							BUG:
-							These stored values are ignoring backMemory. Should use dynamic programming
-							access to Clusters.combinedSignal like the kd tree. Probably makes sense to 
-							use the same cache object from Ihtai.utils. All comparisons should be done
-							against this value, not a cluster's .stm property which only represents the
-							current moment in time (ignoring backMemory).
-							EDIT:actually I don't think i need to care about this in either memorization or query
-							*/
 							//add memory series to level. Hash based on starting state cluster id.
+							//console.log('replacement memory learned');
 							level[i].series[buffer[fs].id]={
 								fs: buffer[fs].stm.slice(), 
 								ss: buffer[ss].stm.slice(),
@@ -429,7 +420,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					}		
 				}
 				else{
-					
+					//console.log('new memory created')
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					level[i].series[buffer[fs].id]={
 						fs: buffer[fs].stm.slice(), 

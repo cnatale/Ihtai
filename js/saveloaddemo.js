@@ -208,8 +208,6 @@ require(['physicsjs'], function(Physics){
 				this.hunger=Math.min(this.hunger, 100);
 				this.hunger=Math.max(this.hunger, 0);
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
-				//important: this next line will cause an ihtai loaded from file to crash due to the ihtai ref
-				//$("#avgHunger").html("avg hunger: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[0]));					
 				return this.hunger;
 			},
 			targetval:0 //the goal value for hunger
@@ -240,8 +238,6 @@ require(['physicsjs'], function(Physics){
 				this.tiredness=Math.min(this.tiredness, 100);
 				this.tiredness=Math.max(this.tiredness, 0);
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));
-				//important: this next line will cause an ihtai loaded from file to crash due to the ihtai ref					
-				//$("#avgTiredness").html("avg tired: "+Math.floor(ihtai.getProperties().drives.getAvgDriveValue()[1]));				
 				return this.tiredness;
 			},
 			targetval:0 //the goal value for hunger
