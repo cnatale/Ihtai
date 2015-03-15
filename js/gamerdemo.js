@@ -114,7 +114,7 @@ require([], function(){
 			return this.curiosity;
 		},
 		cycle:function(stimuli,dt){
-			this.curiosity+= .01 * dt
+			this.curiosity+= .06 * dt
 
 			if(stimuli[4]!=this.px && stimuli[5]!=this.py){
 				this.curiosity-=100 * dt * .04;

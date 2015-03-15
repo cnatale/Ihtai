@@ -258,7 +258,7 @@ var Ihtai = (function(bundle){
 */
 var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=10000;
+	var level, buffer, homeostasisGoal, maxCollisions=100000;
 
 	if(_acceptableRange)
 		acceptableRange=_acceptableRange;
@@ -308,7 +308,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			
 			if(level[i].series.hasOwnProperty(cluster.id)){
 				sd = sqDist(level[i].series[cluster.id].es.slice(-homeostasisGoal.length), homeostasisGoal);
-				if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
+				if(sd*(1/(1+level[i].series[cluster.id].cs/maxCollisions)) < acceptableRange){
 					outputstm = level[i].series[cluster.id].ss;
 					//console.log('output stm lvl:'+ i);
 					break;
