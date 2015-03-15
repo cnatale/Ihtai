@@ -190,6 +190,20 @@ require([], function(){
 		}
 	}];
 
+	//[fireKeySignal,directionKeySignal,feelingPleasure?100:0,feelingPain?100:0,eyePos.x/viewWidth*100, eyePos.y/viewHeight*100, imgDiff]
+	var distributionArr=[{0:.5, 100:.5}, 
+						{15:.25, 35:.25, 65:.25, 85:.25},
+						{0:.5, 100:.5},
+						{0:.5, 100:.5},
+						{0:.1, 10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1, 100:.1},
+						{0:.1, 10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1, 100:.1},
+						{0:.1, 10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1, 100:.1}];
+	//bitmap greyscales+ drives
+	for(var i=0;i<focusWidth*focusHeight+4;i++){
+		distributionArr.push({0:.1, 10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1, 100:.1});
+	}
+	
+
     ihtai = new Ihtai({
 		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:11+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
@@ -197,7 +211,8 @@ require([], function(){
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/
-		bStmCt:0
+		bStmCt:0,
+		distribution:distributionArr
 	});		
 
 	//var intervalID = window.setInterval(updateIhtai, 33);
