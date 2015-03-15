@@ -133,7 +133,16 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 			else{
 				var median, medianIndex, dimensionality, dim, l, r;
-				dimensionality=data[0].length; //assumes all elements are of same dimension
+				//assumes all elements are of same dimension
+				if(typeof comparisonProp==="function"){
+					dimensionality=comparisonProp.call(data[0]).length;
+				}
+				else if(typeof comparisonProp==="string"){
+					dimensionality=data[comparisonProp].length;
+				}
+				else
+					dimensionality=data.length;
+
 				dim = lvl % dimensionality;
 
 				//sort array by current dimension

@@ -41,7 +41,7 @@ describe('ihtai', function(){
 	describe('Clusters', function(){
 		var clusters;
 		beforeEach(function(){
-			clusters = new Clusters(1000, 5);
+			clusters = new Clusters({_numClusters:1000, _vectorDim:5});
 
 		});
 		afterEach(function(){
@@ -50,7 +50,7 @@ describe('ihtai', function(){
 
 
 		it('should find nearest cluster for a vector', function(){
-			clusters= new Clusters(1000, 5);
+			clusters= new Clusters({_numClusters:1000, _vectorDim:5});
 			var startDate=new Date();
 			var res=clusters.findNearestCluster([50,50,50,50,50]);
 			var endDate=new Date();
@@ -61,7 +61,7 @@ describe('ihtai', function(){
 		});
 
 		it('should order cluster keys', function(){
-			var c2 = new Clusters(10, 1), ctr=0;
+			var c2 = new Clusters({_numClusters:10, _vectorDim:1}), ctr=0;
 			c2.orderKeys();
 
 			function inorder(node){
@@ -74,6 +74,13 @@ describe('ihtai', function(){
 
 			inorder(c2.getClusterTree().getRoot());			
 
+		});
+		//TODO:add tests for weighted distribution
+		it('should apply weighted distribution of points', function(){
+			clusters= new Clusters({_numClusters:2, _vectorDim:1, _distribution:[{0:0,100:1}]});
+			var res=clusters.findNearestCluster([80]);
+			expect(res.id).toBe(1);
+			expect(res.stm).toEqual([100]);
 		});
 	});
 

@@ -19,7 +19,7 @@ var Ihtai = (function(bundle){
 		var treeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
 
 		//inflate clusters
-		clusters = new Clusters(clusterCount, vectorDim, bStmCt, treeRoot);
+		clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt, _kdTree:treeRoot});
 
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
@@ -92,7 +92,7 @@ var Ihtai = (function(bundle){
 			if(bundle.bStmCt)
 				bStmCt=bundle.bStmCt;
 
-			clusters = new Clusters(clusterCount, vectorDim, bStmCt);
+			clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt, _distribution:bundle.distribution});
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
 			memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);		
@@ -468,9 +468,11 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 //clusters are 'buckets' that n-dimensional stm moments are placed inside
 //_kdTree is an optional param
-var Clusters = (function(_numClusters, _vectorDim, bStmCt, _kdTree){
-	var vectorDim=_vectorDim, clusterTree;
-	var numClusters = _numClusters;	
+var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
+	var vectorDim=bundle._vectorDim, clusterTree;
+	var numClusters = bundle._numClusters;	
+	bStmCt=bundle.bStmCt;
+
 	/**
 		Individual clusters have the following properties:
 		id: a unique id
@@ -483,7 +485,7 @@ var Clusters = (function(_numClusters, _vectorDim, bStmCt, _kdTree){
 		-randomly assign k clusters over n-dimensional vector space
 		@param {number} k
 	*/
-	function init(_kdTree){	
+	function init(_kdTree, _distribution){	
 		var clusters=[];
 		/*
 		TODO: add ability to distribute random n-dimensional vals by weighted range,
@@ -510,6 +512,7 @@ var Clusters = (function(_numClusters, _vectorDim, bStmCt, _kdTree){
 
 		if(typeof _kdTree == "undefined"){
 			//create clusters with id(needs to be unique) and stm properties
+			/*TODO:check if _distribution != undefined. If so, do weighted distribution of pts*/
 			for(var i=0;i<numClusters;i++){
 				clusters[i]={id:i, stm:[], bStm:[]};
 				//map clusters to random points in n-dimensional space 
@@ -519,7 +522,11 @@ var Clusters = (function(_numClusters, _vectorDim, bStmCt, _kdTree){
 						clusters[i].stm[j]=50;
 					}
 					else{
-						clusters[i].stm[j]=Math.round(Math.random()*100);
+						if(typeof _distribution != "undefined"){
+							clusters[i].stm[j]=IhtaiUtils.weightedRand(_distribution[j]);
+						}
+						else
+							clusters[i].stm[j]=Math.round(Math.random()*100);
 					}
 					
 				}
@@ -556,7 +563,7 @@ var Clusters = (function(_numClusters, _vectorDim, bStmCt, _kdTree){
 			inorder(node);
 		}
 	}
-	init(_kdTree);
+	init(bundle._kdTree, bundle._distribution);
 
 	/** 
 		-find nearest cluster to v
