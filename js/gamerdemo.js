@@ -114,10 +114,10 @@ require([], function(){
 			return this.curiosity;
 		},
 		cycle:function(stimuli,dt){
-			this.curiosity+= .06 * dt
+			this.curiosity+= 1 * dt
 
 			if(stimuli[4]!=this.px && stimuli[5]!=this.py){
-				this.curiosity-=100 * dt * .04;
+				this.curiosity-=100 * dt /** .04*/;
 			}
 			//curiosity is decreased when different images are seen from frame to frame
 			this.curiosity-=stimuli[6] * dt * .1;
@@ -190,6 +190,7 @@ require([], function(){
 		}
 	}];
 
+	//TODO:combine fire key signal with arrow keys, since game can only detect one keypress per cycle
 	//[fireKeySignal,directionKeySignal,feelingPleasure?100:0,feelingPain?100:0,eyePos.x/viewWidth*100, eyePos.y/viewHeight*100, imgDiff]
 	var distributionArr=[{0:.5, 100:.5}, 
 						{15:.25, 35:.25, 65:.25, 85:.25},
@@ -205,9 +206,9 @@ require([], function(){
 	
 
     ihtai = new Ihtai({
-		clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+		clusterCount:70000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:11+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:250,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:600,/*600*//*acceptable range for optimal stimuli is in square dist*/

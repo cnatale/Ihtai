@@ -258,7 +258,7 @@ var Ihtai = (function(bundle){
 */
 var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=100000;
+	var level, buffer, homeostasisGoal, maxCollisions=1;
 
 	if(_acceptableRange)
 		acceptableRange=_acceptableRange;
@@ -308,7 +308,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			
 			if(level[i].series.hasOwnProperty(cluster.id)){
 				sd = sqDist(level[i].series[cluster.id].es.slice(-homeostasisGoal.length), homeostasisGoal);
-				if(sd*(1/(1+level[i].series[cluster.id].cs/maxCollisions)) < acceptableRange){
+				if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
 					outputstm = level[i].series[cluster.id].ss;
 					//console.log('output stm lvl:'+ i);
 					break;
@@ -353,6 +353,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			//Once we have a buffer full enough for this level, add a memory every cycle
 			if(buffer.length>=size){
 				
+				
 				/*
 				If series' end state is less different from homeostasis goal than   
 				current series stored at this start state, overwrite. If no current series is stored
@@ -385,7 +386,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						level[i].series[buffer[fs].id].cs++;
 						//clamp upper bound to keep memory from getting too 'stuck'
 						if(level[i].series[buffer[fs].id].cs>maxCollisions)level[i].series[buffer[fs].id].cs=maxCollisions;
-
 						for(var j=0;j<bufferGoalDist.length;j++){
 							var cs=level[i].series[buffer[fs].id].cs;
 							esGoalDist[j]= ((esGoalDist[j]*cs)+bufferGoalDist[j])/(cs+1);
@@ -395,12 +395,13 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						//console.log('existing memory updated');
 					}
 					else{ 
+						debugger;
 						//second states are different. Figure out which one leads to better outcome.
 						sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
-						if(sd1 < sd2*(1/(1+level[i].series[buffer[fs].id].cs/maxCollisions))){
+						if(sd1 < sd2/**(1/(1+level[i].series[buffer[fs].id].cs/maxCollisions))*/){
 							/*
 							TODO: 
 							-Use the sliced arrays to find nearest neighbor clusters. 
@@ -419,7 +420,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						}	
 					}		
 				}
-				else{
+				else if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange){
 					//console.log('new memory created')
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					level[i].series[buffer[fs].id]={
@@ -436,10 +437,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 	function sqDist(v1, v2){
 		var d=0;
 		for(var i=0; i<v1.length;i++){
-			d+=Math.pow(v1[i] - v2[i], 2);
+			d+=Math.abs(v1[i] - v2[i]);
 		}
-
-		return d;
+		return Math.pow(d, 2);
 	}
 
 	function getHeight(){
