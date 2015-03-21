@@ -258,7 +258,7 @@ var Ihtai = (function(bundle){
 */
 var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1;
+	var level, buffer, homeostasisGoal, maxCollisions=10;
 
 	if(_acceptableRange)
 		acceptableRange=_acceptableRange;
@@ -385,7 +385,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						var esGoalDist = level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length);
 						level[i].series[buffer[fs].id].cs++;
 						//clamp upper bound to keep memory from getting too 'stuck'
-						if(level[i].series[buffer[fs].id].cs>maxCollisions)level[i].series[buffer[fs].id].cs=maxCollisions;
+						if(level[i].series[buffer[fs].id].cs>maxCollisions)
+							level[i].series[buffer[fs].id].cs=maxCollisions;
+
 						for(var j=0;j<bufferGoalDist.length;j++){
 							var cs=level[i].series[buffer[fs].id].cs;
 							esGoalDist[j]= ((esGoalDist[j]*cs)+bufferGoalDist[j])/(cs+1);
@@ -395,7 +397,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						//console.log('existing memory updated');
 					}
 					else{ 
-						debugger;
 						//second states are different. Figure out which one leads to better outcome.
 						sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
@@ -421,7 +422,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					}		
 				}
 				else if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange){
-					//console.log('new memory created')
+					console.log('new memory created')
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					level[i].series[buffer[fs].id]={
 						fs: buffer[fs].stm.slice(), 
