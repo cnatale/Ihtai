@@ -325,6 +325,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 		Memorizes stm
 	*/
 	function memorize(cluster){
+		/*TODO: change es to be the average value of all time steps, starting at ss, in memory.*/
+
 		/*
 			Loop through each time level. At level i, a memory series is i+2 moments long. 
 			The only moments we need to store in the series are the start and end moments, though.
@@ -397,8 +399,37 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						//console.log('existing memory updated');
 					}
 					else{ 
+						////////////////////////////////////////
+						/*TODO: instead of es being equal to endstate stimuli, it becomes the 
+						average of all stimuli starting at ss.
+
+						PROBLEM: avg should actually be calculated and used as sd1 above, but this adds a lot
+						of computational complexity to every iteration, so if the endstate is a close enough
+						approximation for that stage I'd like to use it.
+						*/
+						var avg=[], ctr=0;
+						for(var j=ss;j<=es;j++){
+							ctr++;
+							if(j==ss){ //first iteration
+								avg=buffer[ss].stm.slice();
+							}
+							else{
+								//add current stimuli 
+								for(var k=0;k<avg.length;k++){
+									avg[k]+=buffer[j].stm[k];
+								}
+							}
+						}
+
+						//loop over each index, dividing by total number of values
+						for(k=0;k<avg.length;k++){
+							avg[k]= avg[k]/ctr;
+						}
+						/////////////////////////////////////////	
+
 						//second states are different. Figure out which one leads to better outcome.
-						sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
+						//sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
+						sd1= sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
@@ -412,10 +443,16 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 							*/
 							//add memory series to level. Hash based on starting state cluster id.
 							//console.log('replacement memory learned');
+
+							/*TODO: instead of es being equal to endstate stimuli, it becomes the 
+							average of all stimuli starting at ss.
+							*/
+
+
 							level[i].series[buffer[fs].id]={
 								fs: buffer[fs].stm.slice(), 
 								ss: buffer[ss].stm.slice(),
-								es: buffer[es].stm.slice(),
+								es: avg/*buffer[es].stm.slice()*/,
 								cs:0
 							};
 						}	
@@ -423,11 +460,35 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				}
 				else if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange){
 					console.log('new memory created')
+					////////////////////////////////////////
+					/*TODO: instead of es being equal to endstate stimuli, it becomes the 
+					average of all stimuli starting at ss.
+					*/
+					var avg=[], ctr=0;
+					for(var j=ss;j<=es;j++){
+						ctr++;
+						if(j==ss){ //first iteration
+							avg=buffer[ss].stm.slice();
+						}
+						else{
+							//add current stimuli 
+							for(var k=0;k<avg.length;k++){
+								avg[k]+=buffer[j].stm[k];
+							}
+						}
+					}
+
+					//loop over each index, dividing by total number of values
+					for(k=0;k<avg.length;k++){
+						avg[k]= avg[k]/ctr;
+					}
+					/////////////////////////////////////////
+
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					level[i].series[buffer[fs].id]={
 						fs: buffer[fs].stm.slice(), 
 						ss: buffer[ss].stm.slice(),
-						es: buffer[es].stm.slice(),
+						es: avg/*buffer[es].stm.slice()*/,
 						cs:0
 					};					
 				}

@@ -197,7 +197,7 @@ require([], function(){
     ihtai = new Ihtai({
 		clusterCount:140000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:10+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:250,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:160000,/*500*//*acceptable range for optimal stimuli is in square dist*/
@@ -298,7 +298,7 @@ require([], function(){
 
 			var res=ihtai.cycle(cycleArr, td);
 			lastKeypress +=td;
-			if(res.memorizerOutput != null && lastKeypress > 100 /*&& ihtai.getProperties().driveList[3].aggression<100*//*keep from triggering stimuli loop*/ && Math.random() > .1 /*prevent overfitting*/){
+			if(res.memorizerOutput != null && lastKeypress > 100 && Math.random() > .1 /*prevent overfitting*/ /*&& ihtai.getProperties().driveList[3].aggression<100*//*keep from triggering stimuli loop*/){
 				//read res keypad signals, and trigger keyboard events per signal output
 				directionKeySignal=res.memorizerOutput[0];
 
