@@ -458,11 +458,11 @@ describe('ihtai utils', function(){
 		it('should edit the value of a heap element, and maintain heap property after calling minHeapify on it', function(){
 			var indx=minHeap.heap.length-1;
 			minHeap.heap[indx]=1;
-			minHeap.minHeapify();
+			minHeap.minHeapify(indx);
 			expect(minHeap.getMin()).toBe(1);
-			
+
 			minHeap.heap[0]=9999;
-			minHeap.minHeapify();
+			minHeap.minHeapify(0);
 			expect(minHeap.getMin()).toBe(2);
 			expect(minHeap.heap).toEqual([2, 3, 7, 9, 5, 9999]);
 		});
