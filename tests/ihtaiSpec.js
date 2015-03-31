@@ -460,6 +460,11 @@ describe('ihtai utils', function(){
 			minHeap.heap[indx]=1;
 			minHeap.minHeapify();
 			expect(minHeap.getMin()).toBe(1);
+			
+			minHeap.heap[0]=9999;
+			minHeap.minHeapify();
+			expect(minHeap.getMin()).toBe(2);
+			expect(minHeap.heap).toEqual([2, 3, 7, 9, 5, 9999]);
 		});
 	});
 
