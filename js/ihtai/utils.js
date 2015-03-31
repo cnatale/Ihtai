@@ -70,6 +70,111 @@ IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap){
 	return root;
 });
 
+/*TODO: create binary heap with following capabilities:
+-create binary heap stored in array
+-add to heap
+-remove/update from any place in heap
+-return element with lowest value
+*/
+IhtaiUtils.MinHeap = (function(){
+	var heap;
+	function init(){
+		heap=[];
+	}
+	init();
+
+	function insert(node){
+		/*
+		-Add element to end of heap
+		-compare element with its parent. if greater than parent, stop
+		-If less than parent, swap element with its parent and return to previous step
+		*/
+		heap.push(node);
+
+		function compare(node){
+			var par=par(node);
+			if(heap[node]<heap[par]){
+				var tmp;
+				tmp=heap[node];
+				heap[node]=heap[par];
+				heap[par]=tmp;
+
+				compare(par);
+			}
+
+			function par(i){
+				return Math.floor((i-1)/2);
+			}		
+		}
+
+		compare(heap.length-1);
+	}
+
+	function minHeapify(){
+		/*Assume that heap[i]'s left and right children are min-heaps, but heap[i] might be larger than
+		  its children, thus violating the min-heap property. The value of heap[i] floats down so that subtree rooted
+		  at index obeys the min-heap property. 
+		*/
+		function siftDown(i){
+			var l=left(i), r=right(i), smallest;
+			if(heap[l] && heap[l] < heap[i])
+				smallest= l;
+			else
+				smallest= i;
+
+			if(heap[r] && heap[r] < heap[smallest])
+				smallest= r;
+
+			if(smallest != i){
+				//swap heap[i] with heap[smallest]
+				var tmp;
+				tmp=heap[i];
+				heap[i]=heap[smallest];
+				heap[smallest]=tmp;
+
+				minHeapify(smallest);
+			}
+		}
+
+		var start=Math.floor((heap.length -2)/2);
+		while(start >= 0){
+			siftDown(start);
+			start-=1;
+		}
+	}
+
+	function popMin(){
+		var minItm=heap[0];
+		var endItm=heap[heap.length-1];
+		heap[0]=endItm;
+		heap.pop();
+		minHeapify(0);
+		return minItm;
+	}
+
+	function left(i){
+		return i*2 + 1;
+	}
+	function right(i){
+		return i*2 + 2;
+	}
+	function par(i){
+		return Math.floor((i-1)/2);
+	}
+
+	function getMin(){
+		return heap[0];
+	}
+
+	return{
+		insert:insert,
+		minHeapify:minHeapify,
+		popMin:popMin,
+		getMin:getMin,
+		heap:heap
+	}
+});
+
 IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	var comparisonProp=_comparisonProp;
 	var data=_data, cache=[];

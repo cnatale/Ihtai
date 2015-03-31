@@ -114,7 +114,7 @@ require([], function(){
 			return this.curiosity;
 		},
 		cycle:function(stimuli,dt){
-			this.curiosity+= 2 * dt
+			this.curiosity+= 2 * dt;
 
 			if(stimuli[3]!=this.px && stimuli[4]!=this.py){
 				//decrease when eye moves
@@ -161,7 +161,7 @@ require([], function(){
 		init:function(){
 		    this.weightedDirection=[];
 		    for(var i=0;i<100;i++){
-		    	this.weightedDirection[i]=IhtaiUtils.weightedRand({10:0.40, 30:0.15, 50:0.15, 70:0.15, 90:0.15});
+		    	this.weightedDirection[i]=IhtaiUtils.weightedRand({10:0.2, 30:0.1, 50:0.1, 70:0.1, 90:0.5});
 		    }
 		},
 		matcher: function(stimuli){ /*randomly select an arrow key*/
@@ -197,10 +197,10 @@ require([], function(){
     ihtai = new Ihtai({
 		clusterCount:140000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 		vectorDim:10+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:250,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:3,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
-		acceptableRange:160000,/*500*//*acceptable range for optimal stimuli is in square dist*/
+		acceptableRange:160000,/*160000*//*acceptable range for optimal stimuli is in square dist*/
 		bStmCt:0,
 		distribution:distributionArr
 	});		
@@ -377,7 +377,7 @@ require([], function(){
 				TODO: eyepos still gets stuck at a particular coordinate. Due to rounding?
 				*/
 				var px=eyePos.x, py=eyePos.y;
-				if(res.memorizerOutput != null && ihtai.getProperties().driveList[2].curiosity<100){
+				if(res.memorizerOutput != null && Math.random() > .1 /*&& ihtai.getProperties().driveList[2].curiosity<100*/){
 					eyePos.x=Math.floor(res.memorizerOutput[3]/100*viewWidth);
 					eyePos.y=Math.floor(res.memorizerOutput[4]/100*viewHeight);
 					/*while(eyePos.x==px && eyePos.y==py){

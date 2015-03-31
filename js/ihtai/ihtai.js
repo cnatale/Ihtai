@@ -263,7 +263,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 	if(_acceptableRange)
 		acceptableRange=_acceptableRange;
 	else
-		acceptableRange=75;
+		acceptableRange=/*75*/10000000;
 
 	function init(){
 
@@ -346,7 +346,12 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 		if(buffer.length>height)
 			buffer.shift(); //this may be an O(n) implementation. Think about changing.
 
+		/*
+		TODO:go through each level, and select the level with least sq distance if it is below threshold. 
+		*/
 		for(var i=0; i<height; i++){
+
+
 			size=i+3;
 			fs=buffer.length-size;
 			ss=buffer.length-size+1;

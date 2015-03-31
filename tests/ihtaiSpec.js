@@ -121,7 +121,7 @@ describe('ihtai', function(){
 			var levels = memorizer.getLevels();
 			expect(levels[0].series["3"].fs).toEqual([30,30,30,30,30]);
 			expect(levels[0].series["3"].ss).toEqual([35,35,35,35,35]);
-			expect(levels[0].series["3"].es).toEqual([40,40,40,40,40]);
+			expect(levels[0].series["3"].es).toEqual([37.5, 37.5, 37.5, 37.5, 37.5]);
 		});		
 
 		it('given a cluster, should return vector representing next action agent should take to minimize homeostasis differential', function(){
@@ -400,7 +400,6 @@ describe('ihtai utils', function(){
 		});
 
 		it('should find the nearest neighbor to a vector', function(){
-
 			nearestNeighbor = kdTree.nearestNeighbor([60, 61, 58, 57, 77]);
 			expect(nearestNeighbor).toEqual([60, 61, 58, 57, 77]);
 			var nn = kdTree.nearestNeighbor([1,1,1,1,1]);
@@ -430,6 +429,37 @@ describe('ihtai utils', function(){
 			expect(inflatedRoot.r.val).toEqual([60,61,58,57,77]);
 			expect(inflatedRoot.l.l.val).toEqual([10,5,5,3,6]);
 			expect(inflatedRoot.r.l.val).toEqual([75,50,22,20,21]);
+		});
+	});
+
+	describe('binary heap', function(){
+		var minHeap;
+		beforeEach(function(){
+			minHeap=IhtaiUtils.MinHeap();
+			minHeap.insert(9);
+			minHeap.insert(3);
+			minHeap.insert(7);
+			minHeap.insert(5);
+			minHeap.insert(2);
+			minHeap.insert(8);			
+
+		});
+
+		it('should add elements to heap and maintain heap property', function(){
+
+
+			var sortedList=[];
+			var l=minHeap.heap.length;
+			for(var i=0;i<l; i++){
+				sortedList.push(minHeap.popMin());
+			}
+			expect(sortedList).toEqual([2, 3, 5, 7, 8, 9]);
+		});
+		it('should edit the value of a heap element, and maintain heap property after calling minHeapify on it', function(){
+			var indx=minHeap.heap.length-1;
+			minHeap.heap[indx]=1;
+			minHeap.minHeapify();
+			expect(minHeap.getMin()).toBe(1);
 		});
 	});
 
