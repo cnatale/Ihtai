@@ -446,8 +446,6 @@ describe('ihtai utils', function(){
 		});
 
 		it('should add elements to heap and maintain heap property', function(){
-
-
 			var sortedList=[];
 			var l=minHeap.heap.length;
 			for(var i=0;i<l; i++){
@@ -465,6 +463,18 @@ describe('ihtai utils', function(){
 			minHeap.minHeapify(0);
 			expect(minHeap.getMin()).toBe(2);
 			expect(minHeap.heap).toEqual([2, 3, 7, 9, 5, 9999]);
+		});
+		it('should remove the smallest element from heap', function(){
+			var min=minHeap.popMin();
+			expect(min).toBe(2);
+			expect(minHeap.heap).toEqual([3, 5, 7, 9, 8]);
+		});
+		it('should perform heapify on all elements', function(){
+			minHeap.heap[0]=77;
+			minHeap.heap[3]=5000;
+			minHeap.heap[2]=1;
+			minHeap.minHeapifyAll();
+			expect(minHeap.heap).toEqual([1, 3, 8, 5000, 5, 77]);
 		});
 	});
 

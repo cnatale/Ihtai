@@ -301,6 +301,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 		/*TODO:this query could be improved to log(h) if the data was sorted according to dist from
 		homeostasis goal * some multiplier for height val (to disincentivize longer-term solutions)
+
+		TODO:implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
+		TODO:each level[i].series[cluster.id] must be stored in a heap for this to work
 		*/
 		for(var i=0; i<height; i++){
 			//At each level, compare time series' end drive state with homeostasis goal.
