@@ -303,9 +303,12 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 		TODO:implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
 		TODO:each level[i].series[cluster.id] must be stored in a heap for this to work
 		*/
-		var sd= minHeaps[cluster.id].getMin().sd;
-		if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
-			outputstm = level[i].series[cluster.id].ss;
+		if(minHeaps.hasOwnProperty(cluster.id)){
+			var min=minHeaps[cluster.id].getMin();
+			var sd= min.sd;
+			if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
+				outputstm = min.ss;
+			}
 		}
 
 		return outputstm;
@@ -343,15 +346,36 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 
 			size=i+3;
-			fs=buffer.length-size;
-			ss=buffer.length-size+1;
-			es=buffer.length-1;
-			fsid=buffer[fs].id
-			s=level[i].series[fsid];
 
 			//Once we have a buffer full enough for this level, add a memory every cycle
 			if(buffer.length>=size){
-				
+				fs=buffer.length-size;
+				ss=buffer.length-size+1;
+				es=buffer.length-1;
+				fsid=buffer[fs].id;
+				s=level[i].series[fsid];				
+
+				var avg=[], ctr=0;
+				for(var j=ss;j<=es;j++){
+					ctr++;
+					if(j==ss){ //first iteration
+						avg=buffer[ss].stm.slice();
+					}
+					else{
+						//add current stimuli 
+						//skip iterating over non-homeostasisGoal values to
+						var kl=avg.length-homeostasisGoal.length;
+						for(var k=/*0*/kl;k<avg.length;k++){
+							avg[k]+=buffer[j].stm[k];
+						}
+					}
+				}
+
+				//loop over each index, dividing by total number of values
+				for(k=0;k<avg.length;k++){
+					avg[k]= avg[k]/ctr;
+				}
+				////////////////////////////////////////////////				
 				
 				/*
 				If series' end state is less different from homeostasis goal than   
@@ -360,26 +384,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				*/				
 				if(level[i].series.hasOwnProperty(fsid)){
 					///////stimuli endstate averaging algorithm used in all cases//////
-					//TODO: i probably only need to iterate k over the homeostasisgoal indices instead of all
-					var avg=[], ctr=0;
-					for(var j=ss;j<=es;j++){
-						ctr++;
-						if(j==ss){ //first iteration
-							avg=buffer[ss].stm.slice();
-						}
-						else{
-							//add current stimuli 
-							for(var k=0;k<avg.length;k++){
-								avg[k]+=buffer[j].stm[k];
-							}
-						}
-					}
-
-					//loop over each index, dividing by total number of values
-					for(k=0;k<avg.length;k++){
-						avg[k]= avg[k]/ctr;
-					}
-					////////////////////////////////////////////////
 
 					/*
 					If same first and second states are the same, store the memory
