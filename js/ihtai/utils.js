@@ -93,7 +93,7 @@ IhtaiUtils.MinHeap = (function(){
 
 		function compare(node){
 			var par=par(node);
-			if(heap[node]<heap[par]){
+			if(par >= 0 && heap[node].sd < heap[par].sd){
 				var tmp;
 				tmp=heap[node];
 				heap[node]=heap[par];
@@ -123,12 +123,12 @@ IhtaiUtils.MinHeap = (function(){
 
 		function siftDown(i){
 			var l=left(i), r=right(i), smallest;
-			if(heap[l] && heap[l] < heap[i])
+			if(heap[l] && heap[l].sd < heap[i].sd)
 				smallest= l;
 			else
 				smallest= i;
 
-			if(heap[r] && heap[r] < heap[smallest])
+			if(heap[r] && heap[r].sd < heap[smallest].sd)
 				smallest= r;
 
 			if(smallest != i){
@@ -164,12 +164,12 @@ IhtaiUtils.MinHeap = (function(){
 
 		function siftDown(i){
 			var l=left(i), r=right(i), smallest;
-			if(heap[l] && heap[l] < heap[i])
+			if(heap[l] && heap[l].sd < heap[i].sd)
 				smallest= l;
 			else
 				smallest= i;
 
-			if(heap[r] && heap[r] < heap[smallest])
+			if(heap[r] && heap[r].sd < heap[smallest].sd)
 				smallest= r;
 
 			if(smallest != i){

@@ -436,12 +436,12 @@ describe('ihtai utils', function(){
 		var minHeap;
 		beforeEach(function(){
 			minHeap=IhtaiUtils.MinHeap();
-			minHeap.insert(9);
-			minHeap.insert(3);
-			minHeap.insert(7);
-			minHeap.insert(5);
-			minHeap.insert(2);
-			minHeap.insert(8);			
+			minHeap.insert({sd:9});
+			minHeap.insert({sd:3});
+			minHeap.insert({sd:7});
+			minHeap.insert({sd:5});
+			minHeap.insert({sd:2});
+			minHeap.insert({sd:8});			
 
 		});
 
@@ -451,30 +451,43 @@ describe('ihtai utils', function(){
 			for(var i=0;i<l; i++){
 				sortedList.push(minHeap.popMin());
 			}
-			expect(sortedList).toEqual([2, 3, 5, 7, 8, 9]);
+			var tstArr=[2, 3, 5, 7, 8, 9];
+			for(var i=0;i<sortedList.length;i++){
+				expect(sortedList[i].sd).toEqual(tstArr[i]);
+			}
 		});
 		it('should edit the value of a heap element, and maintain heap property after calling minHeapify on it', function(){
 			var indx=minHeap.heap.length-1;
-			minHeap.heap[indx]=1;
+			minHeap.heap[indx]={sd:1};
 			minHeap.minHeapify(indx);
-			expect(minHeap.getMin()).toBe(1);
+			expect(minHeap.getMin().sd).toBe(1);
 
-			minHeap.heap[0]=9999;
+			minHeap.heap[0]={sd:9999};
 			minHeap.minHeapify(0);
-			expect(minHeap.getMin()).toBe(2);
-			expect(minHeap.heap).toEqual([2, 3, 7, 9, 5, 9999]);
+			expect(minHeap.getMin().sd).toBe(2);
+
+			var tstArr=[2, 3, 7, 9, 5, 9999];
+			for(var i=0;i<minHeap.heap.length;i++){
+				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
+			}
 		});
 		it('should remove the smallest element from heap', function(){
 			var min=minHeap.popMin();
-			expect(min).toBe(2);
-			expect(minHeap.heap).toEqual([3, 5, 7, 9, 8]);
+			expect(min.sd).toBe(2);
+			var tstArr=[3, 5, 7, 9, 8];
+			for(var i=0;i<minHeap.heap.length;i++){
+				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
+			}
 		});
 		it('should perform heapify on all elements', function(){
-			minHeap.heap[0]=77;
-			minHeap.heap[3]=5000;
-			minHeap.heap[2]=1;
+			minHeap.heap[0]={sd:77};
+			minHeap.heap[3]={sd:5000};
+			minHeap.heap[2]={sd:1};
 			minHeap.minHeapifyAll();
-			expect(minHeap.heap).toEqual([1, 3, 8, 5000, 5, 77]);
+			var tstArr=[1, 3, 8, 5000, 5, 77];
+			for(var i=0;i<minHeap.heap.length;i++){
+				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
+			}
 		});
 	});
 

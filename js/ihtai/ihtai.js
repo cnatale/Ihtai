@@ -258,7 +258,7 @@ var Ihtai = (function(bundle){
 */
 var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=10;
+	var level, buffer, homeostasisGoal, maxCollisions=10, minHeaps={};
 
 	if(_acceptableRange)
 		acceptableRange=_acceptableRange;
@@ -299,26 +299,13 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 	function query(cluster){
 		var outputstm=null, stimDist, sd;
 
-		/*TODO:this query could be improved to log(h) if the data was sorted according to dist from
-		homeostasis goal * some multiplier for height val (to disincentivize longer-term solutions)
-
+		/*
 		TODO:implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
 		TODO:each level[i].series[cluster.id] must be stored in a heap for this to work
 		*/
-		for(var i=0; i<height; i++){
-			//At each level, compare time series' end drive state with homeostasis goal.
-			//If result < acceptable range, return time series' starting ouput stm (what agent will act on).
-			
-			if(level[i].series.hasOwnProperty(cluster.id)){
-				sd = sqDist(level[i].series[cluster.id].es.slice(-homeostasisGoal.length), homeostasisGoal);
-				if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
-					outputstm = level[i].series[cluster.id].ss;
-					//console.log('output stm lvl:'+ i);
-					break;
-				}
-				//console.log('query distance:'+sd);
-			}
-			//if no match is within acceptable range, go to next level
+		var sd= minHeaps[cluster.id].getMin().sd;
+		if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
+			outputstm = level[i].series[cluster.id].ss;
 		}
 
 		return outputstm;
@@ -342,7 +329,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es;
+		var sd1,sd2,size, fs, ss, es, fsid, s, sd;
 
 		//update the buffer
 		buffer.push(cluster);
@@ -359,6 +346,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			fs=buffer.length-size;
 			ss=buffer.length-size+1;
 			es=buffer.length-1;
+			fsid=buffer[fs].id
+			s=level[i].series[fsid];
 
 			//Once we have a buffer full enough for this level, add a memory every cycle
 			if(buffer.length>=size){
@@ -369,7 +358,29 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				current series stored at this start state, overwrite. If no current series is stored
 				at this start state, store it regardless.
 				*/				
-				if(level[i].series.hasOwnProperty(buffer[fs].id)){
+				if(level[i].series.hasOwnProperty(fsid)){
+					///////stimuli endstate averaging algorithm used in all cases//////
+					//TODO: i probably only need to iterate k over the homeostasisgoal indices instead of all
+					var avg=[], ctr=0;
+					for(var j=ss;j<=es;j++){
+						ctr++;
+						if(j==ss){ //first iteration
+							avg=buffer[ss].stm.slice();
+						}
+						else{
+							//add current stimuli 
+							for(var k=0;k<avg.length;k++){
+								avg[k]+=buffer[j].stm[k];
+							}
+						}
+					}
+
+					//loop over each index, dividing by total number of values
+					for(k=0;k<avg.length;k++){
+						avg[k]= avg[k]/ctr;
+					}
+					////////////////////////////////////////////////
+
 					/*
 					If same first and second states are the same, store the memory
 					as weighted average of the two memories(same firstState and ss, es drive vals become
@@ -390,58 +401,39 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
 					by reference to clusters is more memory efficient, editing the cluster vals was breaking the kd tree.
 					*/		
-					if(sqDist(buffer[ss].stm, level[i].series[buffer[fs].id].ss) === 0){
-						var bufferGoalDist = buffer[es].stm.slice(-homeostasisGoal.length);
-						var esGoalDist = level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length);
-						level[i].series[buffer[fs].id].cs++;
+
+					if(sqDist(buffer[ss].stm, s.ss) === 0){
+
+						var bufferGoalDist = avg.slice(-homeostasisGoal.length);
+						var esGoalDist = s.es.slice(-homeostasisGoal.length);
+						s.cs++;
 						//clamp upper bound to keep memory from getting too 'stuck'
-						if(level[i].series[buffer[fs].id].cs>maxCollisions)
-							level[i].series[buffer[fs].id].cs=maxCollisions;
+						if(s.cs>maxCollisions)
+							s.cs=maxCollisions;
 
 						for(var j=0;j<bufferGoalDist.length;j++){
-							var cs=level[i].series[buffer[fs].id].cs;
+							var cs=s.cs;
 							esGoalDist[j]= ((esGoalDist[j]*cs)+bufferGoalDist[j])/(cs+1);
 						}
 						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(esGoalDist);
-						Array.prototype.splice.apply(level[i].series[buffer[fs].id].es, args);	
+						Array.prototype.splice.apply(s.es, args);	
 						//console.log('existing memory updated');
+
+						/*
+						TODO: update sqdist of endstate from drive goals and store in s. use this val to key minHeap
+						*/
+						s.sd= sqDist(s.es.slice(-homeostasisGoal.length), homeostasisGoal);
+						
 					}
 					else{ 
-						////////////////////////////////////////
-						/*TODO: instead of es being equal to endstate stimuli, it becomes the 
-						average of all stimuli starting at ss.
-
-						PROBLEM: avg should actually be calculated and used as sd1 above, but this adds a lot
-						of computational complexity to every iteration, so if the endstate is a close enough
-						approximation for that stage I'd like to use it.
-						*/
-						var avg=[], ctr=0;
-						for(var j=ss;j<=es;j++){
-							ctr++;
-							if(j==ss){ //first iteration
-								avg=buffer[ss].stm.slice();
-							}
-							else{
-								//add current stimuli 
-								for(var k=0;k<avg.length;k++){
-									avg[k]+=buffer[j].stm[k];
-								}
-							}
-						}
-
-						//loop over each index, dividing by total number of values
-						for(k=0;k<avg.length;k++){
-							avg[k]= avg[k]/ctr;
-						}
-						/////////////////////////////////////////	
 
 						//second states are different. Figure out which one leads to better outcome.
 						//sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd1= sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal);
-						sd2 = sqDist(level[i].series[buffer[fs].id].es.slice(-homeostasisGoal.length), homeostasisGoal);
+						sd2 = sqDist(s.es.slice(-homeostasisGoal.length), homeostasisGoal);
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
-						if(sd1 < sd2/**(1/(1+level[i].series[buffer[fs].id].cs/maxCollisions))*/){
+						if(sd1 < sd2/**(1/(1+s.cs/maxCollisions))*/){
 							/*
 							TODO: 
 							-Use the sliced arrays to find nearest neighbor clusters. 
@@ -456,49 +448,36 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 							average of all stimuli starting at ss.
 							*/
 
+							s.fs=buffer[fs].stm.slice();
+							s.ss=buffer[ss].stm.slice();
+							s.es=avg;
+							s.cs=0;
+							s.sd=sd1;
 
-							level[i].series[buffer[fs].id]={
-								fs: buffer[fs].stm.slice(), 
-								ss: buffer[ss].stm.slice(),
-								es: avg/*buffer[es].stm.slice()*/,
-								cs:0
-							};
+							/*
+							TODO: compute sqdist from drive goals and store in s. use this val to key minHeap
+
+							*/
 						}	
 					}		
 				}
 				else if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange){
-					console.log('new memory created')
-					////////////////////////////////////////
-					/*TODO: instead of es being equal to endstate stimuli, it becomes the 
-					average of all stimuli starting at ss.
-					*/
-					var avg=[], ctr=0;
-					for(var j=ss;j<=es;j++){
-						ctr++;
-						if(j==ss){ //first iteration
-							avg=buffer[ss].stm.slice();
-						}
-						else{
-							//add current stimuli 
-							for(var k=0;k<avg.length;k++){
-								avg[k]+=buffer[j].stm[k];
-							}
-						}
-					}
-
-					//loop over each index, dividing by total number of values
-					for(k=0;k<avg.length;k++){
-						avg[k]= avg[k]/ctr;
-					}
-					/////////////////////////////////////////
-
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
-					level[i].series[buffer[fs].id]={
+					console.log('new memory created')
+
+					level[i].series[fsid]={
 						fs: buffer[fs].stm.slice(), 
 						ss: buffer[ss].stm.slice(),
-						es: avg/*buffer[es].stm.slice()*/,
-						cs:0
-					};					
+						es: avg,
+						cs:0,
+						sd:sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal)
+					};		
+					//add to fsid's minHeap, or create minHeap if it doesn't exist	
+					//TODO: calculate sqdist between es and drive goals. store this value and use it to key minheap
+					if(!minHeaps.hasOwnProperty(fsid))
+						minHeaps[fsid]= new IhtaiUtils.MinHeap();
+	
+					minHeaps[fsid].insert(level[i].series[fsid]);	
 				}
 			}
 		}
