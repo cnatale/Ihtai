@@ -571,16 +571,16 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 				//map clusters to random points in n-dimensional space 
 				for(var j=0;j<vectorDim;j++){
 					//assumes vectors are normalized to a 0-100 scale
-					if(i==0){ //test cluster
+					/*if(i==0){ //test cluster
 						clusters[i].stm[j]=50;
 					}
-					else{
+					else{*/
 						if(typeof _distribution != "undefined"){
 							clusters[i].stm[j]=IhtaiUtils.weightedRand(_distribution[j]);
 						}
 						else
 							clusters[i].stm[j]=Math.round(Math.random()*100);
-					}
+					//}
 					
 				}
 

@@ -172,11 +172,12 @@ require([], function(){
 	}*/];
 
 	//combine fire key signal with arrow keys, since game can only detect one keypress per cycle
-	var distributionArr=[//left, right, up and fire selector
-						{0:.25, 1:.25, 2:.25, 3:.25, 4:.25},
+	var distributionArr=[//fire, up, left, right, and no movement selector
+						{0:.20, 1:.20, 2:.20, 3:.20, 4:.20},
+						//current row and column eye position
 						{0:.25, 1:.25, 2:.25, 3:.25},
 						{0:.25, 1:.25, 2:.25, 3:.25}];
-	//bitmap b/w values
+	//bitmap block b/w values
 	for(var i=0;i<slidingWindowHBlocks*slidingWindowVBlocks;i++){
 		distributionArr.push({0:.5,1:.5});
 	}
@@ -185,7 +186,6 @@ require([], function(){
 		distributionArr.push({0:.25, 1:.25, 2:.25, 3:.25});
 	}
 	
-
     ihtai = new Ihtai({
 		clusterCount:/*20480*/60000,
 		vectorDim:12,/*number of iostimuli values + drives*/
