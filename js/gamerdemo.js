@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=2, focusHeight=2, ihtaiPaused=false;
+var eyePos={x:0,y:0}, focusWidth=/*160*/80, focusHeight=/*120*/60, slidingWindowHBlocks=3, slidingWindowVBlocks=2, ihtaiPaused=false, row=0, col=0;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -44,11 +44,12 @@ require([], function(){
     document.getElementById('files').addEventListener('change', handleFileSelect, false);
    
     //////////////////////////////////////////////////////
-    var prevGrayscaleImgData=[];
-    for(var i=0;i<focusWidth*focusHeight;i++){
-    	prevGrayscaleImgData[i]=0;
+    var prevBwImgData=[];
+    var i, j;
+    for(i=0;i<slidingWindowHBlocks*slidingWindowVBlocks;i++){
+    	prevBwImgData[i]=0;
     }
-	var prevBrightness=0, lastTime, lastKeypress=0;
+	var lastTime, lastKeypress=0, prevQuadrant=0;
 	var directionKeySignal=0;
     var viewWidth = /*800*/320;
     var viewHeight = /*600*/240;	
@@ -60,29 +61,21 @@ require([], function(){
 		},
 		cycle:function(stimuli, dt){
 			//update pleasure on score increase, slowly decrement over time
-			if(stimuli[1] > 50){
-				if(this.pleasure<100){
-					this.pleasure+= 100 /** dt*/;
-				}
-				else{
-					this.pleasure=100;
-				}
-			}
+			if(feelingPleasure)
+				this.pleasure=3;
 			else{
 				if(this.pleasure>0){
-					this.pleasure-= 1 * dt;
+					this.pleasure-= .01 * dt;
 				}
 				else
 					this.pleasure=0;				
 			}
 
 			//clamp vals
-			this.pleasure=Math.min(this.pleasure, 100);
-			this.pleasure=Math.max(this.pleasure, 0);
 			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));	
 			return this.pleasure;
 		},
-		targetval:100 //the goal value for pleasure
+		targetval:3 //the goal value for pleasure
 	};
 	var painDrive={
 		init:function(){
@@ -91,24 +84,26 @@ require([], function(){
 		},
 		cycle:function(stimuli,dt){
 			//increment pain on death, slowly decrement over time
-			if(stimuli[2] > 50){
-				this.pain+= 100 /** dt*/;
+			if(feelingPain){
+				this.pain= 3;
 			}
 			else{
-				this.pain-= 1 * dt;
-			}
+				if(this.pain>0){
+					this.pain-= .01 * dt;
+				}
+				else
+					this.pain=0;
+			}	
 
 			//clamp vals
-			this.pain=Math.min(this.pain, 100);
-			this.pain=Math.max(this.pain, 0);
 			$("#pain").html("pain: "+Math.floor(this.pain));	
 			return this.pain;
 		},
 		targetval:0 //the goal value for pain
 	};
-	var curiosityDrive={
+	/*var curiosityDrive={
 		init:function(){
-			this.curiosity=100;
+			this.curiosity=1;
 			this.px=0;
 			this.py=0;
 			return this.curiosity;
@@ -118,10 +113,10 @@ require([], function(){
 
 			if(stimuli[3]!=this.px && stimuli[4]!=this.py){
 				//decrease when eye moves
-				this.curiosity-=102 * dt /** .04*/;
+				this.curiosity-=102 * dt;
 			}
 			//curiosity is decreased when different images are seen from frame to frame
-			/*this.curiosity-=stimuli[5] * dt * .1;*/
+			//this.curiosity-=stimuli[5] * dt * .1;
 
 			//clamp vals
 			this.curiosity=Math.min(this.curiosity, 100);
@@ -132,39 +127,40 @@ require([], function(){
 			return this.curiosity;
 		},
 		targetval:0 //the goal value for pain
-	};	
+	};	*/
 	var aggressionDrive={
 		init:function(){
-			this.aggression=100;
+			this.aggression=3;
 			return this.aggression;
 		},
 		cycle:function(stimuli,dt){
-			this.aggression+= 1 * dt;
+			this.aggression+= .01 * dt;
+			if(this.aggression > 3){
+				this.aggression=3;
+			}
 
 			//ship fired a shot
-			if(stimuli[0] < 20)
-				this.aggression-=100 * dt;
+			if(stimuli[0] == 0)
+				this.aggression=0;
 
 			//clamp vals
-			this.aggression=Math.min(this.aggression, 100);
-			this.aggression=Math.max(this.aggression, 0);
 			$("#aggression").html("aggression: "+Math.floor(this.aggression));	
 			return this.aggression;
 		},
 		targetval:0 //the goal value for pain
 	};		
-	drives=[pleasureDrive, painDrive, curiosityDrive, aggressionDrive];
+	drives=[pleasureDrive, painDrive, aggressionDrive];
 
 
 	var reflexes = [
-	{
+	/*{
 		init:function(){
 		    this.weightedDirection=[];
 		    for(var i=0;i<100;i++){
 		    	this.weightedDirection[i]=IhtaiUtils.weightedRand({10:0.2, 30:0.1, 50:0.1, 70:0.1, 90:0.5});
 		    }
 		},
-		matcher: function(stimuli){ /*randomly select an arrow key*/
+		matcher: function(stimuli){ //randomly select an arrow key
 			return true; //always return a potential random action
 		}, 
 		response: function(stimuli){
@@ -173,31 +169,27 @@ require([], function(){
 				signal:[this.weightedDirection[Math.floor(Math.random()*99)]]
 			}
 		}
-	}];
+	}*/];
 
 	//combine fire key signal with arrow keys, since game can only detect one keypress per cycle
-	//[directionKeySignal,feelingPleasure?100:0,feelingPain?100:0,eyePos.x/viewWidth*100, eyePos.y/viewHeight*100, imgDiff]
-	var distributionArr=[
-						{10:.20, 30:.20, 50:.20, 70:.20, 90:.20},
-						{0:.5, 100:.5},
-						{0:.5, 100:.5},
-						{0:.1, 10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1, 100:.1},
-						{0:.1, 10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1, 100:.1},
-						{0:.1, 10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1, 100:.1}];
-	//bitmap greyscales
-	for(var i=0;i<focusWidth*focusHeight+4;i++){
-		distributionArr.push({0:.5, /*10:.1, 20:.1, 30:.1, 40:.1, 60:.1, 70:.1, 80:.1, 90:.1,*/ 100:.5});
+	var distributionArr=[//left, right, up and fire selector
+						{0:.25, 1:.25, 2:.25, 3:.25, 4:.25},
+						{0:.25, 1:.25, 2:.25, 3:.25},
+						{0:.25, 1:.25, 2:.25, 3:.25}];
+	//bitmap b/w values
+	for(var i=0;i<slidingWindowHBlocks*slidingWindowVBlocks;i++){
+		distributionArr.push({0:.5,1:.5});
 	}
 	//drives
-	for(var i=0; i<4;i++){
-		distributionArr.push({0:.25, 20:.25, 80:.25, 100:.25});
+	for(var i=0; i<3;i++){
+		distributionArr.push({0:.25, 1:.25, 2:.25, 3:.25});
 	}
 	
 
     ihtai = new Ihtai({
-		clusterCount:140000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
-		vectorDim:10+(focusWidth*focusHeight)/*108*/,/*number of iostimuli values + drives*/
-		memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		clusterCount:/*20480*/60000,
+		vectorDim:12,/*number of iostimuli values + drives*/
+		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:160000,/*160000*//*acceptable range for optimal stimuli is in square dist*/
@@ -237,6 +229,12 @@ require([], function(){
   	var canvas = $("#canvas");    
 	ctx= canvas[0].getContext("2d");
 
+
+	//declare function variables here so they aren't instantiated every iteration, limiting gc
+	var td, time, imageData, data, bwSum, grayscale, grayscaleImgData, cycleArr, res, e;
+	//grayscale function var declarations
+	var output, ctr, sum, row, col, pctX, pctY, i, gray;
+
 	function updateIhtai(){
 		if(!ihtaiPaused){
 			if(shouldOpenFile){
@@ -246,8 +244,7 @@ require([], function(){
 				return;	
 			}
 
-	    	var td;
-	    	var time=new Date().getTime();
+	    	time=new Date().getTime();
 	    	if(lastTime)
 	    		td=time-lastTime;
 	    	else
@@ -261,67 +258,100 @@ require([], function(){
 			remaining signals: grayscale image data 
 			*/
 			
-			var imageData = ctx.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
-			var data=imageData.data;
+			imageData = ctx.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
+			data=imageData.data;
+			bwSum=[
+				[0,0],
+				[0,0],
+				[0,0]
+			];
 
-			var grayscale = function(d) {
-				var output=[],ctr=0,sum=0;
-			    for (var i = 0; i < d.length; i += 4) {
+			//TODO:change to a difference formula, double resolution, increase memory depth to 500
+			grayscale = function(d) {
+				output=[];
+				ctr=0;
+				sum=0;
+			    for (i = 0; i < d.length; i += 4) {
 			    	//var avg = (d[i] + d[i +1] + d[i +2]) / 3;		    	
-			    	var gray=d[i+3];
+			    	gray=d[i+3];
 			    	//d[i]     = 255; // red
 			    	//d[i + 1] = 0; // green
-			    	d[i + 2] = 255; // blue
-			    	d[i + 3] = 255;
-			    	output.push(gray/2.55); //the 2.55 is a normalizer to scale 0-255 to 0-100
+			    	//d[i + 2] = 255; // blue
+			    	//d[i + 3] = 255;
+			    	o=gray/2.55//the 2.55 is a normalizer to scale 0-255 to 0-100
+			    	output.push(o); 
 			    	ctr++;
 			    	sum+=gray;
+
+			    	//todo:calculate which of six buckets pixel val goes into
+			    	row=Math.floor(i/viewWidth);
+			    	col=i%viewWidth;
+			    	pctX=row/(viewWidth-1);
+			    	pctY=col/(viewHeight-1);
+
+			    	if(pctX <= .32){
+			    		bwSum[0][Math.round(pctY)]+= o;
+			    	}
+			    	else if(pctX <= .65){
+			    		bwSum[1][Math.round(pctY)]+=o;
+			    	}
+			    	else{
+			    		bwSum[2][Math.round(pctY)]+=o;
+			    	}
 			    }
 			    ctx.putImageData(imageData, eyePos.x, eyePos.y);
-			    prevBrightness = sum/ctr; //avg brightness for this bitmap chunk
-			    //console.log(prevBrightness);
+
+			    //we have summed values grouped into 3x2 grid. Normalize (divide by total # pixels in each group).
+			    for(i=0;i<bwSum.length;i++){
+			    	for(j=0;j<bwSum[0].length;j++){
+			    		bwSum[i][j]= bwSum[i][j] / ( (viewWidth/3) * (viewHeight/2) );
+			    		if(bwSum[i][j]>0)
+			    			bwSum[i][j]=1;
+			    		else
+			    			bwSum[i][j]=0;
+			    	}
+			    }
+
+
 			    return output;
 			};			
+			grayscaleImgData= grayscale(data);
 
-			var grayscaleImgData= grayscale(data);
-			/*compare curr grayscale data w/ grayscale data from last iteration*/	
-			var imgDiff=0;
-			for(var i=0;i<grayscaleImgData.length;i++){
-				imgDiff+=Math.abs(grayscaleImgData[i]-prevGrayscaleImgData[i]);
-			}		
-			imgDiff=imgDiff/grayscaleImgData.length; //the average difference value
-			prevGrayscaleImgData=grayscaleImgData;
-			
-			//TODO: associating pleasure with score increase may be a mistake. investigate.
-			var cycleArr=[directionKeySignal,feelingPleasure?100:0,feelingPain?100:0,eyePos.x/viewWidth*100, eyePos.y/viewHeight*100, imgDiff]
-			cycleArr = cycleArr.concat(grayscaleImgData);
+			cycleArr=[directionKeySignal, row, col];
+		    for(i=0;i<bwSum.length;i++){
+		    	for(j=0;j<bwSum[0].length;j++){
+		    		cycleArr.push(bwSum[i][j]);
+		    	}
+		    }			
 
-			var res=ihtai.cycle(cycleArr, td);
+			res=ihtai.cycle(cycleArr, td);
+
 			lastKeypress +=td;
-			if(res.memorizerOutput != null && lastKeypress > 100 && Math.random() > .1 /*prevent overfitting*/ /*&& ihtai.getProperties().driveList[3].aggression<100*//*keep from triggering stimuli loop*/){
+
+			if(res.memorizerOutput != null /*&& lastKeypress > 100*/ && Math.random() > .1 /*prevent overfitting*/){
 				//read res keypad signals, and trigger keyboard events per signal output
 				directionKeySignal=res.memorizerOutput[0];
 
-    			if(directionKeySignal < 20){
+    			if(directionKeySignal == 0){
     				//fire key pressed
-					var e = jQuery.Event("keydown");
+					e = jQuery.Event("keydown");
 					e.which = 32; // # Some key code value
 					$(window).trigger(e);	    				
     			}
-	    		else if(directionKeySignal < 40){
+	    		else if(directionKeySignal == 1){
 	    			//up key pressed
-					var e = jQuery.Event("keydown");
+					e = jQuery.Event("keydown");
 					e.which = 38; // # Some key code value
 					$(window).trigger(e);	    			
 	    		}
-	    		else if(directionKeySignal <60){
+	    		else if(directionKeySignal == 2){
 	    			//left key pressed
-					var e = jQuery.Event("keydown");
+					e = jQuery.Event("keydown");
 					e.which = 37; // # Some key code value
 					$(window).trigger(e);	    			
-	    		}else if(directionKeySignal <80){
+	    		}else if(directionKeySignal == 3){
 	    			//right key pressed
-					var e = jQuery.Event("keydown");
+					e = jQuery.Event("keydown");
 					e.which = 39; // # Some key code value
 					$(window).trigger(e);	    			
 	    		}
@@ -335,28 +365,29 @@ require([], function(){
 			else{
 				//TODO:act on instinct, which in this case is random keypad signals.
 				//Trigger keyborad events based on instinct
-		    	if(res.reflexOutput && res.reflexOutput.length==1 && lastKeypress > 100){
-			    	directionKeySignal=res.reflexOutput[0].signal[0];
-	    			if(directionKeySignal < 20){
+		    	if(true /*&& lastKeypress > 100*/){
+		    		directionKeySignal=Math.round(Math.random()*4);
+			    	
+	    			if(directionKeySignal == 0){
 	    				//fire key pressed
-						var e = jQuery.Event("keydown");
+						e = jQuery.Event("keydown");
 						e.which = 32; // # Some key code value
 						$(window).trigger(e);	    				
 	    			}
-		    		else if(directionKeySignal < 40){
+		    		else if(directionKeySignal == 1){
 		    			//up key pressed
-						var e = jQuery.Event("keydown");
+						e = jQuery.Event("keydown");
 						e.which = 38; // # Some key code value
 						$(window).trigger(e);	    			
 		    		}
-		    		else if(directionKeySignal <60){
+		    		else if(directionKeySignal == 2){
 		    			//left key pressed
-						var e = jQuery.Event("keydown");
+						e = jQuery.Event("keydown");
 						e.which = 37; // # Some key code value
 						$(window).trigger(e);	    			
-		    		}else if(directionKeySignal <80){
+		    		}else if(directionKeySignal == 3){
 		    			//right key pressed
-						var e = jQuery.Event("keydown");
+						e = jQuery.Event("keydown");
 						e.which = 39; // # Some key code value
 						$(window).trigger(e);	    			
 		    		}
@@ -369,49 +400,17 @@ require([], function(){
 		    	}  			
 			}
 
+			function setEyePos(){
+				//loop through a 4x4 grid of possible positions
+				row=Math.floor(prevQuadrant/4);
+				col=prevQuadrant%4;
 
-	    	//eyePos x memorizer index=4, eyePos y memorizer index=5
-	    	//bug eyepos sticks
-			function setEyePos(prevBrightness){
-				/*
-				TODO: eyepos still gets stuck at a particular coordinate. Due to rounding?
-				*/
-				var px=eyePos.x, py=eyePos.y;
-				if(res.memorizerOutput != null && Math.random() > .1 /*&& ihtai.getProperties().driveList[2].curiosity<100*/){
-					eyePos.x=Math.floor(res.memorizerOutput[3]/100*viewWidth);
-					eyePos.y=Math.floor(res.memorizerOutput[4]/100*viewHeight);
-					/*while(eyePos.x==px && eyePos.y==py){
-						if(prevBrightness > 20){
-							//enter fixate mode: decrease random range of next eye pos by 50%
-							eyePos.x=eyePos.x + (Math.random()*viewWidth)/16 - viewWidth/32;
-							eyePos.y=eyePos.y + (Math.random()*viewHeight)/16 - viewHeight/32;			
-						}
-						else{
-							eyePos.x=Math.floor(Math.random()*viewWidth);
-							eyePos.y=Math.floor(Math.random()*viewHeight);
-						}						
-					}*/
-				}
-				else{
-					eyePos.x= Math.floor(Math.random()*viewWidth);
-					eyePos.y= Math.floor(Math.random()*viewHeight);
-					/*while(eyePos.x==px && eyePos.y==py){
-						eyePos.x= Math.floor(Math.random()*viewWidth);
-						eyePos.y= Math.floor(Math.random()*viewHeight);
-					}*/
-				}
-				//constrain within bitmap
-				if(eyePos.x < 0)
-					eyePos.x=0;
-				if(eyePos.x + focusWidth > viewWidth)
-					eyePos.x = viewWidth - focusWidth;
-
-				if(eyePos.y < 0)
-					eyePos.y=0;
-				if(eyePos.y + focusHeight > viewHeight)
-					eyePos.y = viewHeight - focusHeight;		
+				eyePos.x=(col/4) * viewWidth;
+				eyePos.y=(row/4) * viewHeight;
+				prevQuadrant++;		
+				prevQuadrant=prevQuadrant%16;
 			}
-			setEyePos(prevBrightness);	   	
+			setEyePos();	   	
 			//console.log('eyepos'+ eyePos.x+', '+eyePos.y)
 		
 			feelingPleasure=false;feelingPain=false;

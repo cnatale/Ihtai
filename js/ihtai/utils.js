@@ -91,10 +91,10 @@ IhtaiUtils.MinHeap = (function(){
 		*/
 		heap.push(node);
 
+		var par, tmp;
 		function compare(node){
-			var par=par(node);
+			par=par(node);
 			if(par >= 0 && heap[node].sd < heap[par].sd){
-				var tmp;
 				tmp=heap[node];
 				heap[node]=heap[par];
 				heap[par]=tmp;
@@ -121,8 +121,10 @@ IhtaiUtils.MinHeap = (function(){
 		  at index obeys the min-heap property. 
 		*/
 
+		var l, r, smallest, tmp;
 		function siftDown(i){
-			var l=left(i), r=right(i), smallest;
+			l=left(i); 
+			r=right(i);
 			if(heap[l] && heap[l].sd < heap[i].sd)
 				smallest= l;
 			else
@@ -133,7 +135,6 @@ IhtaiUtils.MinHeap = (function(){
 
 			if(smallest != i){
 				//swap heap[i] with heap[smallest]
-				var tmp;
 				tmp=heap[i];
 				heap[i]=heap[smallest];
 				heap[smallest]=tmp;
@@ -162,8 +163,11 @@ IhtaiUtils.MinHeap = (function(){
 		  at index obeys the min-heap property. 
 		*/
 
+		var l, r, smallest, tmp;
 		function siftDown(i){
-			var l=left(i), r=right(i), smallest;
+			l=left(i); 
+			r=right(i); 
+
 			if(heap[l] && heap[l].sd < heap[i].sd)
 				smallest= l;
 			else
@@ -174,7 +178,6 @@ IhtaiUtils.MinHeap = (function(){
 
 			if(smallest != i){
 				//swap heap[i] with heap[smallest]
-				var tmp;
 				tmp=heap[i];
 				heap[i]=heap[smallest];
 				heap[smallest]=tmp;

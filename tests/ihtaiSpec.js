@@ -304,6 +304,12 @@ describe('ihtai', function(){
 
 		});
 
+		/*
+		TODO: test save and load with the following recently-added functionality:
+		-weighted distribution of cluster vectors
+		-new Memorizer cluster averaging and selection algorithmic data
+		*/
+
 		it('should create an Ihtai instance with back-stm', function(){
 			var ihtai2 = new Ihtai({
 				clusterCount:1000,
