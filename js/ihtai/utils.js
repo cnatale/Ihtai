@@ -112,10 +112,6 @@ IhtaiUtils.MinHeap = (function(){
 
 	function minHeapifyAll(){
 		/*
-		  This is a version of minHeapify written to run in log(n) time, for when only one element in a heap may have
-		  had its heap property changed. It has to be called every time there is an edit to a heap element's value, otherwise
-		  the heap property won't hold up.
-
 		  Assume that heap[i]'s left and right children are min-heaps, but heap[i] might be larger than
 		  its children, thus violating the min-heap property. The value of heap[i] floats down so that subtree rooted
 		  at index obeys the min-heap property. 
@@ -155,7 +151,7 @@ IhtaiUtils.MinHeap = (function(){
 	function minHeapify(i){
 		/*
 		  This is a version of minHeapify written to run in log(n) time, for when only one element in a heap may have
-		  had its heap property changed. It has to be called every time there is an edit to a heap element's value, otherwise
+		  had its heap property changed (requires knowledge of which index's value changed). It has to be called every time there is an edit to a heap element's value, otherwise
 		  the heap property won't hold up.
 
 		  Assume that heap[i]'s left and right children are min-heaps, but heap[i] might be larger than

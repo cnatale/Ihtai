@@ -89,6 +89,7 @@ var Ihtai = (function(bundle){
 				acceptableRange=bundle.acceptableRange;
 			else
 				acceptableRange=null;
+
 			if(bundle.bStmCt)
 				bStmCt=bundle.bStmCt;
 
@@ -407,7 +408,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					*/		
 
 					if(sqDist(buffer[ss].stm, s.ss) === 0){
-
 						var bufferGoalDist = avg.slice(-homeostasisGoal.length);
 						var esGoalDist = s.es.slice(-homeostasisGoal.length);
 						s.cs++;
@@ -423,11 +423,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						Array.prototype.splice.apply(s.es, args);	
 						//console.log('existing memory updated');
 
-						/*
-						TODO: update sqdist of endstate from drive goals and store in s. use this val to key minHeap
-						*/
-						s.sd= sqDist(s.es.slice(-homeostasisGoal.length), homeostasisGoal);
 						
+						//update sqdist of endstate from drive goals and store in s
+						s.sd= sqDist(s.es.slice(-homeostasisGoal.length), homeostasisGoal);
 					}
 					else{ 
 
@@ -457,11 +455,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 							s.es=avg;
 							s.cs=0;
 							s.sd=sd1;
-
-							/*
-							TODO: compute sqdist from drive goals and store in s. use this val to key minHeap
-
-							*/
 						}	
 					}		
 				}
@@ -484,6 +477,11 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					minHeaps[fsid].insert(level[i].series[fsid]);	
 				}
 			}
+		}
+
+		if(typeof fsid !== "undefined"){
+			//re-heapify in case a heap member's value has changed
+			minHeaps[fsid].minHeapifyAll();			
 		}
 	}
 

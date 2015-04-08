@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=/*160*/80, focusHeight=/*120*/60, slidingWindowHBlocks=3, slidingWindowVBlocks=2, ihtaiPaused=false, row=0, col=0;
+var eyePos={x:0,y:0}, focusWidth=/*160*/80, focusHeight=/*120*/60, slidingWindowHBlocks=3, slidingWindowVBlocks=2, ihtaiPaused=false;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -134,6 +134,8 @@ require([], function(){
 			return this.aggression;
 		},
 		cycle:function(stimuli,dt){
+			//temporarily change this to limit forward movement
+			/*
 			this.aggression+= .01 * dt;
 			if(this.aggression > 3){
 				this.aggression=3;
@@ -146,6 +148,19 @@ require([], function(){
 			//clamp vals
 			$("#aggression").html("aggression: "+Math.floor(this.aggression));	
 			return this.aggression;
+			*/
+			this.aggression-= .01 * dt;
+			if(this.aggression < 0){
+				this.aggression=0;
+			}
+
+			//ship fired a shot
+			if(stimuli[0] == 1)
+				this.aggression=3;
+
+			//clamp vals
+			$("#aggression").html("anti-movement: "+Math.floor(this.aggression));	
+			return this.aggression;			
 		},
 		targetval:0 //the goal value for pain
 	};		
@@ -187,13 +202,13 @@ require([], function(){
 	}
 	
     ihtai = new Ihtai({
-		clusterCount:/*20480*/60000,
+		clusterCount:/*20480*/80000,
 		vectorDim:12,/*number of iostimuli values + drives*/
 		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:160000,/*160000*//*acceptable range for optimal stimuli is in square dist*/
-		bStmCt:0,
+		bStmCt:/*1*/2,
 		distribution:distributionArr
 	});		
 
@@ -233,7 +248,7 @@ require([], function(){
 	//declare function variables here so they aren't instantiated every iteration, limiting gc
 	var td, time, imageData, data, bwSum, grayscale, grayscaleImgData, cycleArr, res, e;
 	//grayscale function var declarations
-	var output, ctr, sum, row, col, pctX, pctY, i, gray;
+	var output, ctr, sum, row=0, col=0, eyePosRow=0, eyePosCol=0, pctX, pctY, i, gray;
 
 	function updateIhtai(){
 		if(!ihtaiPaused){
@@ -284,10 +299,10 @@ require([], function(){
 			    	sum+=gray;
 
 			    	//todo:calculate which of six buckets pixel val goes into
-			    	row=Math.floor(i/viewWidth);
-			    	col=i%viewWidth;
-			    	pctX=row/(viewWidth-1);
-			    	pctY=col/(viewHeight-1);
+			    	col=(i/4)%focusWidth; //x position
+			    	row=Math.floor((i/4)/focusWidth); //y position
+			    	pctX=col/(focusWidth-1); //x percentage
+			    	pctY=row/(focusHeight-1); //y percentage
 
 			    	if(pctX <= .32){
 			    		bwSum[0][Math.round(pctY)]+= o;
@@ -317,7 +332,7 @@ require([], function(){
 			};			
 			grayscaleImgData= grayscale(data);
 
-			cycleArr=[directionKeySignal, row, col];
+			cycleArr=[directionKeySignal, eyePosRow, eyePosCol];
 		    for(i=0;i<bwSum.length;i++){
 		    	for(j=0;j<bwSum[0].length;j++){
 		    		cycleArr.push(bwSum[i][j]);
@@ -402,11 +417,11 @@ require([], function(){
 
 			function setEyePos(){
 				//loop through a 4x4 grid of possible positions
-				row=Math.floor(prevQuadrant/4);
-				col=prevQuadrant%4;
+				eyePosRow=Math.floor(prevQuadrant/4);
+				eyePosCol=prevQuadrant%4;
 
-				eyePos.x=(col/4) * viewWidth;
-				eyePos.y=(row/4) * viewHeight;
+				eyePos.x=(eyePosCol/4) * viewWidth;
+				eyePos.y=(eyePosRow/4) * viewHeight;
 				prevQuadrant++;		
 				prevQuadrant=prevQuadrant%16;
 			}
