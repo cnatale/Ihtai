@@ -54,7 +54,10 @@ require([], function(){
 		},
 		cycle:function(stimuli, dt){
 			//update pleasure on score increase, slowly decrement over time
-			if(selectionSignal==lastRandNum)
+			//if(lastRandNum==8 && selectionSignal==0){
+			//	debugger;
+			//}
+			if(selectionSignal===lastRandNum)
 				this.pleasure=1;
 			else
 				this.pleasure=0;
@@ -186,8 +189,12 @@ require([], function(){
 		    	console.log('reflex');		
 			}
 			lastRandNum=randNum;
-			$("#prediction").html("prediction: "+selectionSignal+', actual: '+ lastRandNum);	
-			//debugger;
+			$("#prediction").html("prediction: "+selectionSignal+', actual: '+ lastRandNum);
+			if(res.memorizerOutput != null && selectionSignal != lastRandNum){
+					debugger;
+					//houston, we have a problem
+			}	
+	
 		}
 	}
 

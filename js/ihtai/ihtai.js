@@ -532,6 +532,15 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 	var numClusters = bundle._numClusters;	
 	bStmCt=bundle.bStmCt;
 
+	var combinedSignal = function(){
+		var output=[];
+		for(var i=0;i<this.bStm.length;i++){
+			output= output.concat(clusters[this.bStm[i]].stm);
+		}
+		output=output.concat(this.stm);
+		return output;
+	}		
+
 	/**
 		Individual clusters have the following properties:
 		id: a unique id
@@ -632,6 +641,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		@returns {Object} the nearest cluster to v
 	*/
 
+	var clusterTreeCreated=false;
 	function findNearestCluster(v){
 		var nearestCluster;
 
@@ -641,18 +651,36 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		*/
 		var vStr=v.join();
 		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
-			cache[vStr]={
-				id:idCtr++, stm:v, bStm:[]
-			}; 
-			//randomly assign back-memory cluster ids
-			for(j=0; j<bStmCt; j++){
-				cache[vStr].bStm[j]= Math.floor(Math.random()*(idCtr-1));
-			} 	
+			if(idCtr<20000){
+				cache[vStr]={
+					id:idCtr++, stm:v, bStm:[]
+				}; 
+				//randomly assign back-memory cluster ids
+				for(j=0; j<bStmCt; j++){
+					cache[vStr].bStm[j]= Math.floor(Math.random()*(idCtr-1));
+				} 	
+			}
+			else{
+				//cache is too big. init clustertree from cache values,
+				//find nearest neighbor 
+				if(!clusterTreeCreated){
+					//convert cache object into an array
+					var cacheArr=[];
+					for(var key in cache){
+						if(cache.hasOwnProperty(key))
+							cacheArr.push(key);
+					}
+					clusterTree= new IhtaiUtils.KdTree(cacheArr, combinedSignal);
+					clusterTreeCreated=true;
+				}
+				nearestCluster = clusterTree.nearestNeighbor(v);
+				return nearestCluster;
+			}
 		}	
 
-		//nearestCluster = clusterTree.nearestNeighbor(v);
-		nearestCluster=cache[vStr];
-
+		//TODO:once idCtr gets to ~20k, we need to stop caching and build the kd-tree.
+		//if not, memory gets so scarce that the gc is called constantly.
+		nearestCluster=cache[vStr];		
 		return nearestCluster;
 	}
 
