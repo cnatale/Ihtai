@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<style>
+	  body{}
+      #canvas, #canvasOverlay { 
+      	/*position:absolute;*/ 
+      	border:1px 
+      	solid black; 
+      	top:20px; 
+      	left:0px; 
+      	width:100px;
+      	height:140px;
+      }
+      #canvasOverlay{z-index:999;}
+      .button { position:absolute; border:1px solid black; }
+	</style>
+</head>
+<body>
+
+	<!-- TODO: add save file button -->
+	<button id="saveBtn" style="position:absolute;top:0;left:0;z-index:999">Save Ihtai</button>
+	<input type="file" id="files" name="files[]" style="position:absolute;top:0;left:100px;z-index:999"/>
+	<div id="pleasure" style="position:absolute;top:0;right:0;z-index:999"></div>
+	<div id="prediction" style="position:absolute;top:20px;right:0;z-index:999"></div>
+	<canvas id="canvas" width="5" height="7"></canvas>
+	<button id="resetBtn">Select New Number</button>
+
+	<!-- includes -->
+	<script src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+	<script src="http://code.jquery.com/jquery-migrate-1.2.1.js"></script>	
+	<script src="js/external/Queue.js"></script>
+	<script src="js/ihtai/ihtai.js"></script>
+	<script src="js/ihtai/utils.js"></script>
+	<script data-main="js/classifydemo" src="js/external/require.js"></script>	
+	<script src="js/external/download.js"></script>
+
+</body>
+</html>

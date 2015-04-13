@@ -61,15 +61,11 @@ require([], function(){
 		},
 		cycle:function(stimuli, dt){
 			//update pleasure on score increase, slowly decrement over time
+			this.pleasure-= .01 * dt;
+			if(this.pleasure<0)
+				this.pleasure=0;
 			if(feelingPleasure)
 				this.pleasure=3;
-			else{
-				if(this.pleasure>0){
-					this.pleasure-= .01 * dt;
-				}
-				else
-					this.pleasure=0;				
-			}
 
 			//clamp vals
 			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));	
@@ -84,16 +80,11 @@ require([], function(){
 		},
 		cycle:function(stimuli,dt){
 			//increment pain on death, slowly decrement over time
-			if(feelingPain){
+			this.pain-= .01 * dt;
+			if(this.pain<0)
+				this.pain=0;
+			if(feelingPain)
 				this.pain= 3;
-			}
-			else{
-				if(this.pain>0){
-					this.pain-= .01 * dt;
-				}
-				else
-					this.pain=0;
-			}	
 
 			//clamp vals
 			$("#pain").html("pain: "+Math.floor(this.pain));	
@@ -154,7 +145,7 @@ require([], function(){
 				this.aggression=0;
 			}
 
-			//ship fired a shot
+			//ship moved forward
 			if(stimuli[0] == 1)
 				this.aggression=3;
 
@@ -202,13 +193,13 @@ require([], function(){
 	}
 	
     ihtai = new Ihtai({
-		clusterCount:/*20480*/80000,
+		clusterCount:/*20480*/0,
 		vectorDim:12,/*number of iostimuli values + drives*/
-		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:120,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
-		acceptableRange:160000,/*160000*//*acceptable range for optimal stimuli is in square dist*/
-		bStmCt:/*1*/2,
+		acceptableRange:600,/*160000*//*acceptable range for optimal stimuli is in square dist*/
+		bStmCt:0,
 		distribution:distributionArr
 	});		
 
@@ -246,9 +237,14 @@ require([], function(){
 
 
 	//declare function variables here so they aren't instantiated every iteration, limiting gc
-	var td, time, imageData, data, bwSum, grayscale, grayscaleImgData, cycleArr, res, e;
+	var td, time, imageData, data, grayscale, grayscaleImgData, cycleArr, res, e, visLog;
 	//grayscale function var declarations
-	var output, ctr, sum, row=0, col=0, eyePosRow=0, eyePosCol=0, pctX, pctY, i, gray;
+	var output, row=0, col=0, eyePosRow=0, eyePosCol=0, pctX, pctY, i, gray;
+	var bwSum=[
+		[0,0],
+		[0,0],
+		[0,0]
+	];
 
 	function updateIhtai(){
 		if(!ihtaiPaused){
@@ -265,47 +261,37 @@ require([], function(){
 	    	else
 	    		td=0;
 	    	lastTime=time;		
-			/*
-			signal 0: score increase (less than 50 means no, over 50 means yes)
-			signal 1: death (less than 50 means no death, over 50 means death)
-			signal 2: joystick (either left, up, down, or no direction by splitting 0-100 signal in quarters)
-			signal 3: fire button (space bar, less than...)
-			remaining signals: grayscale image data 
-			*/
 			
 			imageData = ctx.getImageData(eyePos.x, eyePos.y, focusWidth, focusHeight);
 			data=imageData.data;
-			bwSum=[
-				[0,0],
-				[0,0],
-				[0,0]
-			];
 
-			//TODO:change to a difference formula, double resolution, increase memory depth to 500
 			grayscale = function(d) {
-				output=[];
-				ctr=0;
-				sum=0;
+				//output=[];
+				//reset bwSum values
+				for(i=0;i<bwSum.length;i++){
+			    	for(j=0;j<bwSum[0].length;j++){
+			    		bwSum[i][j]=0;
+			    	}
+			    }
+
 			    for (i = 0; i < d.length; i += 4) {
 			    	//var avg = (d[i] + d[i +1] + d[i +2]) / 3;		    	
 			    	gray=d[i+3];
-			    	//d[i]     = 255; // red
+			    	d[i]     = 255; // red
 			    	//d[i + 1] = 0; // green
 			    	//d[i + 2] = 255; // blue
 			    	//d[i + 3] = 255;
 			    	o=gray/2.55//the 2.55 is a normalizer to scale 0-255 to 0-100
-			    	output.push(o); 
-			    	ctr++;
-			    	sum+=gray;
+			    	//output.push(o); 
 
-			    	//todo:calculate which of six buckets pixel val goes into
+			    	//calculate which of six buckets pixel val goes into
 			    	col=(i/4)%focusWidth; //x position
 			    	row=Math.floor((i/4)/focusWidth); //y position
 			    	pctX=col/(focusWidth-1); //x percentage
 			    	pctY=row/(focusHeight-1); //y percentage
 
 			    	if(pctX <= .32){
-			    		bwSum[0][Math.round(pctY)]+= o;
+			    		bwSum[0][Math.round(pctY)]+=o;
 			    	}
 			    	else if(pctX <= .65){
 			    		bwSum[1][Math.round(pctY)]+=o;
@@ -319,7 +305,6 @@ require([], function(){
 			    //we have summed values grouped into 3x2 grid. Normalize (divide by total # pixels in each group).
 			    for(i=0;i<bwSum.length;i++){
 			    	for(j=0;j<bwSum[0].length;j++){
-			    		bwSum[i][j]= bwSum[i][j] / ( (viewWidth/3) * (viewHeight/2) );
 			    		if(bwSum[i][j]>0)
 			    			bwSum[i][j]=1;
 			    		else
@@ -327,17 +312,20 @@ require([], function(){
 			    	}
 			    }
 
-
-			    return output;
+			    //return output;
 			};			
-			grayscaleImgData= grayscale(data);
-
+			//grayscaleImgData= grayscale(data);
+			grayscale(data);
+ 
 			cycleArr=[directionKeySignal, eyePosRow, eyePosCol];
+			//visLog="";
 		    for(i=0;i<bwSum.length;i++){
 		    	for(j=0;j<bwSum[0].length;j++){
 		    		cycleArr.push(bwSum[i][j]);
+		    		//visLog=visLog+bwSum[i][j];
 		    	}
 		    }			
+		    //console.log(visLog);
 
 			res=ihtai.cycle(cycleArr, td);
 
@@ -374,7 +362,7 @@ require([], function(){
 	    			//no key pressed
 	    		}
 
-				console.log('memory');
+				//console.log('memory');
 				lastKeypress=0;
 			}
 			else{
@@ -410,7 +398,7 @@ require([], function(){
 		    			//no key pressed
 		    		}
 		
-		    		console.log('reflexes')
+		    		//console.log('reflexes')
 		    		lastKeypress=0;
 		    	}  			
 			}

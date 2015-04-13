@@ -193,9 +193,10 @@ IhtaiUtils.MinHeap = (function(){
 		}
 	}
 
+	var minItm, endItm;
 	function popMin(){
-		var minItm=heap[0];
-		var endItm=heap[heap.length-1];
+		minItm=heap[0];
+		endItm=heap[heap.length-1];
 		heap[0]=endItm;
 		heap.pop();
 		minHeapify(0);
@@ -275,6 +276,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		return root;
 
 		function createNode(data, lvl){
+			//TODO:step through this method, checking to see if it works with backStimuli
 			var node;
 
 			if(data.length<2){
@@ -369,14 +371,15 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		//cache=[];
 		return bestPt;
 
+		var l, r, dir, dim, nv, bpv, d;
 		function nn(node, lvl){
-			var l=1, r=-1, dir;
-			var dim=lvl % pt.length;
+			l=1; 
+			r=-1;
+			dim=lvl % pt.length;
 
 			if(node==null)
 				return;
 
-			var nv;
 			if(typeof comparisonProp==="function"){
 				if(!cache[node.val.id])
 					cache[node.val.id]=comparisonProp.call(node.val);
@@ -401,7 +404,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 
 			//check if current node is closer than current best
-			var d=distSq(nv, pt);
+			d=distSq(nv, pt);
 			if(d<bestDist){
 				bestDist=d;
 				bestPt=node.val;
@@ -411,16 +414,15 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			Whichever way we went, check other child node to see if it could be closer.
 			If so, descend.
 			*/
-			var bpv;
 			if(typeof comparisonProp==="function"){
-				try{
+				//try{
 					if(!cache[bestPt.id])
 						cache[bestPt.id]=comparisonProp.call(bestPt);
-					var bpv=cache[bestPt.id];
-				}
-				catch(e){
-					debugger;
-				}
+					bpv=cache[bestPt.id];
+				//}
+				//catch(e){
+				//	debugger;
+				//}
 			}
 			else if(typeof comparisonProp=="string"){
 				bpv=bestPt[comparisonProp];

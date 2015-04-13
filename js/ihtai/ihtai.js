@@ -65,7 +65,7 @@ var Ihtai = (function(bundle){
 			if(typeof bundle != "object")
 				throw "Error: initialization parameter should be an Object or String!"
 
-			if(bundle.clusterCount)
+			if(!isNaN(bundle.clusterCount))
 				clusterCount= bundle.clusterCount;
 			else
 				throw "Error: no 'clusterCount' property found in initialization Object!"
@@ -85,7 +85,8 @@ var Ihtai = (function(bundle){
 				reflexList=bundle.reflexList;
 			else
 				throw "Error: no 'reflexes' property found in initialization Object!"
-			if(bundle.acceptableRange)
+
+			if(!isNaN(bundle.acceptableRange))
 				acceptableRange=bundle.acceptableRange;
 			else
 				acceptableRange=null;
@@ -261,10 +262,10 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
 	var level, buffer, homeostasisGoal, maxCollisions=10, minHeaps={};
 
-	if(_acceptableRange)
+	if(!isNaN(_acceptableRange))
 		acceptableRange=_acceptableRange;
 	else
-		acceptableRange=/*75*/10000000;
+		acceptableRange=10000000;
 
 	function init(){
 
@@ -307,8 +308,14 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 		if(minHeaps.hasOwnProperty(cluster.id)){
 			var min=minHeaps[cluster.id].getMin();
 			var sd= min.sd;
-			if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ < acceptableRange){
+			if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ <= acceptableRange){
+				console.log('lvl:'+ min.lvl);
+				console.log('min.ss: '+min.ss);
+				console.log('min.es:'+min.es);
+				console.log('min.sd:'+min.sd);
+				console.log('acceptablerange:'+acceptableRange);
 				outputstm = min.ss;
+				//debugger;
 			}
 		}
 
@@ -346,7 +353,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 		for(var i=0; i<height; i++){
 
 
-			size=i+3;
+			size=i+2;
 
 			//Once we have a buffer full enough for this level, add a memory every cycle
 			if(buffer.length>=size){
@@ -458,16 +465,17 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						}	
 					}		
 				}
-				else if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange){
+				else/* if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange)*/{
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
-					console.log('new memory created')
+					//console.log('new memory created')
 
 					level[i].series[fsid]={
 						fs: buffer[fs].stm.slice(), 
 						ss: buffer[ss].stm.slice(),
 						es: avg,
 						cs:0,
-						sd:sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal)
+						sd:sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal),
+						lvl: i /*logging purposes only*/
 					};		
 					//add to fsid's minHeap, or create minHeap if it doesn't exist	
 					//TODO: calculate sqdist between es and drive goals. store this value and use it to key minheap
@@ -520,7 +528,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 //clusters are 'buckets' that n-dimensional stm moments are placed inside
 //_kdTree is an optional param
 var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
-	var vectorDim=bundle._vectorDim, clusterTree;
+	var vectorDim=bundle._vectorDim, clusterTree, cache={}, idCtr=0;
 	var numClusters = bundle._numClusters;	
 	bStmCt=bundle.bStmCt;
 
@@ -623,10 +631,27 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 
 		@returns {Object} the nearest cluster to v
 	*/
+
 	function findNearestCluster(v){
 		var nearestCluster;
-		var leastSq, t;
-		nearestCluster = clusterTree.nearestNeighbor(v);
+
+		/*
+		TODO: cluster creation and caching should be moved here. return cluster from cache.
+		build kdtree off of cache on startup.
+		*/
+		var vStr=v.join();
+		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
+			cache[vStr]={
+				id:idCtr++, stm:v, bStm:[]
+			}; 
+			//randomly assign back-memory cluster ids
+			for(j=0; j<bStmCt; j++){
+				cache[vStr].bStm[j]= Math.floor(Math.random()*(idCtr-1));
+			} 	
+		}	
+
+		//nearestCluster = clusterTree.nearestNeighbor(v);
+		nearestCluster=cache[vStr];
 
 		return nearestCluster;
 	}
