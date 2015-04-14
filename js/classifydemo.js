@@ -57,6 +57,7 @@ require([], function(){
 			//if(lastRandNum==8 && selectionSignal==0){
 			//	debugger;
 			//}
+
 			if(selectionSignal===lastRandNum)
 				this.pleasure=1;
 			else
@@ -113,7 +114,10 @@ require([], function(){
 	img.onload = function() {
 		//ctx.drawImage(img, -20, -8);
 		//img.style.display = 'none';
-		updateIhtai();
+		//updateIhtai();		
+		for(var i=0;i<10000;i++){
+			updateIhtai();
+		}		
 	};	
 	var numCoords={
 		1:{x:0,y:0},
@@ -132,7 +136,6 @@ require([], function(){
 	$('#resetBtn').click(function(){
 		updateIhtai();
 	});
-	
 
 	function updateIhtai(){
 		if(!ihtaiPaused){
@@ -151,7 +154,7 @@ require([], function(){
 	    	lastTime=time;
 
 	    	//select random number img and draw it in canvas
-	    	randNum=Math.round(Math.random()*9);
+	    	randNum=Math.round(1+Math.random()*8);
 	    	currImgCoords=numCoords[randNum];
 			ctx.drawImage(img, currImgCoords.x, currImgCoords.y);
 
@@ -162,7 +165,7 @@ require([], function(){
 			getPixels = function(d) {
 				output=[];
 
-			    for (i = 0; i < d.length; i += 4) {    	
+			    for (var i = 0; i < d.length; i += 4) {    	
 			    	//d[i]     = 255; // red
 			    	//d[i + 1] = 0; // green
 			    	//d[i + 2] = 255; // blue

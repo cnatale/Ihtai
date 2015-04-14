@@ -651,7 +651,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		*/
 		var vStr=v.join();
 		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
-			if(idCtr<20000){
+			if(idCtr<10000){
 				cache[vStr]={
 					id:idCtr++, stm:v, bStm:[]
 				}; 
@@ -668,7 +668,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 					var cacheArr=[];
 					for(var key in cache){
 						if(cache.hasOwnProperty(key))
-							cacheArr.push(key);
+							cacheArr.push(cache[key]);
 					}
 					clusterTree= new IhtaiUtils.KdTree(cacheArr, combinedSignal);
 					clusterTreeCreated=true;
