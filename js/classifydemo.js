@@ -84,7 +84,7 @@ require([], function(){
 	distributionArr.push({0:.5, 1:.5});
 	
     ihtai = new Ihtai({
-		clusterCount:/*20480*/0,
+		clusterCount:/*20480*/10000,
 		vectorDim:37,/*number of iostimuli values + drives*/
 		memoryHeight:120,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
@@ -117,7 +117,7 @@ require([], function(){
 		//updateIhtai();		
 		for(var i=0;i<10000;i++){
 			updateIhtai();
-		}		
+		}	
 	};	
 	var numCoords={
 		1:{x:0,y:0},

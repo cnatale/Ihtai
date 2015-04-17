@@ -8,7 +8,7 @@ require.config({
     ]
 });
 
-var eyePos={x:0,y:0}, focusWidth=/*160*/80, focusHeight=/*120*/60, slidingWindowHBlocks=3, slidingWindowVBlocks=2, ihtaiPaused=false;
+var eyePos={x:0,y:0}, focusWidth=/*160*/40, focusHeight=/*120*/30, slidingWindowHBlocks=3, slidingWindowVBlocks=2, ihtaiPaused=false;
 require([], function(){
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -193,12 +193,12 @@ require([], function(){
 	}
 	
     ihtai = new Ihtai({
-		clusterCount:/*20480*/0,
+		clusterCount:/*20480*/5000,
 		vectorDim:12,/*number of iostimuli values + drives*/
-		memoryHeight:120,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
-		acceptableRange:600,/*160000*//*acceptable range for optimal stimuli is in square dist*/
+		acceptableRange:10000,/*160000*//*acceptable range for optimal stimuli is in square dist*/
 		bStmCt:0,
 		distribution:distributionArr
 	});		
@@ -274,7 +274,7 @@ require([], function(){
 			    	}
 			    }
 
-			    for (i = 0; i < d.length; i += 4) {
+			    for (i=0; i<d.length; i+= 4) {
 			    	//var avg = (d[i] + d[i +1] + d[i +2]) / 3;		    	
 			    	gray=d[i+3];
 			    	d[i]     = 255; // red
@@ -324,7 +324,8 @@ require([], function(){
 		    		cycleArr.push(bwSum[i][j]);
 		    		//visLog=visLog+bwSum[i][j];
 		    	}
-		    }			
+		    }
+
 		    //console.log(visLog);
 
 			res=ihtai.cycle(cycleArr, td);
@@ -405,13 +406,13 @@ require([], function(){
 
 			function setEyePos(){
 				//loop through a 4x4 grid of possible positions
-				eyePosRow=Math.floor(prevQuadrant/4);
-				eyePosCol=prevQuadrant%4;
+				eyePosRow=Math.floor(prevQuadrant/8);
+				eyePosCol=prevQuadrant%8;
 
-				eyePos.x=(eyePosCol/4) * viewWidth;
-				eyePos.y=(eyePosRow/4) * viewHeight;
+				eyePos.x=(eyePosCol/8) * viewWidth;
+				eyePos.y=(eyePosRow/8) * viewHeight;
 				prevQuadrant++;		
-				prevQuadrant=prevQuadrant%16;
+				prevQuadrant=prevQuadrant%64;
 			}
 			setEyePos();	   	
 			//console.log('eyepos'+ eyePos.x+', '+eyePos.y)

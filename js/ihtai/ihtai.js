@@ -309,11 +309,11 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			var min=minHeaps[cluster.id].getMin();
 			var sd= min.sd;
 			if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ <= acceptableRange){
-				console.log('lvl:'+ min.lvl);
-				console.log('min.ss: '+min.ss);
-				console.log('min.es:'+min.es);
-				console.log('min.sd:'+min.sd);
-				console.log('acceptablerange:'+acceptableRange);
+				//console.log('lvl:'+ min.lvl);
+				//console.log('min.ss: '+min.ss);
+				//console.log('min.es:'+min.es);
+				//console.log('min.sd:'+min.sd);
+				//console.log('acceptablerange:'+acceptableRange);
 				outputstm = min.ss;
 				//debugger;
 			}
@@ -348,7 +348,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 			buffer.shift(); //this may be an O(n) implementation. Think about changing.
 
 		/*
-		TODO:go through each level, and select the level with least sq distance if it is below threshold. 
+		go through each level, and select the level with least sq distance if it is below threshold. 
 		*/
 		for(var i=0; i<height; i++){
 
@@ -443,9 +443,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
 						if(sd1 < sd2/**(1/(1+s.cs/maxCollisions))*/){
-							/*
-							TODO: 
-							-Use the sliced arrays to find nearest neighbor clusters. 
+							/* 
 							-Store nearest neighbor clusters. When an Ihtai is JSON stringified, store the
 							cluster id instead of the array. 
 							-When an ihtai is de-stringified, use the cluster id to reference the ihtai cluster value.
@@ -453,12 +451,12 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 							//add memory series to level. Hash based on starting state cluster id.
 							//console.log('replacement memory learned');
 
-							/*TODO: instead of es being equal to endstate stimuli, it becomes the 
-							average of all stimuli starting at ss.
-							*/
 
-							s.fs=buffer[fs].stm.slice();
-							s.ss=buffer[ss].stm.slice();
+							/*TODO:doesn't look like s.fs is being used by anything. get rid of it?
+							WARNING: s.fs is used for fsid property. you'd need to directly store to make this work*/
+
+							s.fs=buffer[fs].stm/*.slice()*/;
+							s.ss=buffer[ss].stm/*.slice()*/;
 							s.es=avg;
 							s.cs=0;
 							s.sd=sd1;
@@ -470,8 +468,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					//console.log('new memory created')
 
 					level[i].series[fsid]={
-						fs: buffer[fs].stm.slice(), 
-						ss: buffer[ss].stm.slice(),
+						fs: buffer[fs].stm/*.slice()*/, 
+						ss: buffer[ss].stm/*.slice()*/,
 						es: avg,
 						cs:0,
 						sd:sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal),
@@ -578,25 +576,18 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 			return output;
 		}			
 
-		if(typeof _kdTree == "undefined"){
+		/*if(typeof _kdTree == "undefined"){
 			//create clusters with id(needs to be unique) and stm properties
-			/*TODO:check if _distribution != undefined. If so, do weighted distribution of pts*/
 			for(var i=0;i<numClusters;i++){
 				clusters[i]={id:i, stm:[], bStm:[]};
 				//map clusters to random points in n-dimensional space 
 				for(var j=0;j<vectorDim;j++){
 					//assumes vectors are normalized to a 0-100 scale
-					/*if(i==0){ //test cluster
-						clusters[i].stm[j]=50;
+					if(typeof _distribution != "undefined"){
+						clusters[i].stm[j]=IhtaiUtils.weightedRand(_distribution[j]);
 					}
-					else{*/
-						if(typeof _distribution != "undefined"){
-							clusters[i].stm[j]=IhtaiUtils.weightedRand(_distribution[j]);
-						}
-						else
-							clusters[i].stm[j]=Math.round(Math.random()*100);
-					//}
-					
+					else
+						clusters[i].stm[j]=Math.round(Math.random()*100);	
 				}
 
 				//randomly assign back-memory cluster ids
@@ -610,7 +601,6 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		}
 		else{
 			clusterTree= new IhtaiUtils.KdTree(_kdTree, combinedSignal, true);
-
 			//since function objects are ignored in json, clusters combinedSignal is stripped
 			//and needs to be added back to every object
 
@@ -630,6 +620,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 
 			inorder(node);
 		}
+		*/
 	}
 	init(bundle._kdTree, bundle._distribution);
 
@@ -651,7 +642,9 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		*/
 		var vStr=v.join();
 		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
-			if(idCtr<10000){
+			//once idCtr gets too high, stop caching and build the kd-tree.
+			//if not, memory gets so scarce that the gc is called constantly.			
+			if(idCtr<numClusters){
 				cache[vStr]={
 					id:idCtr++, stm:v, bStm:[]
 				}; 
@@ -661,8 +654,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 				} 	
 			}
 			else{
-				//cache is too big. init clustertree from cache values,
-				//find nearest neighbor 
+				//init clustertree from cache values,
 				if(!clusterTreeCreated){
 					//convert cache object into an array
 					var cacheArr=[];
@@ -673,13 +665,13 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 					clusterTree= new IhtaiUtils.KdTree(cacheArr, combinedSignal);
 					clusterTreeCreated=true;
 				}
+				console.log('accessing cluster tree');
+				//find nearest neighbor 
 				nearestCluster = clusterTree.nearestNeighbor(v);
 				return nearestCluster;
 			}
 		}	
 
-		//TODO:once idCtr gets to ~20k, we need to stop caching and build the kd-tree.
-		//if not, memory gets so scarce that the gc is called constantly.
 		nearestCluster=cache[vStr];		
 		return nearestCluster;
 	}

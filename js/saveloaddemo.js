@@ -207,6 +207,7 @@ require(['physicsjs'], function(Physics){
 				//clamp vals
 				this.hunger=Math.min(this.hunger, 100);
 				this.hunger=Math.max(this.hunger, 0);
+				//this.hunger=Math.round(this.hunger);
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
 				return this.hunger;
 			},
@@ -237,6 +238,7 @@ require(['physicsjs'], function(Physics){
 				//clamp vals
 				this.tiredness=Math.min(this.tiredness, 100);
 				this.tiredness=Math.max(this.tiredness, 0);
+				//this.tiredness=Math.round(this.tiredness);
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));
 				return this.tiredness;
 			},
@@ -252,6 +254,7 @@ require(['physicsjs'], function(Physics){
 				else
 					return false;
 			}, 
+
 			response: function(stm){
 				return {
 					indices:[2],
@@ -276,12 +279,12 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:100000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:10000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostm values + drives*/
 			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:/*600*/100000,/*acceptable range for optimal stm is in square dist*/
+			acceptableRange:10000,/*acceptable range for optimal stm is in square dist*/
 			backStimCt:0
 		});
 	    /////////////////////////////////
@@ -343,12 +346,12 @@ require(['physicsjs'], function(Physics){
 		    		var my=(circle.state.acc.y+Math.sin(newAngle)*((td/200)*(moveVel/1000)));				
 					circle.state.acc.set(mx,my);
 					dist=circle.state.pos.dist(square.state.pos);
-					normalizedDist=(dist/normalizer)*100;
+					normalizedDist=Math.round((dist/normalizer)*100);
 				}
 		    	//////////////////////
 		    	var normalizedAngle;
 		    	if(newAngle){
-		    		normalizedAngle=newAngle*(100/(2*Math.PI));
+		    		normalizedAngle=Math.round(newAngle*(100/(2*Math.PI)));
 		    	}
 		    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist], td);
 		    	//returns {reflexOutput:~, memorizerOutput:~}
