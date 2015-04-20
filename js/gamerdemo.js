@@ -69,7 +69,7 @@ require([], function(){
 
 			//clamp vals
 			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));	
-			return this.pleasure;
+			return Math.round(this.pleasure);
 		},
 		targetval:3 //the goal value for pleasure
 	};
@@ -88,58 +88,16 @@ require([], function(){
 
 			//clamp vals
 			$("#pain").html("pain: "+Math.floor(this.pain));	
-			return this.pain;
+			return Math.round(this.pain);
 		},
 		targetval:0 //the goal value for pain
 	};
-	/*var curiosityDrive={
-		init:function(){
-			this.curiosity=1;
-			this.px=0;
-			this.py=0;
-			return this.curiosity;
-		},
-		cycle:function(stimuli,dt){
-			this.curiosity+= 2 * dt;
-
-			if(stimuli[3]!=this.px && stimuli[4]!=this.py){
-				//decrease when eye moves
-				this.curiosity-=102 * dt;
-			}
-			//curiosity is decreased when different images are seen from frame to frame
-			//this.curiosity-=stimuli[5] * dt * .1;
-
-			//clamp vals
-			this.curiosity=Math.min(this.curiosity, 100);
-			this.curiosity=Math.max(this.curiosity, 0);
-			$("#curiosity").html("curiosity: "+Math.floor(this.curiosity));	
-			this.px = stimuli[3];
-			this.py = stimuli[4];
-			return this.curiosity;
-		},
-		targetval:0 //the goal value for pain
-	};	*/
 	var aggressionDrive={
 		init:function(){
 			this.aggression=3;
 			return this.aggression;
 		},
 		cycle:function(stimuli,dt){
-			//temporarily change this to limit forward movement
-			/*
-			this.aggression+= .01 * dt;
-			if(this.aggression > 3){
-				this.aggression=3;
-			}
-
-			//ship fired a shot
-			if(stimuli[0] == 0)
-				this.aggression=0;
-
-			//clamp vals
-			$("#aggression").html("aggression: "+Math.floor(this.aggression));	
-			return this.aggression;
-			*/
 			this.aggression-= .01 * dt;
 			if(this.aggression < 0){
 				this.aggression=0;
@@ -151,7 +109,7 @@ require([], function(){
 
 			//clamp vals
 			$("#aggression").html("anti-movement: "+Math.floor(this.aggression));	
-			return this.aggression;			
+			return Math.round(this.aggression);			
 		},
 		targetval:0 //the goal value for pain
 	};		
@@ -198,7 +156,7 @@ require([], function(){
 		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
-		acceptableRange:10000,/*160000*//*acceptable range for optimal stimuli is in square dist*/
+		acceptableRange:144,/*max val is 144*//*acceptable range for optimal stimuli is in square dist*/
 		bStmCt:0,
 		distribution:distributionArr
 	});		
@@ -277,10 +235,10 @@ require([], function(){
 			    for (i=0; i<d.length; i+= 4) {
 			    	//var avg = (d[i] + d[i +1] + d[i +2]) / 3;		    	
 			    	gray=d[i+3];
-			    	d[i]     = 255; // red
-			    	//d[i + 1] = 0; // green
-			    	//d[i + 2] = 255; // blue
-			    	//d[i + 3] = 255;
+			    	d[i]     = 0; // red
+			    	d[i + 1] = 0; // green
+			    	d[i + 2] = 255; // blue
+			    	d[i + 3] = 255;
 			    	o=gray/2.55//the 2.55 is a normalizer to scale 0-255 to 0-100
 			    	//output.push(o); 
 
@@ -363,7 +321,7 @@ require([], function(){
 	    			//no key pressed
 	    		}
 
-				//console.log('memory');
+				console.log('memory');
 				lastKeypress=0;
 			}
 			else{
@@ -405,14 +363,25 @@ require([], function(){
 			}
 
 			function setEyePos(){
-				//loop through a 4x4 grid of possible positions
-				eyePosRow=Math.floor(prevQuadrant/8);
-				eyePosCol=prevQuadrant%8;
+				/*if(res.memorizerOutput != null && Math.random() > .1){
+					eyePosRow=res.memorizerOutput[1];
+					eyePosCol=res.memorizerOutput[2];
+					eyePos.x=(eyePosCol/8) * viewWidth;
+					eyePos.y=(eyePosRow/8) * viewHeight;					
+					prevQuadrant= Math.floor((eyePos.y/viewHeight)*64) + Math.floor((eyePos.x/viewWidth)*8);
+					prevQuadrant++;		
+					prevQuadrant=prevQuadrant%64;				
+				}
+				else{*/
+					//loop through a 4x4 grid of possible positions
+					eyePosRow=Math.floor(prevQuadrant/8);
+					eyePosCol=prevQuadrant%8;
 
-				eyePos.x=(eyePosCol/8) * viewWidth;
-				eyePos.y=(eyePosRow/8) * viewHeight;
-				prevQuadrant++;		
-				prevQuadrant=prevQuadrant%64;
+					eyePos.x=(eyePosCol/8) * viewWidth;
+					eyePos.y=(eyePosRow/8) * viewHeight;
+					prevQuadrant++;		
+					prevQuadrant=prevQuadrant%64;
+				//}
 			}
 			setEyePos();	   	
 			//console.log('eyepos'+ eyePos.x+', '+eyePos.y)

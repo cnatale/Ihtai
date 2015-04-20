@@ -73,7 +73,7 @@ var Ihtai = (function(bundle){
 				vectorDim=bundle.vectorDim;
 			else
 				throw "Error: no 'vectorDim' property found in initialization Object!"		
-			if(bundle.memoryHeight)
+			if(!isNaN(bundle.memoryHeight))
 				memoryHeight=bundle.memoryHeight;
 			else
 				throw "Error: no 'memoryHeight' property found in initialization Object!"
@@ -373,7 +373,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 						//add current stimuli 
 						//skip iterating over non-homeostasisGoal values to
 						var kl=avg.length-homeostasisGoal.length;
-						for(var k=/*0*/kl;k<avg.length;k++){
+						for(var k=kl;k<avg.length;k++){
 							avg[k]+=buffer[j].stm[k];
 						}
 					}
@@ -383,6 +383,8 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				for(k=0;k<avg.length;k++){
 					avg[k]= avg[k]/ctr;
 				}
+				
+				
 				////////////////////////////////////////////////				
 				
 				/*
@@ -457,7 +459,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 							s.fs=buffer[fs].stm/*.slice()*/;
 							s.ss=buffer[ss].stm/*.slice()*/;
-							s.es=avg;
+							s.es=avg/*buffer[es].stm.slice()*/;
 							s.cs=0;
 							s.sd=sd1;
 						}	
@@ -470,7 +472,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					level[i].series[fsid]={
 						fs: buffer[fs].stm/*.slice()*/, 
 						ss: buffer[ss].stm/*.slice()*/,
-						es: avg,
+						es: avg/*buffer[es].stm.slice()*/,
 						cs:0,
 						sd:sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal),
 						lvl: i /*logging purposes only*/

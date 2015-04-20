@@ -284,7 +284,7 @@ require(['physicsjs'], function(Physics){
 			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:10000,/*acceptable range for optimal stm is in square dist*/
+			acceptableRange:1,/*acceptable range for optimal stm is in square dist*/
 			backStimCt:0
 		});
 	    /////////////////////////////////
