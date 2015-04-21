@@ -1,7 +1,7 @@
 var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
-	var clusters, memorizer, drives, reflexes, acceptableRange, _enableReflexes=true, _enableMemories=true;
+	var clusters, memorizer, drives, reflexes, acceptableRange, distanceAlgo, _enableReflexes=true, _enableMemories=true;
 	var bStmCt=0, prevstm=[];
 	var outputstm =[]; //the output stm buffer;
 
@@ -85,6 +85,10 @@ var Ihtai = (function(bundle){
 				reflexList=bundle.reflexList;
 			else
 				throw "Error: no 'reflexes' property found in initialization Object!"
+			if(bundle.distanceAlgo)
+				distanceAlgo=bundle.distanceAlgo;
+			else
+				distanceAlgo="avg";
 
 			if(!isNaN(bundle.acceptableRange))
 				acceptableRange=bundle.acceptableRange;
@@ -97,7 +101,7 @@ var Ihtai = (function(bundle){
 			clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt, _distribution:bundle.distribution});
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
-			memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange);		
+			memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
 		}
 	init(bundle);
 	}
@@ -258,21 +262,22 @@ var Ihtai = (function(bundle){
 	The cerebral cortex of the a.i. Hierarchically, temporally memorizes
 	moments in time represented by vectors combining stm and drive states.
 */
-var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, _levels){
-	var height=_height, acceptableRange/*the square distance that matches must be less than*/;
+//params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
+var Memorizer = (function(bundle){
+	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
 	var level, buffer, homeostasisGoal, maxCollisions=10, minHeaps={};
 
-	if(!isNaN(_acceptableRange))
-		acceptableRange=_acceptableRange;
+	if(!isNaN(bundle._acceptableRange))
+		acceptableRange=bundle._acceptableRange;
 	else
 		acceptableRange=10000000;
 
 	function init(){
 
-		if(typeof _buffer != "undefined" && typeof _levels != "undefined"){
+		if(typeof bundle._buffer != "undefined" && typeof bundle._levels != "undefined"){
 			//rebuild from existing buffer and level data
-			buffer=_buffer;
-			level=_levels;
+			buffer=bundle._buffer;
+			level=bundle._levels;
 		}
 		else{
 			//initialize an array of hashmaps representing all possible memories
@@ -282,11 +287,16 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				level[i].series={};
 			}
 		}
+	
+		if(typeof bundle._distanceAlgo !== "undefined")
+			distanceAlgo=bundle._distanceAlgo;
+		else
+			distanceAlgo="avg";
 
 		/*The default homeostasis goal val is for test purposes only. The _homeostasisGoal 
 		parameter should always be included when initializing Meorizer.*/
-		if(typeof _homeostasisGoal !== "undefined")
-			homeostasisGoal = _homeostasisGoal;
+		if(typeof bundle._homeostasisGoal !== "undefined")
+			homeostasisGoal = bundle._homeostasisGoal;
 		else
 			homeostasisGoal=[0,0,0,0,0]; //default for test purposes
 	}
@@ -354,7 +364,6 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 
 			size=i+2;
-
 			//Once we have a buffer full enough for this level, add a memory every cycle
 			if(buffer.length>=size){
 				fs=buffer.length-size;
@@ -364,24 +373,26 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 				s=level[i].series[fsid];				
 
 				var avg=[], ctr=0;
-				for(var j=ss;j<=es;j++){
-					ctr++;
-					if(j==ss){ //first iteration
-						avg=buffer[ss].stm.slice();
-					}
-					else{
-						//add current stimuli 
-						//skip iterating over non-homeostasisGoal values to
-						var kl=avg.length-homeostasisGoal.length;
-						for(var k=kl;k<avg.length;k++){
-							avg[k]+=buffer[j].stm[k];
+				if(distanceAlgo == "avg"){
+					for(var j=ss;j<=es;j++){
+						ctr++;
+						if(j==ss){ //first iteration
+							avg=buffer[ss].stm.slice();
+						}
+						else{
+							//add current stimuli 
+							//skip iterating over non-homeostasisGoal values to
+							var kl=avg.length-homeostasisGoal.length;
+							for(var k=kl;k<avg.length;k++){
+								avg[k]+=buffer[j].stm[k];
+							}
 						}
 					}
-				}
 
-				//loop over each index, dividing by total number of values
-				for(k=0;k<avg.length;k++){
-					avg[k]= avg[k]/ctr;
+					//loop over each index, dividing by total number of values
+					for(k=0;k<avg.length;k++){
+						avg[k]= avg[k]/ctr;
+					}
 				}
 				
 				
@@ -417,7 +428,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					*/		
 
 					if(sqDist(buffer[ss].stm, s.ss) === 0){
-						var bufferGoalDist = avg.slice(-homeostasisGoal.length);
+						var bufferGoalDist = distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length);
 						var esGoalDist = s.es.slice(-homeostasisGoal.length);
 						s.cs++;
 						//clamp upper bound to keep memory from getting too 'stuck'
@@ -440,7 +451,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 						//second states are different. Figure out which one leads to better outcome.
 						//sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
-						sd1= sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal);
+						sd1= sqDist(distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd2 = sqDist(s.es.slice(-homeostasisGoal.length), homeostasisGoal);
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
@@ -459,7 +470,7 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 
 							s.fs=buffer[fs].stm/*.slice()*/;
 							s.ss=buffer[ss].stm/*.slice()*/;
-							s.es=avg/*buffer[es].stm.slice()*/;
+							s.es=distanceAlgo=="avg"?avg:buffer[es].stm.slice();
 							s.cs=0;
 							s.sd=sd1;
 						}	
@@ -472,9 +483,9 @@ var Memorizer = (function(_height, _homeostasisGoal, _acceptableRange, _buffer, 
 					level[i].series[fsid]={
 						fs: buffer[fs].stm/*.slice()*/, 
 						ss: buffer[ss].stm/*.slice()*/,
-						es: avg/*buffer[es].stm.slice()*/,
+						es: distanceAlgo=="avg"?avg:buffer[es].stm.slice(),
 						cs:0,
-						sd:sqDist(avg.slice(-homeostasisGoal.length), homeostasisGoal),
+						sd:sqDist(distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal),
 						lvl: i /*logging purposes only*/
 					};		
 					//add to fsid's minHeap, or create minHeap if it doesn't exist	

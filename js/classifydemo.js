@@ -91,7 +91,8 @@ require([], function(){
 		reflexList:reflexes,
 		acceptableRange:0,/*160000*//*acceptable range for optimal stimuli is in square dist*/
 		bStmCt:0,
-		distribution:distributionArr
+		distribution:distributionArr,
+		distanceAlgo:"endState"
 	});		
 
 	//var intervalID = window.setInterval(updateIhtai, 33);
