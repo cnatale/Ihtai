@@ -279,12 +279,12 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:10000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:1000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostm values + drives*/
-			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
+			acceptableRange:0,/*acceptable range for optimal stm is in square dist*/
 			backStimCt:0,
 			distanceAlgo:"endState" /*avg or endState*/
 		});
@@ -354,7 +354,7 @@ require(['physicsjs'], function(Physics){
 		    	if(newAngle){
 		    		normalizedAngle=newAngle*(100/(2*Math.PI));
 		    	}
-		    	var res=ihtai.cycle([square?100:0,normalizedAngle?normalizedAngle:0,moveVel,normalizedDist], td);
+		    	var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
 		    	//returns {reflexOutput:~, memorizerOutput:~}
 
 		    	//use memorizer and reflex pellet recognition output to move circle 
