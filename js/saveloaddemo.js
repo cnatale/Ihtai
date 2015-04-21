@@ -279,9 +279,9 @@ require(['physicsjs'], function(Physics){
 		}];
 
 	    ihtai = new Ihtai({
-			clusterCount:2000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:10000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostm values + drives*/
-			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/

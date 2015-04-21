@@ -295,8 +295,9 @@ var Memorizer = (function(bundle){
 
 		/*The default homeostasis goal val is for test purposes only. The _homeostasisGoal 
 		parameter should always be included when initializing Meorizer.*/
-		if(typeof bundle._homeostasisGoal !== "undefined")
-			homeostasisGoal = bundle._homeostasisGoal;
+		if(typeof bundle._goals !== "undefined"){
+			homeostasisGoal = bundle._goals;
+		}
 		else
 			homeostasisGoal=[0,0,0,0,0]; //default for test purposes
 	}
