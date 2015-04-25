@@ -362,7 +362,11 @@ require(['physicsjs'], function(Physics){
 		    	if(Math.random() > .1)
 		    		var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
 		    	else{
+		    		//var rdm=1+Math.round(Math.random()*3)
+		    		//var daydreamres;
+		    		//for(var i=0; i<rdm; i++){
 		    		ihtai.daydream([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
+					//}
 		    		var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
 		    	}
 		    	//returns {reflexOutput:~, memorizerOutput:~}
@@ -385,15 +389,15 @@ require(['physicsjs'], function(Physics){
 		    	}
 		    	else{
 		    		console.log('reflex')
-		    		if(Math.random() > .1)
+		    		//if(Math.random() > .1)
 		    			moveVel=100;
-		    		else
-		    			moveVel=0;
+		    		//else
+		    		//	moveVel=0;
 		    	}
 
 		    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
 		    	if (res.drivesOutput!=null){    		
-		    		if(res.drivesOutput[1]>=20){
+		    		if(res.drivesOutput[1]>=100){
 		    			sleepMode=true;
 		    		}
 		    		if(res.drivesOutput[1]==0){ //circle has gotten enough sleep. wake it back up.

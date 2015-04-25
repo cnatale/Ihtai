@@ -165,63 +165,61 @@ var Ihtai = (function(bundle){
 		//set every drive state to desired target	
 		var targetDriveVals=drives.getGoals();
 
-		if(Math.random()>.9){//choose a random cluster, set it's drive states to ideal goals
-			var rndCluster=clusters.getRandomCluster();
-			iostm=rndCluster.stm.slice(0, -targetDriveVals.length);
-			//iostm=rndCluster.stm.slice();
+		if(targetDriveVals != drivesOutput){
 
-			//iostm= rndCluster.splice(-targetDriveVals.length, targetDriveVals.length, )
-			//Array.prototype.splice.apply(rndStm, [-targetDriveVals.length, targetDriveVals.length].concat(targetDriveVals));
-			//iostm=rndStm;
-		}		
+			/*if(Math.random()>.9){//choose a random cluster, set it's drive states to ideal goals
+				var rndCluster=clusters.getRandomCluster();
+				iostm=rndCluster.stm.slice(0, -targetDriveVals.length);
+			}*/		
 
-		//merge iostm and drives output
-		combinedstm = iostm.concat(targetDriveVals);
+			//merge iostm and drives output
+			combinedstm = iostm.concat(targetDriveVals);
 
-		/*
-		Keep track of last bStmCt stm, Array.concat combinedstm onto
-		aforementioned stm. Set combinedstm to this val instead.
+			/*
+			Keep track of last bStmCt stm, Array.concat combinedstm onto
+			aforementioned stm. Set combinedstm to this val instead.
 
-		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
-		if we have last bStmCt stm in memory (dependent on curCluster)
-		*/		
+			Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
+			if we have last bStmCt stm in memory (dependent on curCluster)
+			*/		
 
-		var reflexOutput=[], memorizerOutput=null;
-		if(prevstm.length === bStmCt){ //wait for prevstm buffer to fill up
-			var backAndCurrentstm=[];
-			for(var i=0;i<prevstm.length;i++){
-				backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
-			}
-			backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
+			var reflexOutput=[], memorizerOutput=null;
+			if(prevstm.length === bStmCt){ //wait for prevstm buffer to fill up
+				var backAndCurrentstm=[];
+				for(var i=0;i<prevstm.length;i++){
+					backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
+				}
+				backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
 
-			//TODO:1 in 10 chance we replace iostm with a random cluster's io stimuli
+				//TODO:1 in 10 chance we replace iostm with a random cluster's io stimuli
+				
+				//get nearest cluster for combined stm
+				curCluster= clusters.findNearestCluster(backAndCurrentstm);
 			
-			//get nearest cluster for combined stm
-			curCluster= clusters.findNearestCluster(backAndCurrentstm);
-		
 
-			//cycle reflexes
-			if(_enableReflexes)
-				reflexOutput=reflexes.cycle(curCluster, dt);
+				//cycle reflexes
+				if(_enableReflexes)
+					reflexOutput=reflexes.cycle(curCluster, dt);
 
-			//cycle memorizer	
-			if(_enableMemories){
-				memorizerOutput=memorizer.query(curCluster);
-				memorizer.memorize(curCluster);
+				//cycle memorizer	
+				if(_enableMemories){
+					memorizerOutput=memorizer.query(curCluster);
+					memorizer.memorize(curCluster);
+				}
 			}
-		}
 
-		//update previous stm buffer
-		prevstm.push(combinedstm);
-		if(prevstm.length>bStmCt)
-			prevstm.shift();
-	
-		//send reflex output and memorizer output back to ai agent
-		return {
-			reflexOutput:reflexOutput,
-			memorizerOutput:memorizerOutput,
-			drivesOutput:drivesOutput
-		};
+			//update previous stm buffer
+			prevstm.push(combinedstm);
+			if(prevstm.length>bStmCt)
+				prevstm.shift();
+		
+			//send reflex output and memorizer output back to ai agent
+			return {
+				reflexOutput:reflexOutput,
+				memorizerOutput:memorizerOutput,
+				drivesOutput:drivesOutput
+			};
+		}
 	}	
 
 	function enableReflexes(state){
