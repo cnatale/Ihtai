@@ -278,18 +278,19 @@ require(['physicsjs'], function(Physics){
 			}
 		}];
 
+		//TODO:interestingly, setting clusterCount to a low number like 1000 vs 10000. figure out why this is.
 	    ihtai = new Ihtai({
-			clusterCount:1000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:5000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostm values + drives*/
-			memoryHeight:1000,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
-			acceptableRange:0,/*acceptable range for optimal stm is in square dist*/
+			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
 			backStimCt:0,
-			distanceAlgo:"endState" /*avg or endState*/
+			distanceAlgo:"avg" /*avg or endState*/
 		});
 	    /////////////////////////////////
-	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false;
+	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false, zeroMoveCtr=0;
 		// subscribe to ticker to advance the simulation
 		Physics.util.ticker.on(function( time, dt ){
 			if(!ihtaiPaused){
@@ -349,17 +350,29 @@ require(['physicsjs'], function(Physics){
 					dist=circle.state.pos.dist(square.state.pos);
 					normalizedDist=(dist/normalizer)*100;
 				}
+				else{
+					moveVel=0;
+				}
 		    	//////////////////////
 		    	var normalizedAngle;
 		    	if(newAngle){
 		    		normalizedAngle=newAngle*(100/(2*Math.PI));
 		    	}
-		    	var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
-		    	//returns {reflexOutput:~, memorizerOutput:~}
 
+		    	if(Math.random() > .1)
+		    		var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
+		    	else{
+		    		ihtai.daydream([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
+		    		var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
+		    	}
+		    	//returns {reflexOutput:~, memorizerOutput:~}
+		
 		    	//use memorizer and reflex pellet recognition output to move circle 
-		    	if(res.memorizerOutput != null && !isRavenous){
-		    			if(res.memorizerOutput[0]>50 && Math.random() > .1){ //has a pellet been detected?
+
+		    	/* TODO:change logic so that instead of acting on instinct randomly,
+		    	   daydream and act on response */
+		    	if(res.memorizerOutput != null /*!isRavenous*/){
+		    			if(res.memorizerOutput[0]>50){ //has a pellet been detected?
 		    				moveVel=res.memorizerOutput[2];
 		    				//sometimes the above value will not come back as 0 or 100 due to compression.
 		    				//bracket signal to 0 or 100
@@ -370,25 +383,17 @@ require(['physicsjs'], function(Physics){
 		    			}
 		    			console.log('memorizer');
 		    	}
-		    	else if(ihtai.areReflexesEnabled()){
-			    	if(res.reflexOutput){
-			    		if(res.reflexOutput.length==1){
-			    			moveVel=res.reflexOutput[0].signal[0];
-			    		}
-			    		else{
-			    			moveVel=0;
-			    		}
-			    		console.log('reflexes')
-			    	}    		
-		    	}
 		    	else{
-		    		moveVel=0;
+		    		console.log('reflex')
+		    		if(Math.random() > .1)
+		    			moveVel=100;
+		    		else
+		    			moveVel=0;
 		    	}
 
 		    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
-
-		    	if (res.drivesOutput!=null){
-		    		if(res.drivesOutput[1]==100){
+		    	if (res.drivesOutput!=null){    		
+		    		if(res.drivesOutput[1]>=20){
 		    			sleepMode=true;
 		    		}
 		    		if(res.drivesOutput[1]==0){ //circle has gotten enough sleep. wake it back up.
@@ -401,9 +406,11 @@ require(['physicsjs'], function(Physics){
 		    			isRavenous=false;
 		    		}
 		    	}
-		    	if(sleepMode){
+		    	/*if(isRavenous)
+		    		moveVel=100;
+		    	*/	
+		    	if(sleepMode) //sleep comes before hunger
 		    		moveVel=0;
-		    	}
 		    	
 		    }
 		});

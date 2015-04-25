@@ -151,9 +151,9 @@ require([], function(){
 	}
 	
     ihtai = new Ihtai({
-		clusterCount:/*20480*/5000,
+		clusterCount:/*20480*/2000,
 		vectorDim:12,/*number of iostimuli values + drives*/
-		memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
+		memoryHeight:300,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
 		reflexList:reflexes,
 		acceptableRange:144,/*max val is 144*//*acceptable range for optimal stimuli is in square dist*/

@@ -158,6 +158,72 @@ var Ihtai = (function(bundle){
 		};
 	}
 
+	function daydream(iostm, dt){
+		var combinedstm, curCluster;
+
+		var drivesOutput=drives.cycle(iostm, dt);
+		//set every drive state to desired target	
+		var targetDriveVals=drives.getGoals();
+
+		if(Math.random()>.9){//choose a random cluster, set it's drive states to ideal goals
+			var rndCluster=clusters.getRandomCluster();
+			iostm=rndCluster.stm.slice(0, -targetDriveVals.length);
+			//iostm=rndCluster.stm.slice();
+
+			//iostm= rndCluster.splice(-targetDriveVals.length, targetDriveVals.length, )
+			//Array.prototype.splice.apply(rndStm, [-targetDriveVals.length, targetDriveVals.length].concat(targetDriveVals));
+			//iostm=rndStm;
+		}		
+
+		//merge iostm and drives output
+		combinedstm = iostm.concat(targetDriveVals);
+
+		/*
+		Keep track of last bStmCt stm, Array.concat combinedstm onto
+		aforementioned stm. Set combinedstm to this val instead.
+
+		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
+		if we have last bStmCt stm in memory (dependent on curCluster)
+		*/		
+
+		var reflexOutput=[], memorizerOutput=null;
+		if(prevstm.length === bStmCt){ //wait for prevstm buffer to fill up
+			var backAndCurrentstm=[];
+			for(var i=0;i<prevstm.length;i++){
+				backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
+			}
+			backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
+
+			//TODO:1 in 10 chance we replace iostm with a random cluster's io stimuli
+			
+			//get nearest cluster for combined stm
+			curCluster= clusters.findNearestCluster(backAndCurrentstm);
+		
+
+			//cycle reflexes
+			if(_enableReflexes)
+				reflexOutput=reflexes.cycle(curCluster, dt);
+
+			//cycle memorizer	
+			if(_enableMemories){
+				memorizerOutput=memorizer.query(curCluster);
+				memorizer.memorize(curCluster);
+			}
+		}
+
+		//update previous stm buffer
+		prevstm.push(combinedstm);
+		if(prevstm.length>bStmCt)
+			prevstm.shift();
+	
+		//send reflex output and memorizer output back to ai agent
+		return {
+			reflexOutput:reflexOutput,
+			memorizerOutput:memorizerOutput,
+			drivesOutput:drivesOutput
+		};
+	}	
+
 	function enableReflexes(state){
 		_enableReflexes=state;
 	}
@@ -249,6 +315,7 @@ var Ihtai = (function(bundle){
 	}
 	return {
 		cycle:cycle,
+		daydream:daydream,
 		enableReflexes:enableReflexes,
 		areReflexesEnabled:areReflexesEnabled,
 		enableMemories:enableMemories,
@@ -657,7 +724,8 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		var vStr=v.join();
 		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
 			//once idCtr gets too high, stop caching and build the kd-tree.
-			//if not, memory gets so scarce that the gc is called constantly.			
+			//if not, memory gets so scarce that the gc is called constantly.	
+
 			if(idCtr<numClusters){
 				cache[vStr]={
 					id:idCtr++, stm:v, bStm:[]
@@ -712,10 +780,18 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		inorder(node);
 	}	
 
+	function getRandomCluster(){
+		var keys=Object.keys(cache);
+		var randomKey=Math.round(Math.random()*(keys.length-1));
+		return cache[keys[randomKey]];
+	}
+
 	return {
 		findNearestCluster: findNearestCluster,
 		getClusterTree: getClusterTree,
-		orderKeys: orderKeys
+		orderKeys: orderKeys,
+		getSize: function(){return idCtr;},
+		getRandomCluster: getRandomCluster
 	};
 });
 
@@ -809,6 +885,7 @@ var Reflexes = (function(_reflexes){
 
 	function cycle(cluster, dt){
 		var output=[], matcher, response, indices, stm=cluster.stm, ctr;
+
 		//cluster has properties: id, stm
 		for(var i=0; i<reflexes.length;i++){
 			matcher=reflexes[i].matcher;
