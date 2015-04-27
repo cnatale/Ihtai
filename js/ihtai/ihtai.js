@@ -189,6 +189,7 @@ var Ihtai = (function(bundle){
 
 			//PROBLEM: drive states are getting updated whether we unroll everything else or not.
 			//TODO:find way to roll back this drives.cycle() if we decide to not use it
+			//TODO:add undo method to Drives that reverses effects of previous drives.cycle()
 			drivesOutput=drives.cycle(iostm, dt);					
 			//merge iostm and drives output
 			combinedstm = iostm.concat(drivesOutput);

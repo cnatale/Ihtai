@@ -183,7 +183,7 @@ require(['physicsjs'], function(Physics){
 	    // add tiredness drive, add behavior that when tiredness=100, stop moving (to 'seed'
 	   	// conservation of motion).
 		var hungerDrive={
-			hunger:100,
+			hunger:100, prevHunger:0,
 			init:function(){
 				return this.hunger;
 			},
@@ -211,10 +211,13 @@ require(['physicsjs'], function(Physics){
 				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
 				return Math.round(this.hunger);
 			},
+			undo:function(){
+
+			},
 			targetval:0 //the goal value for hunger
 		};
 		var tiredDrive={
-			tiredness:0,
+			tiredness:0, prevTiredness:0,
 			init:function(){
 				return this.tiredness;
 			},
@@ -241,6 +244,9 @@ require(['physicsjs'], function(Physics){
 				//this.tiredness=Math.round(this.tiredness);
 				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));
 				return Math.round(this.tiredness);
+			},
+			undo:function(){
+
 			},
 			targetval:0 //the goal value for hunger
 		};
