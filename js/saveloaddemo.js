@@ -282,12 +282,12 @@ require(['physicsjs'], function(Physics){
 	    ihtai = new Ihtai({
 			clusterCount:5000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostm values + drives*/
-			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+			memoryHeight:2,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
 			backStimCt:0,
-			distanceAlgo:"avg" /*avg or endState*/
+			distanceAlgo:"endState" /*avg or endState*/
 		});
 	    /////////////////////////////////
 	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false, zeroMoveCtr=0;
@@ -359,15 +359,11 @@ require(['physicsjs'], function(Physics){
 		    		normalizedAngle=newAngle*(100/(2*Math.PI));
 		    	}
 
-		    	if(Math.random() > .1)
-		    		var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
+		    	var res;
+		    	if(Math.random() > .5)
+		    		res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
 		    	else{
-		    		//var rdm=1+Math.round(Math.random()*3)
-		    		//var daydreamres;
-		    		//for(var i=0; i<rdm; i++){
-		    		ihtai.daydream([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
-					//}
-		    		var res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
+		    		res=ihtai.daydream([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td, [2]);
 		    	}
 		    	//returns {reflexOutput:~, memorizerOutput:~}
 		

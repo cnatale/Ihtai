@@ -158,22 +158,40 @@ var Ihtai = (function(bundle){
 		};
 	}
 
-	function daydream(iostm, dt){
-		var combinedstm, curCluster;
+	function daydream(iostm, dt, outputIndices){
+		/*
+		TODO: 
+		✓-add array param that specifies which iostm indices are motor/output stimuli
+		✓-pick random cluster
+		✓-replace iostm's values for indices which equal index values in new array param
+		✓-run memorizer.query with cluster selected based on iostm's modified value
+		✓-if memorizer.query returns null, it's a new memory and we should act on it
+		✓-otherwise, we need to find out if the original iostm resulted in a smaller sd. If
+		 yes, we should just pass in the ioriginal iostm as output. Otherwise, pass new iostm.
+		✓-return this modified iostm
+		*/
 
-		var drivesOutput=drives.cycle(iostm, dt);
+
+		var combinedstm, curCluster, origIostm=iostm.slice(), drivesOutput;
+
 		//set every drive state to desired target	
 		var targetDriveVals=drives.getGoals();
+		
+		//if(! _.isEqual(targetDriveVals, drivesOutput)){
+			//choose a random cluster
+			var rndCluster=clusters.getRandomCluster();
+			var rndstm=rndCluster.stm.slice();
 
-		if(targetDriveVals != drivesOutput){
+			//replace iostm's values for indices which equal index values in new array param
+			for(var i=0; i<outputIndices.length;i++){
+				iostm.splice(outputIndices[i], 1, rndstm[outputIndices[i]]);
+			}
 
-			/*if(Math.random()>.9){//choose a random cluster, set it's drive states to ideal goals
-				var rndCluster=clusters.getRandomCluster();
-				iostm=rndCluster.stm.slice(0, -targetDriveVals.length);
-			}*/		
-
+			//PROBLEM: drive states are getting updated whether we unroll everything else or not.
+			//TODO:find way to roll back this drives.cycle() if we decide to not use it
+			drivesOutput=drives.cycle(iostm, dt);					
 			//merge iostm and drives output
-			combinedstm = iostm.concat(targetDriveVals);
+			combinedstm = iostm.concat(drivesOutput);
 
 			/*
 			Keep track of last bStmCt stm, Array.concat combinedstm onto
@@ -203,7 +221,22 @@ var Ihtai = (function(bundle){
 
 				//cycle memorizer	
 				if(_enableMemories){
+					//run memorizer.query with cluster selected based on iostm's modified value
 					memorizerOutput=memorizer.query(curCluster);
+					if(memorizerOutput==null){
+						//a stimuli with this pattern has never been memorized here. go ahead and memorize it
+					}
+					else{
+						/*figure out if the predicted square dist of randomized output is lower than 
+						  the unrandomized output. if yes, memorize. if no, revert back to original
+						  iostm and memorize :EDIT: this may be unneccessary b/c if the randomized output
+						  is already memorized, Ihtai will have given it a score based on performance. 
+						*/
+						//TODO:this isn't taking into account backStm
+						combinedstm=origIostm.concat(drivesOutput)
+						curCluster=clusters.findNearestCluster(combinedstm);
+						memorizerOutput=memorizer.query(curCluster);
+					}
 					memorizer.memorize(curCluster);
 				}
 			}
@@ -219,7 +252,7 @@ var Ihtai = (function(bundle){
 				memorizerOutput:memorizerOutput,
 				drivesOutput:drivesOutput
 			};
-		}
+		//}
 	}	
 
 	function enableReflexes(state){
