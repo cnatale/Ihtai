@@ -188,6 +188,7 @@ require(['physicsjs'], function(Physics){
 				return this.hunger;
 			},
 			cycle:function(stm, dt){
+				this.prevHunger=this.hunger;
 				if(stm[3] < 10){
 					if(this.hunger>0){
 						this.hunger-= .01 * dt;
@@ -212,7 +213,7 @@ require(['physicsjs'], function(Physics){
 				return Math.round(this.hunger);
 			},
 			undo:function(){
-
+				this.hunger=this.prevHunger;
 			},
 			targetval:0 //the goal value for hunger
 		};
@@ -222,6 +223,7 @@ require(['physicsjs'], function(Physics){
 				return this.tiredness;
 			},
 			cycle:function(stm,dt){
+				this.prevTiredness=this.tiredness;
 				if(stm[2] <= 50){
 					if(this.tiredness>0){
 						this.tiredness-= .01 * dt;
@@ -246,7 +248,7 @@ require(['physicsjs'], function(Physics){
 				return Math.round(this.tiredness);
 			},
 			undo:function(){
-
+				this.tiredness=this.prevTiredness;
 			},
 			targetval:0 //the goal value for hunger
 		};

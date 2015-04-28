@@ -234,6 +234,10 @@ var Ihtai = (function(bundle){
 						  is already memorized, Ihtai will have given it a score based on performance. 
 						*/
 						//TODO:this isn't taking into account backStm
+
+						//call each drive's undo() method to revert previous cycle
+						drives.undo();
+
 						combinedstm=origIostm.concat(drivesOutput)
 						curCluster=clusters.findNearestCluster(combinedstm);
 						memorizerOutput=memorizer.query(curCluster);
@@ -857,6 +861,12 @@ var Drives = (function(_drives){
 		return response;
 	}
 
+	function undo(){
+		for(var i=0;i<drives.length;i++){
+			drives[i].undo();
+		}		
+	}
+
 	function getDrives(){
 		return drives;
 	}
@@ -884,6 +894,7 @@ var Drives = (function(_drives){
 
 	return {
 		cycle:cycle,
+		undo:undo,
 		getDrives:getDrives,
 		getGoals:getGoals,
 		getAvgDriveval:getAvgDriveval,
