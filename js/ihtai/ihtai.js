@@ -158,6 +158,14 @@ var Ihtai = (function(bundle){
 		};
 	}
 
+	function sqDist(v1, v2){
+		var d=0;
+		for(var i=0; i<v1.length;i++){
+			d+=Math.abs(v1[i] - v2[i]);
+		}
+		return Math.pow(d, 2);
+	}
+
 	function daydream(iostm, dt, outputIndices){
 		/*
 		TODO: 
@@ -171,93 +179,111 @@ var Ihtai = (function(bundle){
 		✓-return this modified iostm
 		*/
 
-
 		var combinedstm, curCluster, origIostm=iostm.slice(), drivesOutput;
 
 		//set every drive state to desired target	
 		var targetDriveVals=drives.getGoals();
 		
 		//if(! _.isEqual(targetDriveVals, drivesOutput)){
-			//choose a random cluster
-			var rndCluster=clusters.getRandomCluster();
-			var rndstm=rndCluster.stm.slice();
 
-			//replace iostm's values for indices which equal index values in new array param
-			for(var i=0; i<outputIndices.length;i++){
-				iostm.splice(outputIndices[i], 1, rndstm[outputIndices[i]]);
-			}
+		//choose a random cluster
+		var rndCluster=clusters.getRandomCluster();
+		var rndstm=rndCluster.stm.slice();
 
-			//PROBLEM: drive states are getting updated whether we unroll everything else or not.
-			//TODO:find way to roll back this drives.cycle() if we decide to not use it
-			//TODO:add undo method to Drives that reverses effects of previous drives.cycle()
-			drivesOutput=drives.cycle(iostm, dt);					
-			//merge iostm and drives output
-			combinedstm = iostm.concat(drivesOutput);
+		//replace iostm's values for indices which equal index values in new array param
+		for(var i=0; i<outputIndices.length;i++){
+			iostm.splice(outputIndices[i], 1, rndstm[outputIndices[i]]);
+		}
 
-			/*
-			Keep track of last bStmCt stm, Array.concat combinedstm onto
-			aforementioned stm. Set combinedstm to this val instead.
+		drivesOutput=drives.cycle(iostm, dt);					
+		//merge iostm and drives output
+		combinedstm = iostm.concat(drivesOutput);
 
-			Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
-			if we have last bStmCt stm in memory (dependent on curCluster)
-			*/		
+		var reflexOutput=[], memorizerOutput=null;
 
-			var reflexOutput=[], memorizerOutput=null;
-			if(prevstm.length === bStmCt){ //wait for prevstm buffer to fill up
-				var backAndCurrentstm=[];
-				for(var i=0;i<prevstm.length;i++){
-					backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
-				}
-				backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
+		var backAndCurrentstm=[];
+		for(var i=0;i<prevstm.length;i++){
+			backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
+		}
+		backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
 
-				//TODO:1 in 10 chance we replace iostm with a random cluster's io stimuli
-				
-				//get nearest cluster for combined stm
-				curCluster= clusters.findNearestCluster(backAndCurrentstm);
-			
+		//get nearest cluster for combined stm
+		curCluster= clusters.findNearestCluster(backAndCurrentstm);
 
-				//cycle reflexes
-				if(_enableReflexes)
-					reflexOutput=reflexes.cycle(curCluster, dt);
+		//cycle reflexes
+		if(_enableReflexes)
+			reflexOutput=reflexes.cycle(curCluster, dt);
 
-				//cycle memorizer	
-				if(_enableMemories){
-					//run memorizer.query with cluster selected based on iostm's modified value
-					memorizerOutput=memorizer.query(curCluster);
-					if(memorizerOutput==null){
-						//a stimuli with this pattern has never been memorized here. go ahead and memorize it
-					}
-					else{
-						/*figure out if the predicted square dist of randomized output is lower than 
-						  the unrandomized output. if yes, memorize. if no, revert back to original
-						  iostm and memorize :EDIT: this may be unneccessary b/c if the randomized output
-						  is already memorized, Ihtai will have given it a score based on performance. 
-						*/
-						//TODO:this isn't taking into account backStm
+		//run memorizer.query with cluster selected based on iostm's modified value
+		memorizerOutput=memorizer.query(curCluster);
+		if(memorizerOutput==null){
+			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
 
-						//call each drive's undo() method to revert previous cycle
-						drives.undo();
-
-						combinedstm=origIostm.concat(drivesOutput)
-						curCluster=clusters.findNearestCluster(combinedstm);
-						memorizerOutput=memorizer.query(curCluster);
-					}
-					memorizer.memorize(curCluster);
-				}
-			}
-
-			//update previous stm buffer
-			prevstm.push(combinedstm);
-			if(prevstm.length>bStmCt)
-				prevstm.shift();
-		
 			//send reflex output and memorizer output back to ai agent
 			return {
 				reflexOutput:reflexOutput,
 				memorizerOutput:memorizerOutput,
 				drivesOutput:drivesOutput
-			};
-		//}
+			};				
+		}
+		else{
+			/*figure out if the predicted square dist of randomized output is lower than 
+			  the unrandomized output. if yes, memorize. if no, revert back to original
+			  iostm and memorize
+			*/
+			//NOTE:this isn't taking into account backStm
+
+			//call each drive's undo() method to revert previous cycle
+
+			/*TODO:need an extra check here to determine if the daydream result is 
+				anticipated to be closer to ideal drive state than normal query.
+				If yes, return daydream result. If no, return normal query result.
+			*/
+
+			//TODO:this is wrong. shouldn't be drivesOutput2. recalculate drivesoutput w approp iostm
+			drives.undo();
+			var drivesOutput2=drives.cycle(origIostm, dt);
+			//TODO:make sure drivesoutput is updating
+			var combinedstm2=origIostm.concat(drivesOutput2);
+
+			var curCluster2=clusters.findNearestCluster(combinedstm2);
+
+			var memorizerOutput2=memorizer.query(curCluster2);
+
+			/*
+			now that we have both memorizeroutput and memorizeroutput2,
+			determine if which drivesoutput is closer to target.
+			*/
+			var sd1=sqDist(drivesOutput,drives.getGoals());
+			var sd2=sqDist(drivesOutput2,drives.getGoals());
+
+			if(sd1<sd2){ //use daydream
+				//have to undo/redo the drives cycles with the original daydream stimuli again...
+				drives.undo();
+				drivesOutput=drives.cycle(iostm, dt);
+
+				memorizer.memorize(curCluster);
+			
+				//send reflex output and memorizer output back to ai agent
+				return {
+					reflexOutput:reflexOutput,
+					memorizerOutput:memorizerOutput,
+					drivesOutput:drivesOutput
+				};		
+			}
+			else{ //use regular query
+				memorizer.memorize(curCluster2);
+			
+				//send reflex output and memorizer output back to ai agent
+				return {
+					reflexOutput:reflexOutput,
+					memorizerOutput:memorizerOutput2,
+					drivesOutput:drivesOutput2
+				};									
+		
+			}
+
+		}
 	}	
 
 	function enableReflexes(state){
@@ -416,8 +442,8 @@ var Memorizer = (function(bundle){
 		var outputstm=null, stimDist, sd;
 
 		/*
-		TODO:implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
-		TODO:each level[i].series[cluster.id] must be stored in a heap for this to work
+		implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
+		each level[i].series[cluster.id] must be stored in a heap for this to work
 		*/
 		if(minHeaps.hasOwnProperty(cluster.id)){
 			var min=minHeaps[cluster.id].getMin();
@@ -862,9 +888,12 @@ var Drives = (function(_drives){
 	}
 
 	function undo(){
+		var response=[];
 		for(var i=0;i<drives.length;i++){
-			drives[i].undo();
+			var r=drives[i].undo();
+			response.push(r);
 		}		
+		return response;
 	}
 
 	function getDrives(){

@@ -191,14 +191,14 @@ require(['physicsjs'], function(Physics){
 				this.prevHunger=this.hunger;
 				if(stm[3] < 10){
 					if(this.hunger>0){
-						this.hunger-= .01 * dt;
+						this.hunger-= .1 * dt;
 					}
 					else
 						this.hunger=0;
 				}
 				else{
 					if(this.hunger<100){
-						this.hunger+= .01 * dt;
+						this.hunger+= .1 * dt;
 					}
 					else{
 						this.hunger=100;
@@ -214,6 +214,7 @@ require(['physicsjs'], function(Physics){
 			},
 			undo:function(){
 				this.hunger=this.prevHunger;
+				return Math.round(this.hunger);
 			},
 			targetval:0 //the goal value for hunger
 		};
@@ -226,14 +227,14 @@ require(['physicsjs'], function(Physics){
 				this.prevTiredness=this.tiredness;
 				if(stm[2] <= 50){
 					if(this.tiredness>0){
-						this.tiredness-= .01 * dt;
+						this.tiredness-= .1 * dt;
 					}
 					else
 						this.tiredness=0;
 				}
 				else{
 					if(this.tiredness<100){
-						this.tiredness+= .01 * dt;
+						this.tiredness+= .1 * dt;
 					}
 					else{
 						this.tiredness=100;
@@ -249,6 +250,7 @@ require(['physicsjs'], function(Physics){
 			},
 			undo:function(){
 				this.tiredness=this.prevTiredness;
+				return Math.round(this.tiredness);
 			},
 			targetval:0 //the goal value for hunger
 		};
@@ -290,7 +292,7 @@ require(['physicsjs'], function(Physics){
 	    ihtai = new Ihtai({
 			clusterCount:5000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
 			vectorDim:6,/*number of iostm values + drives*/
-			memoryHeight:2,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
