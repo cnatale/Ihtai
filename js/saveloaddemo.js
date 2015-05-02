@@ -191,14 +191,14 @@ require(['physicsjs'], function(Physics){
 				this.prevHunger=this.hunger;
 				if(stm[3] < 10){
 					if(this.hunger>0){
-						this.hunger-= .1 * dt;
+						this.hunger-= .01 * dt;
 					}
 					else
 						this.hunger=0;
 				}
 				else{
 					if(this.hunger<100){
-						this.hunger+= .1 * dt;
+						this.hunger+= .01 * dt;
 					}
 					else{
 						this.hunger=100;
@@ -227,14 +227,14 @@ require(['physicsjs'], function(Physics){
 				this.prevTiredness=this.tiredness;
 				if(stm[2] <= 50){
 					if(this.tiredness>0){
-						this.tiredness-= .1 * dt;
+						this.tiredness-= .01 * dt;
 					}
 					else
 						this.tiredness=0;
 				}
 				else{
 					if(this.tiredness<100){
-						this.tiredness+= .1 * dt;
+						this.tiredness+= .01 * dt;
 					}
 					else{
 						this.tiredness=100;

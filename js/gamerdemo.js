@@ -57,9 +57,11 @@ require([], function(){
 	var pleasureDrive={
 		init:function(){
 			this.pleasure=0;
+			this.prevPleasure=0;
 			return this.pleasure;
 		},
 		cycle:function(stimuli, dt){
+			this.prevPleasure=this.pleasure;
 			//update pleasure on score increase, slowly decrement over time
 			this.pleasure-= .01 * dt;
 			if(this.pleasure<0)
@@ -71,14 +73,20 @@ require([], function(){
 			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));	
 			return Math.round(this.pleasure);
 		},
+		undo:function(){
+			this.pleasure=this.prevPleasure;
+			return Math.round(this.pleasure);			
+		},
 		targetval:3 //the goal value for pleasure
 	};
 	var painDrive={
 		init:function(){
 			this.pain=0;
+			this.prevPain=0;
 			return this.pain;
 		},
 		cycle:function(stimuli,dt){
+			this.prevPain=this.pain;
 			//increment pain on death, slowly decrement over time
 			this.pain-= .01 * dt;
 			if(this.pain<0)
@@ -90,14 +98,20 @@ require([], function(){
 			$("#pain").html("pain: "+Math.floor(this.pain));	
 			return Math.round(this.pain);
 		},
+		undo:function(){
+			this.pain=this.prevPain;
+			return Math.round(this.pain);
+		},
 		targetval:0 //the goal value for pain
 	};
 	var aggressionDrive={
 		init:function(){
 			this.aggression=3;
+			this.prevAggression=3;
 			return this.aggression;
 		},
 		cycle:function(stimuli,dt){
+			this.prevAggression=this.aggression;
 			this.aggression-= .01 * dt;
 			if(this.aggression < 0){
 				this.aggression=0;
@@ -109,6 +123,10 @@ require([], function(){
 
 			//clamp vals
 			$("#aggression").html("anti-movement: "+Math.floor(this.aggression));	
+			return Math.round(this.aggression);			
+		},
+		undo:function(){
+			this.aggression=this.prevAggression;
 			return Math.round(this.aggression);			
 		},
 		targetval:0 //the goal value for pain
@@ -285,12 +303,14 @@ require([], function(){
 		    }
 
 		    //console.log(visLog);
-
-			res=ihtai.cycle(cycleArr, td);
+		    if(Math.random() > .5)
+				res=ihtai.cycle(cycleArr, td);
+			else
+				res=ihtai.daydream(cycleArr, td,[0]);
 
 			lastKeypress +=td;
 
-			if(res.memorizerOutput != null /*&& lastKeypress > 100*/ && Math.random() > .1 /*prevent overfitting*/){
+			if(res.memorizerOutput != null /*&& lastKeypress > 100*/ /*&& Math.random() > .1*/ /*prevent overfitting*/){
 				//read res keypad signals, and trigger keyboard events per signal output
 				directionKeySignal=res.memorizerOutput[0];
 
