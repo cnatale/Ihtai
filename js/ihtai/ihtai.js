@@ -172,7 +172,7 @@ var Ihtai = (function(bundle){
 		✓-add array param that specifies which iostm indices are motor/output stimuli
 		✓-pick random cluster
 		✓-replace iostm's values for indices which equal index values in new array param
-		✓-run memorizer.query with cluster selected based on iostm's modified value
+		✓-run memorizer.drive with cluster selected based on iostm's modified value
 		✓-if memorizer.query returns null, it's a new memory and we should act on it
 		✓-otherwise, we need to find out if the original iostm resulted in a smaller sd. If
 		 yes, we should just pass in the ioriginal iostm as output. Otherwise, pass new iostm.
@@ -218,7 +218,8 @@ var Ihtai = (function(bundle){
 		memorizerOutput=memorizer.query(curCluster);
 		if(memorizerOutput[0]==null){
 			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
-
+			memorizer.memorize(curCluster);
+			
 			//send reflex output and memorizer output back to ai agent
 			return {
 				reflexOutput:reflexOutput,

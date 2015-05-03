@@ -14,7 +14,7 @@ require.config({
 
 require(['physicsjs'], function(Physics){
 	//application starting point
-	var ihtai, ihtaiPaused=false;
+	var ihtai, ihtaiPaused=false, firstCycle=true;
 	var moveVel=0, lastTime, sleepMode=false, isRavenous=false, zeroMoveCtr=0;	
 
 	//////////// Load File Functionality /////////////////
@@ -226,7 +226,7 @@ require(['physicsjs'], function(Physics){
 			},
 			cycle:function(stm,dt){
 				this.prevTiredness=this.tiredness;
-				if(stm[2] <= 50 || sleepMode){
+				if(moveVel <= 50 || sleepMode){
 					if(this.tiredness>0){
 						this.tiredness-= .01 * dt;
 					}
@@ -319,6 +319,7 @@ require(['physicsjs'], function(Physics){
 		    	else
 		    		td=0;
 		    	lastTime=time;
+
 		    	if(newAngle){
 		    		//todo:instead of dividing td by a constant, change the moveVel denom. constant
 		    		var mx=(circle.state.acc.x+Math.cos(newAngle)*((td/200)*(moveVel/1000)));
@@ -338,8 +339,10 @@ require(['physicsjs'], function(Physics){
 
 				var inputStm=[square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)];
 		    	var res;
-		    	if(Math.random() > .5)
+		    	if(Math.random() > 1 || firstCycle){
 		    		res=ihtai.cycle(inputStm, td);
+		    		firstCycle=false;
+		    	}
 		    	else{
 		    		res=ihtai.daydream(inputStm, td, [2]);
 		    	}
