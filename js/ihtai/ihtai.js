@@ -216,7 +216,7 @@ var Ihtai = (function(bundle){
 
 		//run memorizer.query with cluster selected based on iostm's modified value
 		memorizerOutput=memorizer.query(curCluster);
-		if(memorizerOutput==null){
+		if(memorizerOutput[0]==null){
 			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
 
 			//send reflex output and memorizer output back to ai agent
@@ -240,13 +240,14 @@ var Ihtai = (function(bundle){
 				If yes, return daydream result. If no, return normal query result.
 			*/
 
-			//TODO:this is wrong. shouldn't be drivesOutput2. recalculate drivesoutput w approp iostm
 			drives.undo();
 			var drivesOutput2=drives.cycle(origIostm, dt);
 			//TODO:make sure drivesoutput is updating
 			var combinedstm2=origIostm.concat(drivesOutput2);
 
 			var curCluster2=clusters.findNearestCluster(combinedstm2);
+			if(_enableReflexes)
+				var reflexOutput2=reflexes.cycle(curCluster2, dt);			
 
 			var memorizerOutput2=memorizer.query(curCluster2);
 
@@ -254,8 +255,16 @@ var Ihtai = (function(bundle){
 			now that we have both memorizeroutput and memorizeroutput2,
 			determine if which drivesoutput is closer to target.
 			*/
-			var sd1=sqDist(drivesOutput,drives.getGoals());
-			var sd2=sqDist(drivesOutput2,drives.getGoals());
+			/*TODO: I don't think i want to compare the drivesoutput, but instead the 
+			  drives portion of the memorizerOutput. This is the prediction of what will happen next.
+			  Although even this differs from the behavior selection method in query.
+
+			  TODO: have memorizer.query return the sd value of selected endState, make decision 
+			  based on that.
+
+			*/
+			var sd1=memorizerOutput[1]
+			var sd2=memorizerOutput2[1];
 
 			if(sd1<sd2){ //use daydream
 				//have to undo/redo the drives cycles with the original daydream stimuli again...
@@ -276,7 +285,7 @@ var Ihtai = (function(bundle){
 			
 				//send reflex output and memorizer output back to ai agent
 				return {
-					reflexOutput:reflexOutput,
+					reflexOutput:reflexOutput2,
 					memorizerOutput:memorizerOutput2,
 					drivesOutput:drivesOutput2
 				};									
@@ -459,7 +468,7 @@ var Memorizer = (function(bundle){
 			}
 		}
 
-		return outputstm;
+		return [outputstm, sd];
 	}
 
 	/**

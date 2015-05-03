@@ -310,9 +310,9 @@ require([], function(){
 
 			lastKeypress +=td;
 
-			if(res.memorizerOutput != null /*&& lastKeypress > 100*/ /*&& Math.random() > .1*/ /*prevent overfitting*/){
+			if(res.memorizerOutput[0] != null /*&& lastKeypress > 100*/ /*&& Math.random() > .1*/ /*prevent overfitting*/){
 				//read res keypad signals, and trigger keyboard events per signal output
-				directionKeySignal=res.memorizerOutput[0];
+				directionKeySignal=res.memorizerOutput[0][0];
 
     			if(directionKeySignal == 0){
     				//fire key pressed

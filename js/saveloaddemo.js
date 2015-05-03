@@ -15,6 +15,7 @@ require.config({
 require(['physicsjs'], function(Physics){
 	//application starting point
 	var ihtai, ihtaiPaused=false;
+	var moveVel=0, lastTime, sleepMode=false, isRavenous=false, zeroMoveCtr=0;	
 
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
@@ -225,7 +226,7 @@ require(['physicsjs'], function(Physics){
 			},
 			cycle:function(stm,dt){
 				this.prevTiredness=this.tiredness;
-				if(stm[2] <= 50){
+				if(stm[2] <= 50 || sleepMode){
 					if(this.tiredness>0){
 						this.tiredness-= .01 * dt;
 					}
@@ -256,51 +257,20 @@ require(['physicsjs'], function(Physics){
 		};
 		drives=[hungerDrive, tiredDrive];
 
-		var reflexes = [{
-			init:function(){},
-			matcher: function(stm){ /*move if pellet it detected*/
-				if(stm[0]>=50)
-					return true;
-				else
-					return false;
-			}, 
+		var reflexes = [];
 
-			response: function(stm){
-				return {
-					indices:[2],
-					signal:[100]
-				}
-			}
-		},
-		{
-			init:function(){},
-			matcher: function(stm){ /*dont' move if no pellet is detected*/
-				if(stm[0]<50)
-					return true;
-				else
-					return false;
-			}, 
-			response: function(stm){
-				return {
-					indices:[2],
-					signal:[0]
-				}
-			}
-		}];
-
-		//TODO:interestingly, setting clusterCount to a low number like 1000 vs 10000. figure out why this is.
 	    ihtai = new Ihtai({
-			clusterCount:5000,/*value of 100,000 seems to allow for memorizer to take over quickly*/
+			clusterCount:5000,
 			vectorDim:6,/*number of iostm values + drives*/
 			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
 			backStimCt:0,
-			distanceAlgo:"endState" /*avg or endState*/
+			distanceAlgo:"avg" /*avg or endState*/
 		});
-	    /////////////////////////////////
-	    var moveVel=0, lastTime, sleepMode=false, isRavenous=false, zeroMoveCtr=0;
+
+
 		// subscribe to ticker to advance the simulation
 		Physics.util.ticker.on(function( time, dt ){
 			if(!ihtaiPaused){
@@ -311,12 +281,9 @@ require(['physicsjs'], function(Physics){
 					return;	
 				}
 
-
 			    world.step( time );
 			    world.wakeUpAll();
 
-			    //test making ball always face square
-		    	///////////////////
 		    	//get the circle
 		    	var queryFn = Physics.query({
 		    		name:'circle'
@@ -369,11 +336,12 @@ require(['physicsjs'], function(Physics){
 		    		normalizedAngle=newAngle*(100/(2*Math.PI));
 		    	}
 
+				var inputStm=[square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)];
 		    	var res;
 		    	if(Math.random() > .5)
-		    		res=ihtai.cycle([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td);
+		    		res=ihtai.cycle(inputStm, td);
 		    	else{
-		    		res=ihtai.daydream([square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)], td, [2]);
+		    		res=ihtai.daydream(inputStm, td, [2]);
 		    	}
 		    	//returns {reflexOutput:~, memorizerOutput:~}
 		
@@ -381,9 +349,9 @@ require(['physicsjs'], function(Physics){
 
 		    	/* TODO:change logic so that instead of acting on instinct randomly,
 		    	   daydream and act on response */
-		    	if(res.memorizerOutput != null /*!isRavenous*/){
-		    			if(res.memorizerOutput[0]>50){ //has a pellet been detected?
-		    				moveVel=res.memorizerOutput[2];
+		    	if(res.memorizerOutput[0] != null /*!isRavenous*/){
+		    			if(res.memorizerOutput[0][0]>50){ //has a pellet been detected?
+		    				moveVel=res.memorizerOutput[0][2];
 		    				//sometimes the above value will not come back as 0 or 100 due to compression.
 		    				//bracket signal to 0 or 100
 		    				moveVel=Math.round(moveVel/100)*100;
@@ -419,8 +387,9 @@ require(['physicsjs'], function(Physics){
 		    	/*if(isRavenous)
 		    		moveVel=100;
 		    	*/	
-		    	if(sleepMode) //sleep comes before hunger
+		    	if(sleepMode){ //sleep comes before hunger
 		    		moveVel=0;
+		    	}
 		    	
 		    }
 		});
