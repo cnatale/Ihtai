@@ -195,7 +195,7 @@ var Ihtai = (function(bundle){
 			iostm.splice(outputIndices[i], 1, rndstm[outputIndices[i]]);
 		}
 
-		drivesOutput=drives.cycle(iostm, dt);					
+		drivesOutput=drives.cycle(origIostm, dt);					
 		//merge iostm and drives output
 		combinedstm = iostm.concat(drivesOutput);
 
@@ -219,7 +219,7 @@ var Ihtai = (function(bundle){
 		if(memorizerOutput[0]==null){
 			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
 			memorizer.memorize(curCluster);
-			
+
 			//send reflex output and memorizer output back to ai agent
 			return {
 				reflexOutput:reflexOutput,
@@ -267,10 +267,11 @@ var Ihtai = (function(bundle){
 			var sd1=memorizerOutput[1]
 			var sd2=memorizerOutput2[1];
 
+			//compare the square distances from ideal drive state for the daydream and input clusters
 			if(sd1<sd2){ //use daydream
 				//have to undo/redo the drives cycles with the original daydream stimuli again...
 				drives.undo();
-				drivesOutput=drives.cycle(iostm, dt);
+				drivesOutput=drives.cycle(origIostm, dt);
 
 				memorizer.memorize(curCluster);
 			

@@ -226,7 +226,8 @@ require(['physicsjs'], function(Physics){
 			},
 			cycle:function(stm,dt){
 				this.prevTiredness=this.tiredness;
-				if(moveVel <= 50 || sleepMode){
+				//use movevel to base movement on actual output stimuli from prev cycle, not daydreams 
+				if(stm[2] <= 50 || sleepMode){
 					if(this.tiredness>0){
 						this.tiredness-= .01 * dt;
 					}
