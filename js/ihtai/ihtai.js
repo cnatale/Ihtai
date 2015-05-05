@@ -183,8 +183,6 @@ var Ihtai = (function(bundle){
 
 		//set every drive state to desired target	
 		var targetDriveVals=drives.getGoals();
-		
-		//if(! _.isEqual(targetDriveVals, drivesOutput)){
 
 		//choose a random cluster
 		var rndCluster=clusters.getRandomCluster();
@@ -195,7 +193,7 @@ var Ihtai = (function(bundle){
 			iostm.splice(outputIndices[i], 1, rndstm[outputIndices[i]]);
 		}
 
-		drivesOutput=drives.cycle(origIostm, dt);					
+		drivesOutput=drives.cycle(iostm, dt);					
 		//merge iostm and drives output
 		combinedstm = iostm.concat(drivesOutput);
 
@@ -216,10 +214,13 @@ var Ihtai = (function(bundle){
 
 		//run memorizer.query with cluster selected based on iostm's modified value
 		memorizerOutput=memorizer.query(curCluster);
+
 		if(memorizerOutput[0]==null){
 			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
 			memorizer.memorize(curCluster);
-
+			drives.undo();
+			drives.cycle(origIostm, dt);
+			
 			//send reflex output and memorizer output back to ai agent
 			return {
 				reflexOutput:reflexOutput,
@@ -236,11 +237,6 @@ var Ihtai = (function(bundle){
 
 			//call each drive's undo() method to revert previous cycle
 
-			/*TODO:need an extra check here to determine if the daydream result is 
-				anticipated to be closer to ideal drive state than normal query.
-				If yes, return daydream result. If no, return normal query result.
-			*/
-
 			drives.undo();
 			var drivesOutput2=drives.cycle(origIostm, dt);
 			//TODO:make sure drivesoutput is updating
@@ -252,29 +248,24 @@ var Ihtai = (function(bundle){
 
 			var memorizerOutput2=memorizer.query(curCluster2);
 
-			/*
-			now that we have both memorizeroutput and memorizeroutput2,
-			determine if which drivesoutput is closer to target.
-			*/
-			/*TODO: I don't think i want to compare the drivesoutput, but instead the 
-			  drives portion of the memorizerOutput. This is the prediction of what will happen next.
-			  Although even this differs from the behavior selection method in query.
-
-			  TODO: have memorizer.query return the sd value of selected endState, make decision 
-			  based on that.
-
-			*/
 			var sd1=memorizerOutput[1]
 			var sd2=memorizerOutput2[1];
 
-			//compare the square distances from ideal drive state for the daydream and input clusters
+			/*  extra check here to determine if the daydream result is 
+				anticipated to be closer to ideal drive state than normal query.
+				If yes, return daydream result. If no, return normal query result.
+			*/
 			if(sd1<sd2){ //use daydream
 				//have to undo/redo the drives cycles with the original daydream stimuli again...
 				drives.undo();
-				drivesOutput=drives.cycle(origIostm, dt);
+				drivesOutput=drives.cycle(iostm, dt);
 
 				memorizer.memorize(curCluster);
 			
+				//...and then reset to actual iostim once again...
+				drives.undo();
+				drives.cycle(origIostm, dt);
+
 				//send reflex output and memorizer output back to ai agent
 				return {
 					reflexOutput:reflexOutput,

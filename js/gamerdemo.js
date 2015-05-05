@@ -169,7 +169,7 @@ require([], function(){
 	}
 	
     ihtai = new Ihtai({
-		clusterCount:/*20480*/2000,
+		clusterCount:/*20480*/3000,
 		vectorDim:12,/*number of iostimuli values + drives*/
 		memoryHeight:300,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
 		drivesList:drives,
