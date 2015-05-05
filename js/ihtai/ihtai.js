@@ -215,6 +215,12 @@ var Ihtai = (function(bundle){
 		//run memorizer.query with cluster selected based on iostm's modified value
 		memorizerOutput=memorizer.query(curCluster);
 
+
+		///////////////
+
+		/////////////
+
+
 		if(memorizerOutput[0]==null){
 			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
 			memorizer.memorize(curCluster);
@@ -237,6 +243,7 @@ var Ihtai = (function(bundle){
 
 			//call each drive's undo() method to revert previous cycle
 
+			/////////////////// 
 			drives.undo();
 			var drivesOutput2=drives.cycle(origIostm, dt);
 			//TODO:make sure drivesoutput is updating
@@ -247,6 +254,8 @@ var Ihtai = (function(bundle){
 				var reflexOutput2=reflexes.cycle(curCluster2, dt);			
 
 			var memorizerOutput2=memorizer.query(curCluster2);
+
+			///////////////////
 
 			var sd1=memorizerOutput[1]
 			var sd2=memorizerOutput2[1];
