@@ -457,9 +457,9 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		var d=0;
 		//assumes a and b are the same length
 		for(var i=0;i<a.length;i++){
-			d+= Math.pow(a[i]-b[i], 2);
+			d+= /*Math.pow(a[i]-b[i], 2);*/ Math.abs(a[i]-b[i]);
 		}
-		return d;
+		return d;	
 	}
 
 	function getRoot(){

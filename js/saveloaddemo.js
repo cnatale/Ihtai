@@ -192,14 +192,14 @@ require(['physicsjs'], function(Physics){
 				this.prevHunger=this.hunger;
 				if(stm[3] < 10){
 					if(this.hunger>0){
-						this.hunger-= .01 * dt;
+						this.hunger-= 1/*.01 * dt*/;
 					}
 					else
 						this.hunger=0;
 				}
 				else{
 					if(this.hunger<100){
-						this.hunger+= .01 * dt;
+						this.hunger+= 1 /*.01 * dt*/;
 					}
 					else{
 						this.hunger=100;
@@ -210,7 +210,7 @@ require(['physicsjs'], function(Physics){
 				this.hunger=Math.min(this.hunger, 100);
 				this.hunger=Math.max(this.hunger, 0);
 				//this.hunger=Math.round(this.hunger);
-				$("#hunger").html("hunger: "+Math.floor(this.hunger));	
+				$("#hunger").html("hunger: "+/*Math.floor(*/this.hunger/*)*/);	
 				return Math.round(this.hunger);
 			},
 			undo:function(){
@@ -229,14 +229,14 @@ require(['physicsjs'], function(Physics){
 				//use movevel to base movement on actual output stimuli from prev cycle, not daydreams 
 				if(stm[2] <= 50 || sleepMode){
 					if(this.tiredness>0){
-						this.tiredness-= .01 * dt;
+						this.tiredness-= 1 /*.01 * dt*/;
 					}
 					else
 						this.tiredness=0;
 				}
 				else{
 					if(this.tiredness<100){
-						this.tiredness+= .01 * dt;
+						this.tiredness+= 1 /*.01 * dt*/;
 					}
 					else{
 						this.tiredness=100;
@@ -247,7 +247,7 @@ require(['physicsjs'], function(Physics){
 				this.tiredness=Math.min(this.tiredness, 100);
 				this.tiredness=Math.max(this.tiredness, 0);
 				//this.tiredness=Math.round(this.tiredness);
-				$("#tiredness").html("tiredness: "+Math.floor(this.tiredness));
+				$("#tiredness").html("tiredness: "+/*Math.floor(*/this.tiredness/*)*/);
 				return Math.round(this.tiredness);
 			},
 			undo:function(){
@@ -321,6 +321,10 @@ require(['physicsjs'], function(Physics){
 		    		td=0;
 		    	lastTime=time;
 
+		    	///////////WARNING:only use for debugging purposes//////////
+		    	td=20; 
+		    	////////////////////////////////////////////////////////////
+
 		    	if(newAngle){
 		    		//todo:instead of dividing td by a constant, change the moveVel denom. constant
 		    		var mx=(circle.state.acc.x+Math.cos(newAngle)*((td/200)*(moveVel/1000)));
@@ -340,6 +344,7 @@ require(['physicsjs'], function(Physics){
 
 				var inputStm=[square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)];
 		    	var res;
+
 		    	if(Math.random() > .5 || firstCycle){
 		    		res=ihtai.cycle(inputStm, td);
 		    		firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle

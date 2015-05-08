@@ -2,7 +2,7 @@ var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
 	var clusters, memorizer, drives, reflexes, acceptableRange, distanceAlgo, _enableReflexes=true, _enableMemories=true;
-	var bStmCt=0, prevstm=[];
+	var bStmCt=0, prevstm=[], driveGoals;
 	var outputstm =[]; //the output stm buffer;
 
 	if(typeof bundle=="string"){ //load from stringified json instead of default initialization
@@ -101,6 +101,7 @@ var Ihtai = (function(bundle){
 			clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt, _distribution:bundle.distribution});
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
+			driveGoals=drives.getGoals();
 			memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
 		}
 	init(bundle);
@@ -158,12 +159,13 @@ var Ihtai = (function(bundle){
 		};
 	}
 
-	function sqDist(v1, v2){
+	function sqDist(a, b){
 		var d=0;
-		for(var i=0; i<v1.length;i++){
-			d+=Math.abs(v1[i] - v2[i]);
+		//assumes a and b are the same length
+		for(var i=0;i<a.length;i++){
+			d+= /*Math.pow(a[i]-b[i], 2);*/ Math.abs(a[i]-b[i]);
 		}
-		return Math.pow(d, 2);
+		return d;		
 	}
 
 	function daydream(iostm, dt, outputIndices){
@@ -224,9 +226,9 @@ var Ihtai = (function(bundle){
 		if(memorizerOutput[0]==null){
 			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
 			memorizer.memorize(curCluster);
-			drives.undo();
+			/*drives.undo();
 			drives.cycle(origIostm, dt);
-			
+			*/
 			//send reflex output and memorizer output back to ai agent
 			return {
 				reflexOutput:reflexOutput,
@@ -264,16 +266,36 @@ var Ihtai = (function(bundle){
 				anticipated to be closer to ideal drive state than normal query.
 				If yes, return daydream result. If no, return normal query result.
 			*/
+			/*
+			TODO: figure out a way to normalize sd scores based on the starting distance of curCluster and
+			curCluster2 from drive goals
+			*/
+			var curClusterDist=sqDist(curCluster.stm.slice(-driveGoals.length), driveGoals);
+			var curCluster2Dist=sqDist(curCluster2.stm.slice(-driveGoals.length), driveGoals);
+			//take the difference of distances, and add it to the closer cluster to normalize
+			if(curClusterDist<curCluster2Dist && curClusterDist != 0){
+				sd1= sd1 + (curCluster2Dist-curClusterDist);
+			}
+			if(curCluster2Dist<curClusterDist && curCluster2Dist != 0){
+				sd2= sd2 + (curClusterDist-curCluster2Dist);
+			}
+
 			if(sd1<sd2){ //use daydream
 				//have to undo/redo the drives cycles with the original daydream stimuli again...
-				drives.undo();
-				drivesOutput=drives.cycle(iostm, dt);
-
-				memorizer.memorize(curCluster);
+				if(curClusterDist<curCluster2Dist){
+					drives.undo();
+					drivesOutput=drives.cycle(iostm, dt);
+					memorizer.memorize(curCluster);
+				}
+				else{
+					memorizer.memorize(curCluster2)
+				}
+				
 			
 				//...and then reset to actual iostim once again...
-				drives.undo();
-				drives.cycle(origIostm, dt);
+				//drives.undo();
+				//drives.cycle(origIostm, dt);
+				
 
 				//send reflex output and memorizer output back to ai agent
 				return {
@@ -283,7 +305,15 @@ var Ihtai = (function(bundle){
 				};		
 			}
 			else{ //use regular query
-				memorizer.memorize(curCluster2);
+				
+				if(curClusterDist<curCluster2Dist){
+					drives.undo();
+					drivesOutput=drives.cycle(iostm, dt);
+					memorizer.memorize(curCluster);
+				}
+				else{
+					memorizer.memorize(curCluster2);
+				}
 			
 				//send reflex output and memorizer output back to ai agent
 				return {
@@ -645,12 +675,13 @@ var Memorizer = (function(bundle){
 		}
 	}
 
-	function sqDist(v1, v2){
+	function sqDist(a, b){
 		var d=0;
-		for(var i=0; i<v1.length;i++){
-			d+=Math.abs(v1[i] - v2[i]);
+		//assumes a and b are the same length
+		for(var i=0;i<a.length;i++){
+			d+= /*Math.pow(a[i]-b[i], 2);*/ Math.abs(a[i]-b[i]);
 		}
-		return Math.pow(d, 2);
+		return d;		
 	}
 
 	function getHeight(){
