@@ -131,7 +131,7 @@ require([], function(){
 		},
 		targetval:0 //the goal value for pain
 	};		
-	drives=[pleasureDrive, painDrive, aggressionDrive];
+	drives=[pleasureDrive/*, painDrive, aggressionDrive*/];
 
 
 	var reflexes = [
@@ -176,7 +176,8 @@ require([], function(){
 		reflexList:reflexes,
 		acceptableRange:144,/*max val is 144*//*acceptable range for optimal stimuli is in square dist*/
 		bStmCt:0,
-		distribution:distributionArr
+		distribution:distributionArr,
+		distanceAlgo:"avg"
 	});		
 
 	//var intervalID = window.setInterval(updateIhtai, 33);

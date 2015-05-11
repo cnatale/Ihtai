@@ -280,22 +280,21 @@ var Ihtai = (function(bundle){
 				sd2= sd2 + (curClusterDist-curCluster2Dist);
 			}
 
-			if(sd1<sd2){ //use daydream
-				//have to undo/redo the drives cycles with the original daydream stimuli again...
-				if(curClusterDist<curCluster2Dist){
-					drives.undo();
-					drivesOutput=drives.cycle(iostm, dt);
-					memorizer.memorize(curCluster);
-				}
-				else{
-					memorizer.memorize(curCluster2)
-				}
-				
-			
-				//...and then reset to actual iostim once again...
-				//drives.undo();
-				//drives.cycle(origIostm, dt);
-				
+			/*
+			Memorize the stimuli that has the lowest normalized drive differential,
+			while also setting the appropriate drive data first.
+			*/
+			if(curClusterDist<curCluster2Dist){
+				drives.undo();
+				drivesOutput=drives.cycle(iostm, dt);
+				memorizer.memorize(curCluster);
+			}
+			else{
+				memorizer.memorize(curCluster2)
+			}
+
+
+			if(sd1<sd2){ //use daydream stm query output
 
 				//send reflex output and memorizer output back to ai agent
 				return {
@@ -304,16 +303,7 @@ var Ihtai = (function(bundle){
 					drivesOutput:drivesOutput
 				};		
 			}
-			else{ //use regular query
-				
-				if(curClusterDist<curCluster2Dist){
-					drives.undo();
-					drivesOutput=drives.cycle(iostm, dt);
-					memorizer.memorize(curCluster);
-				}
-				else{
-					memorizer.memorize(curCluster2);
-				}
+			else{ //use regular stm query output
 			
 				//send reflex output and memorizer output back to ai agent
 				return {
@@ -495,7 +485,7 @@ var Memorizer = (function(bundle){
 				//console.log('min.es:'+min.es);
 				//console.log('min.sd:'+min.sd);
 				//console.log('acceptablerange:'+acceptableRange);
-				outputstm = min.ss;
+				outputstm = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in minheap
 				//debugger;
 			}
 		}
@@ -536,7 +526,8 @@ var Memorizer = (function(bundle){
 
 			size=i+2;
 			//Once we have a buffer full enough for this level, add a memory every cycle
-			if(buffer.length>=size){
+			//TODO:make sure the '&& size<=height' isn't introducing bugs into code
+			if(buffer.length>=size && size<=height){
 				fs=buffer.length-size;
 				ss=buffer.length-size+1;
 				es=buffer.length-1;

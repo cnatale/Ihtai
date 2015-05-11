@@ -345,7 +345,7 @@ require(['physicsjs'], function(Physics){
 				var inputStm=[square?100:0,normalizedAngle?Math.round(normalizedAngle):0,Math.round(moveVel),Math.round(normalizedDist)];
 		    	var res;
 
-		    	if(Math.random() > .5 || firstCycle){
+		    	if(Math.random() > 1 || firstCycle){
 		    		res=ihtai.cycle(inputStm, td);
 		    		firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
 		    	}
