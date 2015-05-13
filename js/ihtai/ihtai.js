@@ -169,67 +169,47 @@ var Ihtai = (function(bundle){
 	}
 
 	function daydream(iostm, dt, outputIndices){
-		/*
-		TODO: 
-		✓-add array param that specifies which iostm indices are motor/output stimuli
-		✓-pick random cluster
-		✓-replace iostm's values for indices which equal index values in new array param
-		✓-run memorizer.drive with cluster selected based on iostm's modified value
-		✓-if memorizer.query returns null, it's a new memory and we should act on it
-		✓-otherwise, we need to find out if the original iostm resulted in a smaller sd. If
-		 yes, we should just pass in the ioriginal iostm as output. Otherwise, pass new iostm.
-		✓-return this modified iostm
-		*/
-
-		var combinedstm, curCluster, origIostm=iostm.slice(), drivesOutput;
-
-		//set every drive state to desired target	
+		var combinedstm, curCluster, origIostm=iostm.slice(), drivesOutput;	
 		var targetDriveVals=drives.getGoals();
 
 		//choose a random cluster
 		var rndCluster=clusters.getRandomCluster();
 		var rndstm=rndCluster.stm.slice();
 
-		//replace iostm's values for indices which equal index values in new array param
+		//Replace iostm's values for the indices which equal index values in new array param.
 		for(var i=0; i<outputIndices.length;i++){
 			iostm.splice(outputIndices[i], 1, rndstm[outputIndices[i]]);
 		}
 
-		drivesOutput=drives.cycle(iostm, dt);					
-		//merge iostm and drives output
+		drivesOutput = drives.cycle(iostm, dt);					
 		combinedstm = iostm.concat(drivesOutput);
 
 		var reflexOutput=[], memorizerOutput=null;
 
 		var backAndCurrentstm=[];
 		for(var i=0;i<prevstm.length;i++){
-			backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
+			backAndCurrentstm = backAndCurrentstm.concat(prevstm[i]);
 		}
-		backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
+		backAndCurrentstm = backAndCurrentstm.concat(combinedstm);
 
 		//get nearest cluster for combined stm
-		curCluster= clusters.findNearestCluster(backAndCurrentstm);
+		curCluster = clusters.findNearestCluster(backAndCurrentstm);
 
 		//cycle reflexes
 		if(_enableReflexes)
-			reflexOutput=reflexes.cycle(curCluster, dt);
+			reflexOutput = reflexes.cycle(curCluster, dt);
 
 		//run memorizer.query with cluster selected based on iostm's modified value
-		memorizerOutput=memorizer.query(curCluster);
+		memorizerOutput = memorizer.query(curCluster);
 
-
-		///////////////
-
-		/////////////
-
-
+		//Check if a stimuli with this pattern has ever been memorized before.
 		if(memorizerOutput[0]==null){
-			//a stimuli with this pattern has never been memorized here. go ahead and memorize it
+			//If no, try the imagined memory no matter what.
 			memorizer.memorize(curCluster);
 			/*drives.undo();
 			drives.cycle(origIostm, dt);
 			*/
-			//send reflex output and memorizer output back to ai agent
+			//return imagined reflex output and memorizer output back to ai agent
 			return {
 				reflexOutput:reflexOutput,
 				memorizerOutput:memorizerOutput,
@@ -237,18 +217,16 @@ var Ihtai = (function(bundle){
 			};				
 		}
 		else{
-			/*figure out if the predicted square dist of randomized output is lower than 
-			  the unrandomized output. if yes, memorize. if no, revert back to original
-			  iostm and memorize
+			/*
+			  Figure out if the predicted square distance of the imagined output is lower than 
+			  that of the queried output. If yes, memorize the imagined output. If no, revert 
+			  back to queried output, re-run drives.cycle(), and memorize the queried output.
 			*/
 			//NOTE:this isn't taking into account backStm
-
+			
 			//call each drive's undo() method to revert previous cycle
-
-			/////////////////// 
 			drives.undo();
 			var drivesOutput2=drives.cycle(origIostm, dt);
-			//TODO:make sure drivesoutput is updating
 			var combinedstm2=origIostm.concat(drivesOutput2);
 
 			var curCluster2=clusters.findNearestCluster(combinedstm2);
@@ -257,22 +235,17 @@ var Ihtai = (function(bundle){
 
 			var memorizerOutput2=memorizer.query(curCluster2);
 
-			///////////////////
-
 			var sd1=memorizerOutput[1]
 			var sd2=memorizerOutput2[1];
 
-			/*  extra check here to determine if the daydream result is 
-				anticipated to be closer to ideal drive state than normal query.
-				If yes, return daydream result. If no, return normal query result.
-			*/
-			/*
-			TODO: figure out a way to normalize sd scores based on the starting distance of curCluster and
-			curCluster2 from drive goals
-			*/
+			/*  Determine if the daydream result is anticipated to be closer to ideal 
+			    drive state than normal query. If yes, return daydream result. If no, 
+			    return normal query result. */
+
 			var curClusterDist=sqDist(curCluster.stm.slice(-driveGoals.length), driveGoals);
 			var curCluster2Dist=sqDist(curCluster2.stm.slice(-driveGoals.length), driveGoals);
-			//take the difference of distances, and add it to the closer cluster to normalize
+
+			//Normalization: take the difference of distances, and add it to the closer cluster.
 			if(curClusterDist<curCluster2Dist && curClusterDist != 0){
 				sd1= sd1 + (curCluster2Dist-curClusterDist);
 			}
@@ -293,19 +266,19 @@ var Ihtai = (function(bundle){
 				memorizer.memorize(curCluster2)
 			}
 
+			//Separately, return memorizer output for data with lowest square distance score.
+			if(sd1<sd2){ //use daydream output
 
-			if(sd1<sd2){ //use daydream stm query output
-
-				//send reflex output and memorizer output back to ai agent
+				//return imagined output back to ai agent
 				return {
 					reflexOutput:reflexOutput,
 					memorizerOutput:memorizerOutput,
 					drivesOutput:drivesOutput
 				};		
 			}
-			else{ //use regular stm query output
+			else{ //use regular stimuli query output
 			
-				//send reflex output and memorizer output back to ai agent
+				//return queried output back to ai agent
 				return {
 					reflexOutput:reflexOutput2,
 					memorizerOutput:memorizerOutput2,
@@ -420,7 +393,7 @@ var Ihtai = (function(bundle){
 
 /**
 	The cerebral cortex of the a.i. Hierarchically, temporally memorizes
-	moments in time represented by vectors combining stm and drive states.
+	moments in time represented by vectors combining stimuli and drive states.
 */
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
