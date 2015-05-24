@@ -59,35 +59,13 @@ describe('ihtai', function(){
 			console.log('findNearestCluster time: '+timeDiff);
 			expect(res.id).toBe(0); //cluster 0 is specifically given this val during initialization
 		});
-
-		it('should order cluster keys', function(){
-			var c2 = new Clusters({_numClusters:10, _vectorDim:1}), ctr=0;
-			c2.orderKeys();
-
-			function inorder(node){
-				if (node==null)
-					return;
-				inorder(node.l);
-				expect(node.val.id).toEqual(ctr++);
-				inorder(node.r);
-			}
-
-			inorder(c2.getClusterTree().getRoot());			
-
-		});
-		//TODO:add tests for weighted distribution
-		it('should apply weighted distribution of points', function(){
-			clusters= new Clusters({_numClusters:2, _vectorDim:1, _distribution:[{0:0,100:1}]});
-			var res=clusters.findNearestCluster([80]);
-			expect(res.id).toBe(1);
-			expect(res.stm).toEqual([100]);
-		});
 	});
 
 	describe('Memorizer', function(){
 		var memorizer, memory, cluster;
 		beforeEach(function(){
-			memorizer = new Memorizer(100);
+					
+			memorizer = new Memorizer({_memoryHeight:100});
 
 			memory=[10,20,30,40,50];
 			cluster = {id:0, stm:memory};
@@ -119,9 +97,10 @@ describe('ihtai', function(){
 
 		it('should memorize vectors', function(){
 			var levels = memorizer.getLevels();
+
 			expect(levels[0].series["3"].fs).toEqual([30,30,30,30,30]);
 			expect(levels[0].series["3"].ss).toEqual([35,35,35,35,35]);
-			expect(levels[0].series["3"].es).toEqual([37.5, 37.5, 37.5, 37.5, 37.5]);
+			expect(levels[0].series["3"].es).toEqual([35,35,35,35,35]);
 		});		
 
 		it('given a cluster, should return vector representing next action agent should take to minimize homeostasis differential', function(){
@@ -132,7 +111,8 @@ describe('ihtai', function(){
 			is the 'next step' that IHTAI thinks agent should take to get as close as possible to homeostasis
 			goal from current input stm.
 			*/
-			expect(res).toEqual([50,40,30,20,10]);
+	
+			expect(res[0]).toEqual([50,40,30,20,10]);
 		})
 
 	});
@@ -326,7 +306,7 @@ describe('ihtai', function(){
 			ihtai2.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50], 33);
 		});
 
-		it('should implement back-stm correctly on re-inflated Ihtai instances', function(){
+/*		it('should implement back-stm correctly on re-inflated Ihtai instances', function(){
 			var ihtai = new Ihtai({
 				clusterCount:1000,
 				vectorDim:10,
@@ -361,6 +341,7 @@ describe('ihtai', function(){
 					
 			expect(rebuiltRes.memorizerOutput).toEqual(origRes.memorizerOutput);	
 		});
+*/		
 	})
 });
 
@@ -377,6 +358,13 @@ describe('ihtai utils', function(){
 			expect(res).toEqual([ 1, 4, 5, 6, 7, 8, 12, 20, 100 ]);
 		})
 	})
+
+	//TODO:add distSq unit test
+	describe('distSq', function(){
+		it('', function(){
+
+		});
+	});
 
 	describe('kd tree', function(){
 		var arr, kdTree, root, heap;
@@ -395,8 +383,6 @@ describe('ihtai utils', function(){
 		});
 
 		it('should create a tree', function(){
-
-
 			expect(root.val).toEqual([29,2,32,20,10]);
 			expect(root.l.val).toEqual([8,20,25,30,1]);
 			expect(root.r.val).toEqual([60,61,58,57,77]);
@@ -410,7 +396,8 @@ describe('ihtai utils', function(){
 			expect(nearestNeighbor).toEqual([60, 61, 58, 57, 77]);
 			var nn = kdTree.nearestNeighbor([1,1,1,1,1]);
 			expect(nn).toEqual([10,5,5,3,6]);
-			var nn2 = kdTree.nearestNeighbor([61, 58, 59, 61, 78]);
+			
+			var nn2 = kdTree.nearestNeighbor([61, 58, 59, 61, 78]); //10 //
 			expect(nn2).toEqual([60,61,58,57,77]);
 		});
 

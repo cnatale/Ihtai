@@ -169,6 +169,22 @@ var Ihtai = (function(bundle){
 	}
 
 	function daydream(iostm, dt, outputIndices){
+		/*
+		TODO: change logic so that:
+		-the imagined cluster is a completely random cluster
+		-just memorize the normal stm, don't worry about the random cluster
+		-output should be whichever normalized sq dist is smaller: imagined memorizer.query()
+		  or original stm memorizer.query()
+		-maybe before sending back imagined query response, splice it. not sure if this is 
+		  necessary or not. maybe use optional param
+
+		External TODO:
+		-add 'frustration drive' that triggers daydreams, b/c this shouldn't run all the time,
+		  since the stimuli with a lower random marginal score isn't guaranteed to lead to a better result
+		  in current circumstances.
+		*/
+
+
 		var combinedstm, curCluster, origIostm=iostm.slice(), drivesOutput;	
 		var targetDriveVals=drives.getGoals();
 
@@ -257,7 +273,7 @@ var Ihtai = (function(bundle){
 			Memorize the stimuli that has the lowest normalized drive differential,
 			while also setting the appropriate drive data first.
 			*/
-			if(curClusterDist<curCluster2Dist){
+			if(curClusterDist<curCluster2Dist /*|| Math.random()>.9*/ ){
 				drives.undo();
 				drivesOutput=drives.cycle(iostm, dt);
 				memorizer.memorize(curCluster);
@@ -511,7 +527,7 @@ var Memorizer = (function(bundle){
 				if(distanceAlgo == "avg"){
 					for(var j=ss;j<=es;j++){
 						ctr++;
-						if(j==ss){ //first iteration
+						if(j==ss){ //first iteration; set array to second state
 							avg=buffer[ss].stm.slice();
 						}
 						else{
@@ -539,7 +555,7 @@ var Memorizer = (function(bundle){
 				at this start state, store it regardless.
 				*/				
 				if(level[i].series.hasOwnProperty(fsid)){
-					///////stimuli endstate averaging algorithm used in all cases//////
+					/////// stimuli endstate averaging algorithm used in all cases //////
 
 					/*
 					If same first and second states are the same, store the memory
@@ -547,7 +563,7 @@ var Memorizer = (function(bundle){
 					weighted average)
 
 					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
-					should raise its cost for future queries. Also if a less optimal outcome becomes more optimal,
+					should raise its cost for future queries. Also if stored outcome becomes more optimal,
 					increase fitness. 
 
 					It also simulates how behavior "hardens" as it is carried out more and more often
@@ -559,9 +575,8 @@ var Memorizer = (function(bundle){
 					is selected (as opposed to non-weighted average).
 
 					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
-					by reference to clusters is more memory efficient, editing the cluster vals was breaking the kd tree.
+					by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
 					*/		
-
 					if(sqDist(buffer[ss].stm, s.ss) === 0){
 						var bufferGoalDist = distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length);
 						var esGoalDist = s.es.slice(-homeostasisGoal.length);
@@ -609,6 +624,7 @@ var Memorizer = (function(bundle){
 							s.cs=0;
 							s.sd=sd1;
 						}	
+						//If sd1>=sd2, ignore the stm b/c acting on it isn't as effective as acting on currently stored stm.
 					}		
 				}
 				else/* if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange)*/{
@@ -830,24 +846,6 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		return clusterTree;
 	}
 
-	/*
-	WARNING: order cluster id's by inorder traversal. Only run before Ihtai starts 
-	memorizing or else the keys won't match up with their associated memory height arrays anymore.
-	*/
-	function orderKeys(){
-		var ctr=0, node=clusterTree.getRoot();
-
-		function inorder(node){
-			if (node==null)
-				return;
-			inorder(node.l);
-			node.val.id=ctr++;
-			inorder(node.r);
-		}
-
-		inorder(node);
-	}	
-
 	function getRandomCluster(){
 		var keys=Object.keys(cache);
 		var randomKey=Math.round(Math.random()*(keys.length-1));
@@ -857,7 +855,6 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 	return {
 		findNearestCluster: findNearestCluster,
 		getClusterTree: getClusterTree,
-		orderKeys: orderKeys,
 		getSize: function(){return idCtr;},
 		getRandomCluster: getRandomCluster
 	};

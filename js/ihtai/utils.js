@@ -362,17 +362,13 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	*/
 	function nearestNeighbor(pt, cmpr){
 		var bestPt, bestDist=Infinity;
-		/*if(typeof cmpr !="undefined"){
-			//offers a way to overried default comparisonProp for kd tree
-			var comparisonProp = cmpr;
-		}*/
 	
 		nn(root, 0);
 		//cache=[];
 		return bestPt;
 
-		var l, r, dir, dim, nv, bpv, d;
 		function nn(node, lvl){
+			var l, r, dir, dim, nv, bpv, d;
 			l=1; 
 			r=-1;
 			dim=lvl % pt.length;
@@ -380,15 +376,15 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			if(node==null)
 				return;
 
-			if(typeof comparisonProp==="function"){
+			if(typeof comparisonProp==="function"){ //compare based on comparison function
 				if(!cache[node.val.id])
 					cache[node.val.id]=comparisonProp.call(node.val);
 				nv=cache[node.val.id];	
 			}
-			else if(typeof comparisonProp=="string"){
+			else if(typeof comparisonProp=="string"){ //compare based on object property
 				nv=node.val[comparisonProp]
 			}
-			else{
+			else{ //compare arrays directly
 				nv=node.val;
 			}
 
@@ -428,12 +424,16 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				bpv=bestPt[comparisonProp];
 			}
 			else{
-				bpv=bestPt
+				bpv=bestPt;
 			}
 			
+			//TODO:maybe this needs to use distSq instead of comparing just one index?
 			d=Math.pow(pt[dim] - bpv[dim],2);
+			//d=distSq(pt, bpv);
 			if(dir==l){
 				//check r
+				//TODO:this comparison is a problem because bestDist is based on sq dist of entire vector,
+				//while d is based on square dist of only one vector index
 				if(d<bestDist){
 					//traverse r
 					nn(node.r, lvl+1);
@@ -457,7 +457,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		var d=0;
 		//assumes a and b are the same length
 		for(var i=0;i<a.length;i++){
-			d+= /*Math.pow(a[i]-b[i], 2);*/ Math.abs(a[i]-b[i]);
+			d+= Math.pow(a[i]-b[i], 2); /*Math.abs(a[i]-b[i])*/;
 		}
 		return d;	
 	}
