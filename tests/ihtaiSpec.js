@@ -359,13 +359,6 @@ describe('ihtai utils', function(){
 		})
 	})
 
-	//TODO:add distSq unit test
-	describe('distSq', function(){
-		it('', function(){
-
-		});
-	});
-
 	describe('kd tree', function(){
 		var arr, kdTree, root, heap;
 
@@ -382,23 +375,36 @@ describe('ihtai utils', function(){
 			root = kdTree.getRoot();			
 		});
 
+		it('should calculate the square distance between two vectors', function(){
+			var res = kdTree.distSq([2,2],[0,0]);
+			expect(res).toBe(8);
+			res = kdTree.distSq([2,2],[3,5]);
+			expect(res).toBe(10);
+			res = kdTree.distSq([2,2],[-3,-5]);
+			expect(res).toBe(74);
+		});		
+
 		it('should create a tree', function(){
 			expect(root.val).toEqual([29,2,32,20,10]);
 			expect(root.l.val).toEqual([8,20,25,30,1]);
 			expect(root.r.val).toEqual([60,61,58,57,77]);
 			expect(root.l.l.val).toEqual([10,5,5,3,6]);
 			expect(root.r.l.val).toEqual([75,50,22,20,21]);
-
 		});
 
 		it('should find the nearest neighbor to a vector', function(){
-			nearestNeighbor = kdTree.nearestNeighbor([60, 61, 58, 57, 77]);
-			expect(nearestNeighbor).toEqual([60, 61, 58, 57, 77]);
-			var nn = kdTree.nearestNeighbor([1,1,1,1,1]);
+			var nn = kdTree.nearestNeighbor([60, 61, 58, 57, 77]);
+			expect(nn).toEqual([60, 61, 58, 57, 77]);
+			nn = kdTree.nearestNeighbor([1,1,1,1,1]);
 			expect(nn).toEqual([10,5,5,3,6]);
-			
-			var nn2 = kdTree.nearestNeighbor([61, 58, 59, 61, 78]); //10 //
-			expect(nn2).toEqual([60,61,58,57,77]);
+			nn = kdTree.nearestNeighbor([61, 58, 59, 61, 78]);
+			expect(nn).toEqual([60,61,58,57,77]);
+			nn=kdTree.nearestNeighbor([79, 55, 18, 19, 24]);
+			expect(nn).toEqual([75,50,22,20,21]);
+			nn=kdTree.nearestNeighbor([-5, -10, -5, -2, 10]);
+			expect(nn).toEqual([10,5,5,3,6]);	
+			nn=kdTree.nearestNeighbor([100, 100, 90, 200, 150]);
+			expect(nn).toEqual([60,61,58,57,77]);
 		});
 
 		it('should convert a kd tree into a binary heap', function(){

@@ -473,6 +473,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	return {
 		buildKdTree:buildKdTree,
 		nearestNeighbor:nearestNeighbor,
+		distSq,
 		getRoot:getRoot,
 		getComparisonProp:getComparisonProp,
 		toBinaryHeap:toBinaryHeap
