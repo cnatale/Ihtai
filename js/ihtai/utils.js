@@ -357,10 +357,11 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 
 	/**
 	Perform nearest neighbor search on kd-tree.
-	@param v the vector to use when performing nearest neighbor search
+	@param tgt: The vector that we want the nearest neighbor of.
+	@param cmpr: Comparison property or function. (optional)
 	nodes have properties l, r, and val
 	*/
-	function nearestNeighbor(pt, cmpr){
+	function nearestNeighbor(tgt, cmpr){
 		var bestPt, bestDist=Infinity;
 	
 		nn(root, 0);
@@ -371,7 +372,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			var l, r, dir, dim, nv, bpv, d;
 			l=1; 
 			r=-1;
-			dim=lvl % pt.length;
+			dim=lvl % tgt.length;
 
 			if(node==null)
 				return;
@@ -388,7 +389,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				nv=node.val;
 			}
 
-			if(pt[dim] < nv[dim]){
+			if(tgt[dim] < nv[dim]){
 				//descend l
 				nn(node.l, lvl+1);
 				dir=l;
@@ -401,26 +402,17 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 
 			/////unwind phase/////
 
-			//check if current node is closer than current best
-			d=distSq(nv, pt);
+			//check if current node is closer than current best. Update if it is.
+			d=distSq(nv, tgt);
 			if(d<bestDist){
 				bestDist=d;
 				bestPt=node.val;
 			}
 
-			/*
-			Whichever way we went, check other child node to see if it could be closer.
-			If so, descend.
-			*/
 			if(typeof comparisonProp==="function"){
-				//try{
-					if(!cache[bestPt.id])
-						cache[bestPt.id]=comparisonProp.call(bestPt);
-					bpv=cache[bestPt.id];
-				//}
-				//catch(e){
-				//	debugger;
-				//}
+				if(!cache[bestPt.id])
+					cache[bestPt.id]=comparisonProp.call(bestPt);
+				bpv=cache[bestPt.id];
 			}
 			else if(typeof comparisonProp=="string"){
 				bpv=bestPt[comparisonProp];
@@ -430,22 +422,20 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 			
 			/*
-			Check if sq dist between current dimension of this point and best known point
+			Check if sq dist of current dimension between search point and best known point
 			is less than our best distance. If so, we can't rule out that a closer point is
-			in the other branch of the binary tree: explore it. If not, exit method.	
+			in the other branch of the binary tree: explore it. If not, exit method.
 			*/
-			d=Math.pow(pt[dim] - bpv[dim],2);
+			d=Math.pow(tgt[dim] - nv[dim],2);
 			if(dir==l){
-				//check r
 				if(d<bestDist){
-					//traverse r
+					//check r
 					nn(node.r, lvl+1);
 				}
 			}
 			else{
-				//check l
 				if(d<bestDist){
-					//traverse l
+					//check l
 					nn(node.l, lvl+1);
 				}
 			}
