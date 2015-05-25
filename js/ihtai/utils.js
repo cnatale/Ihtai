@@ -422,7 +422,7 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 			
 			/*
-			Check if sq dist of current dimension between search point and best known point
+			Check if sq dist of current dimension between search point and current node
 			is less than our best distance. If so, we can't rule out that a closer point is
 			in the other branch of the binary tree: explore it. If not, exit method.
 			*/
