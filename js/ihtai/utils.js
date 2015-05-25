@@ -399,6 +399,8 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				dir=r;
 			}
 
+			/////unwind phase/////
+
 			//check if current node is closer than current best
 			d=distSq(nv, pt);
 			if(d<bestDist){
@@ -427,13 +429,14 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				bpv=bestPt;
 			}
 			
-			//TODO:maybe this needs to use distSq instead of comparing just one index?
+			/*
+			Check if sq dist between current dimension of this point and best known point
+			is less than our best distance. If so, we can't rule out that a closer point is
+			in the other branch of the binary tree: explore it. If not, exit method.	
+			*/
 			d=Math.pow(pt[dim] - bpv[dim],2);
-			//d=distSq(pt, bpv);
 			if(dir==l){
 				//check r
-				//TODO:this comparison is a problem because bestDist is based on sq dist of entire vector,
-				//while d is based on square dist of only one vector index
 				if(d<bestDist){
 					//traverse r
 					nn(node.r, lvl+1);
