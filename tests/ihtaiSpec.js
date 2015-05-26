@@ -410,7 +410,7 @@ describe('ihtai utils', function(){
 		it('should generate a lot of random points, add to tree, and make sure all are in tree', function(){
 			var dim=7; //number of dimensions
 			var arr=[], nn, numVecs=10000;
-			console.log('beginning randome pts kd-tree test');
+			console.log('beginning random pts kd-tree test');
 			for(var i=0;i<numVecs;i++){
 				var vec=[];
 				for (var j=0;j<7;j++){
