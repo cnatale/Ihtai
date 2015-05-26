@@ -270,8 +270,6 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		*/
 
 		//each node contains the following properties: l, r, and val		
-
-		//TODO: this net line is the entirety of poor load performance
 		var root=createNode(data,0); //this will recursively build the entire kd-tree, with reference to root
 		return root;
 
@@ -298,8 +296,10 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 				else if(typeof comparisonProp==="string"){
 					dimensionality=data[comparisonProp].length;
 				}
-				else
-					dimensionality=data.length;
+				else{
+					//assumes all vectors are the same dimension
+					dimensionality=data[0].length;
+				}
 
 				dim = lvl % dimensionality;
 

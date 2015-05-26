@@ -268,7 +268,7 @@ require(['physicsjs'], function(Physics){
 			reflexList:reflexes,
 			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
 			backStimCt:0,
-			distanceAlgo:"avg" /*avg or endState*/
+			distanceAlgo:"endState" /*avg or endState*/
 		});
 
 

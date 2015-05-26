@@ -407,6 +407,27 @@ describe('ihtai utils', function(){
 			expect(nn).toEqual([60,61,58,57,77]);
 		});
 
+		it('should generate a lot of random points, add to tree, and make sure all are in tree', function(){
+			var dim=7; //number of dimensions
+			var arr=[], nn, numVecs=10000;
+			console.log('beginning randome pts kd-tree test');
+			for(var i=0;i<numVecs;i++){
+				var vec=[];
+				for (var j=0;j<7;j++){
+					vec[j]=Math.round(Math.random()*100);
+				}
+				arr.push(vec);
+			}
+			var kdTree = IhtaiUtils.KdTree(arr); 
+
+			//make sure all elements are in the tree
+			for(i=0;i<numVecs;i++){
+				nn=kdTree.nearestNeighbor(arr[i]);
+				expect(nn).toEqual(arr[i]);
+			}
+			console.log('finished random pts kd-tree test');
+		});
+
 		it('should convert a kd tree into a binary heap', function(){
 			heap=kdTree.toBinaryHeap();
 			expect(heap[0]).toEqual([29,2,32,20,10]);
@@ -418,7 +439,8 @@ describe('ihtai utils', function(){
 			for(var i=6;i<=10;i++){
 				expect(heap[i]).toEqual(null);
 			}
-	
+
+			
 		});
 		it('should convert a binary heap into a kd tree', function(){
 			var inflatedRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
