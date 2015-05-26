@@ -538,7 +538,7 @@ describe('ihtai utils', function(){
 				inputArr[i]=i+1;
 			}
 
-			//insert epements randomly into minheap
+			//insert elements randomly into minheap
 			var ctr=49;
 			for(i=0;i<50;i++){
 				rnd=Math.round(Math.random()*ctr);
