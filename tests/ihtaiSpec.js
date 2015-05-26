@@ -547,7 +547,7 @@ describe('ihtai utils', function(){
 				ctr--;
 			}
 
-			//make sure elements out output in order
+			//make sure elements output in order
 			for(i=1;i<=50;i++){
 				expect(minHeap.popMin().sd).toEqual(i);
 			}
