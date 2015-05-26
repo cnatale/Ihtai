@@ -410,7 +410,6 @@ describe('ihtai utils', function(){
 		it('should generate a lot of random points, add to tree, and make sure all are in tree', function(){
 			var dim=7; //number of dimensions
 			var arr=[], nn, numVecs=10000;
-			console.log('beginning random pts kd-tree test');
 			for(var i=0;i<numVecs;i++){
 				var vec=[];
 				for (var j=0;j<7;j++){
@@ -425,7 +424,6 @@ describe('ihtai utils', function(){
 				nn=kdTree.nearestNeighbor(arr[i]);
 				expect(nn).toEqual(arr[i]);
 			}
-			console.log('finished random pts kd-tree test');
 		});
 
 		it('should convert a kd tree into a binary heap', function(){
@@ -439,8 +437,6 @@ describe('ihtai utils', function(){
 			for(var i=6;i<=10;i++){
 				expect(heap[i]).toEqual(null);
 			}
-
-			
 		});
 		it('should convert a binary heap into a kd tree', function(){
 			var inflatedRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
@@ -466,6 +462,11 @@ describe('ihtai utils', function(){
 
 		});
 
+		it('should have the correct number of elements after insertions', function(){
+			//relying on six insertions from beforeEach()
+			expect(minHeap.heap.length).toBe(6);
+		});
+
 		it('should add elements to heap and maintain heap property', function(){
 			var sortedList=[];
 			var l=minHeap.heap.length;
@@ -477,6 +478,20 @@ describe('ihtai utils', function(){
 				expect(sortedList[i].sd).toEqual(tstArr[i]);
 			}
 		});
+
+		it('should generate a lot of points, add to heap, while always keeping minimum value in position 0', function(){
+			var minVal=Infinity, minHeap, curVal, numElms=10000;
+			minHeap=IhtaiUtils.MinHeap();
+			for(var i=0;i<numElms;i++){
+				curVal=Math.round(Math.random()*100);
+				minHeap.insert({sd:curVal});
+				if(curVal<minVal)
+					minVal=curVal;
+			}
+
+			expect(minHeap.getMin().sd).toBe(minVal);
+		});
+
 		it('should edit the value of a heap element, and maintain heap property after calling minHeapify on it', function(){
 			var indx=minHeap.heap.length-1;
 			minHeap.heap[indx]={sd:1};
@@ -500,6 +515,12 @@ describe('ihtai utils', function(){
 				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
 			}
 		});
+		it('should remove elements from heap when popMin() is called', function(){
+			for(var i=0;i<6;i++){
+				minHeap.popMin();
+			}
+			expect(minHeap.heap.length).toBe(0);
+		})
 		it('should perform heapify on all elements', function(){
 			minHeap.heap[0]={sd:77};
 			minHeap.heap[3]={sd:5000};
@@ -508,6 +529,27 @@ describe('ihtai utils', function(){
 			var tstArr=[1, 3, 8, 5000, 5, 77];
 			for(var i=0;i<minHeap.heap.length;i++){
 				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
+			}
+		});
+		it('should dequeue the values 1 to 50 in order when randomly inserted', function(){
+			var minHeap=IhtaiUtils.MinHeap();
+			var inputArr=[], rnd;
+			for(var i=0;i<50;i++){
+				inputArr[i]=i+1;
+			}
+
+			//insert epements randomly into minheap
+			var ctr=49;
+			for(i=0;i<50;i++){
+				rnd=Math.round(Math.random()*ctr);
+				minHeap.insert({sd:inputArr[rnd]});
+				inputArr.splice(rnd, 1);
+				ctr--;
+			}
+
+			//make sure elements out output in order
+			for(i=1;i<=50;i++){
+				expect(minHeap.popMin().sd).toEqual(i);
 			}
 		});
 	});
