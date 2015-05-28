@@ -119,18 +119,18 @@ require(['physicsjs'], function(Physics){
 		world.add(circle);
 
 	    $("#viewport").click(function(e){
-	     	// checking canvas coordinates for the mouse click
+	     	// Checking canvas coordinates for the mouse click
 			var offset = $(this).offset();
 			var px = e.pageX - offset.left;
 				var py = e.pageY - offset.top;
-				// this is the way physicsjs handles 2d vectors, similar at Box2D's b2Vec
+				// This is the way physicsjs handles 2d vectors, similar at Box2D's b2Vec
 			var mousePos = Physics.vector();
 				mousePos.set(px,py);
-				// finding a body under mouse position
+				// Finding a body under mouse position
 				var body = world.findOne({
 				$at: mousePos
 			})
-			// there isn't any body under mouse position, going to create a new box
+			// There isn't any body under mouse position; going to create a new box.
 			if(!body){
 		     	world.add(Physics.body("convex-polygon",{
 						x: px,
@@ -147,8 +147,9 @@ require(['physicsjs'], function(Physics){
 					}));
 			}
 			else{
-				// there is a body under mouse position, let's remove it
-				world.removeBody(body);
+				//There is a square under the mouse position. Let's remove it.
+				if(body.name != "circle")
+					world.removeBody(body);
 			} 
 		})	
 		function dropBox(){

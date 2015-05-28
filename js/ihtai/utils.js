@@ -182,7 +182,6 @@ IhtaiUtils.MinHeap = (function(){
 			}
 		}
 
-		//var start=Math.floor((heap.length -2)/2);
 		var start = Math.floor((i-1)/2);
 		if(i==0)
 			siftDown(i);

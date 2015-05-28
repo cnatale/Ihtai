@@ -554,6 +554,4 @@ describe('ihtai utils', function(){
 		});
 	});
 
-
-
 })
