@@ -152,6 +152,9 @@ require(['physicsjs'], function(Physics){
 					world.removeBody(body);
 			} 
 		})	
+
+		dropBoxPos = [300, 25, 25, 550, 550, 630, 200, 400, 20, 100];
+		dropBoxPosIndex=0;
 		function dropBox(){
 	    	//get a square if one exists
 	    	queryFn = Physics.query({
@@ -163,7 +166,7 @@ require(['physicsjs'], function(Physics){
 	    	}
 
 	     	world.add(Physics.body("convex-polygon",{
-					x: Math.random()*viewWidth,
+					x: /*Math.random()*viewWidth*/dropBoxPos[dropBoxPosIndex],
 					y: 0,
 					vertices: [
 						{x:0, y:0},
@@ -175,7 +178,11 @@ require(['physicsjs'], function(Physics){
 					restitution:.25,
 					name:'square'
 				}));	
-			window.setTimeout(dropBox, 60000+ Math.random()*30000);	
+			window.setTimeout(dropBox, /*60000*/2000);	
+			if(dropBoxPosIndex<dropBoxPos.length-1)
+				dropBoxPosIndex++;
+			else
+				dropBoxPosIndex=0;
 		}  
 
 		dropBox();
