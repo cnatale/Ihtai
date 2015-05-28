@@ -178,7 +178,7 @@ require(['physicsjs'], function(Physics){
 					restitution:.25,
 					name:'square'
 				}));	
-			window.setTimeout(dropBox, /*60000*/2000);	
+			window.setTimeout(dropBox, 30000);	
 			if(dropBoxPosIndex<dropBoxPos.length-1)
 				dropBoxPosIndex++;
 			else
