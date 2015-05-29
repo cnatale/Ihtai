@@ -173,12 +173,11 @@ require(['physicsjs'], function(Physics){
 						{x:0, y:60},
 						{x:60, y:60},
 						{x:60, y:0}
-
 					],
 					restitution:.25,
 					name:'square'
 				}));	
-			window.setTimeout(dropBox, 30000);	
+			window.setTimeout(dropBox, /*30000*/10000);	
 			if(dropBoxPosIndex<dropBoxPos.length-1)
 				dropBoxPosIndex++;
 			else
@@ -186,7 +185,6 @@ require(['physicsjs'], function(Physics){
 		}  
 
 		dropBox();
-		//window.setTimeout(dropBox, Math.random()*30000);
 
 	    ///////// init Ihtai /////////////
 	    // add tiredness drive, add behavior that when tiredness=100, stop moving (to 'seed'
