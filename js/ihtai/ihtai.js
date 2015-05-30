@@ -212,11 +212,11 @@ var Ihtai = (function(bundle){
 
 		//choose a random cluster
 		var rndCluster=clusters.getRandomCluster();
-		var rndstm=rndCluster.stm.slice();
+		var rndStm=rndCluster.stm.slice();
 
 		//Replace iostm's values for the indices which equal index values in new array param.
 		for(var i=0; i<outputIndices.length;i++){
-			iostm.splice(outputIndices[i], 1, rndstm[outputIndices[i]]);
+			iostm.splice(outputIndices[i], 1, rndStm[outputIndices[i]]);
 		}
 
 		drivesOutput = drives.cycle(iostm, dt);					
@@ -231,19 +231,19 @@ var Ihtai = (function(bundle){
 		backAndCurrentstm = backAndCurrentstm.concat(combinedstm);
 
 		//get nearest cluster for combined stm
-		curCluster = clusters.findNearestCluster(backAndCurrentstm);
+		imaginedCluster = clusters.findNearestCluster(backAndCurrentstm);
 
 		//cycle reflexes
 		if(_enableReflexes)
-			reflexOutput = reflexes.cycle(curCluster, dt);
+			reflexOutput = reflexes.cycle(imaginedCluster, dt);
 
 		//run memorizer.query with cluster selected based on iostm's modified value
-		memorizerOutput = memorizer.query(curCluster);
+		memorizerOutput = memorizer.query(imaginedCluster);
 
 		//Check if a stimuli with this pattern has ever been memorized before.
 		if(memorizerOutput[0]==null){
 			//If no, try the imagined memory no matter what.
-			memorizer.memorize(curCluster);
+			memorizer.memorize(imaginedCluster);
 			/*drives.undo();
 			drives.cycle(origIostm, dt);
 			*/
@@ -280,25 +280,25 @@ var Ihtai = (function(bundle){
 			    drive state than normal query. If yes, return daydream result. If no, 
 			    return normal query result. */
 
-			var curClusterDist=sqDist(curCluster.stm.slice(-driveGoals.length), driveGoals);
+			var imaginedClusterDist=sqDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
 			var curCluster2Dist=sqDist(curCluster2.stm.slice(-driveGoals.length), driveGoals);
 
 			//Normalization: take the difference of distances, and add it to the closer cluster.
-			if(curClusterDist<curCluster2Dist && curClusterDist != 0){
-				sd1= sd1 + (curCluster2Dist-curClusterDist);
+			if(imaginedClusterDist<curCluster2Dist && imaginedClusterDist != 0){
+				sd1= sd1 + (curCluster2Dist-imaginedClusterDist);
 			}
-			if(curCluster2Dist<curClusterDist && curCluster2Dist != 0){
-				sd2= sd2 + (curClusterDist-curCluster2Dist);
+			if(curCluster2Dist<imaginedClusterDist && curCluster2Dist != 0){
+				sd2= sd2 + (imaginedClusterDist-curCluster2Dist);
 			}
 
 			/*
 			Memorize the stimuli that has the lowest normalized drive differential,
 			while also setting the appropriate drive data first.
 			*/
-			if(curClusterDist<curCluster2Dist /*|| Math.random()>.9*/ ){
+			if(imaginedClusterDist<curCluster2Dist /*|| Math.random()>.9*/ ){
 				drives.undo();
 				drivesOutput=drives.cycle(iostm, dt);
-				memorizer.memorize(curCluster);
+				memorizer.memorize(imaginedCluster);
 			}
 			else{
 				memorizer.memorize(curCluster2)
