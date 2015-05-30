@@ -211,12 +211,12 @@ var Ihtai = (function(bundle){
 		var targetDriveVals=drives.getGoals();
 
 		//choose a random cluster
-		var rndCluster=clusters.getRandomCluster();
-		var rndStm=rndCluster.stm.slice();
+		var randomCluster=clusters.getRandomCluster();
+		var randomStm=randomCluster.stm.slice();
 
 		//Replace iostm's values for the indices which equal index values in new array param.
 		for(var i=0; i<outputIndices.length;i++){
-			iostm.splice(outputIndices[i], 1, rndStm[outputIndices[i]]);
+			iostm.splice(outputIndices[i], 1, randomStm[outputIndices[i]]);
 		}
 
 		imaginedDrivesOutput = drives.cycle(iostm, dt);					
