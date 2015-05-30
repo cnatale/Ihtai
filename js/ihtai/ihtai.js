@@ -207,7 +207,7 @@ var Ihtai = (function(bundle){
 		*/
 
 
-		var combinedstm, curCluster, origIostm=iostm.slice(), drivesOutput;	
+		var imaginedCombinedStm, imaginedCluster, imaginedDrivesOutput, origIostm=iostm.slice();	
 		var targetDriveVals=drives.getGoals();
 
 		//choose a random cluster
@@ -219,29 +219,29 @@ var Ihtai = (function(bundle){
 			iostm.splice(outputIndices[i], 1, rndStm[outputIndices[i]]);
 		}
 
-		drivesOutput = drives.cycle(iostm, dt);					
-		combinedstm = iostm.concat(drivesOutput);
+		imaginedDrivesOutput = drives.cycle(iostm, dt);					
+		imaginedCombinedStm = iostm.concat(imaginedDrivesOutput);
 
-		var reflexOutput=[], memorizerOutput=null;
+		var imaginedReflexOutput=[], imaginedMemorizerOutput=null;
 
 		var backAndCurrentstm=[];
 		for(var i=0;i<prevstm.length;i++){
 			backAndCurrentstm = backAndCurrentstm.concat(prevstm[i]);
 		}
-		backAndCurrentstm = backAndCurrentstm.concat(combinedstm);
+		backAndCurrentstm = backAndCurrentstm.concat(imaginedCombinedStm);
 
 		//get nearest cluster for combined stm
 		imaginedCluster = clusters.findNearestCluster(backAndCurrentstm);
 
 		//cycle reflexes
 		if(_enableReflexes)
-			reflexOutput = reflexes.cycle(imaginedCluster, dt);
+			imaginedReflexOutput = reflexes.cycle(imaginedCluster, dt);
 
 		//run memorizer.query with cluster selected based on iostm's modified value
-		memorizerOutput = memorizer.query(imaginedCluster);
+		imaginedMemorizerOutput = memorizer.query(imaginedCluster);
 
 		//Check if a stimuli with this pattern has ever been memorized before.
-		if(memorizerOutput[0]==null){
+		if(imaginedMemorizerOutput[0]==null){
 			//If no, try the imagined memory no matter what.
 			memorizer.memorize(imaginedCluster);
 			/*drives.undo();
@@ -249,9 +249,9 @@ var Ihtai = (function(bundle){
 			*/
 			//return imagined reflex output and memorizer output back to ai agent
 			return {
-				reflexOutput:reflexOutput,
-				memorizerOutput:memorizerOutput,
-				drivesOutput:drivesOutput
+				reflexOutput:imaginedReflexOutput,
+				memorizerOutput:imaginedMemorizerOutput,
+				drivesOutput:imaginedDrivesOutput
 			};				
 		}
 		else{
@@ -264,54 +264,54 @@ var Ihtai = (function(bundle){
 			
 			//call each drive's undo() method to revert previous cycle
 			drives.undo();
-			var drivesOutput2=drives.cycle(origIostm, dt);
-			var combinedstm2=origIostm.concat(drivesOutput2);
+			var realDrivesOutput=drives.cycle(origIostm, dt);
+			var realCombinedStm=origIostm.concat(realDrivesOutput);
 
-			var curCluster2=clusters.findNearestCluster(combinedstm2);
+			var realCurCluster=clusters.findNearestCluster(realCombinedStm);
 			if(_enableReflexes)
-				var reflexOutput2=reflexes.cycle(curCluster2, dt);			
+				var reflexOutput2=reflexes.cycle(realCurCluster, dt);			
 
-			var memorizerOutput2=memorizer.query(curCluster2);
+			var realMemorizerOutput=memorizer.query(realCurCluster);
 
-			var sd1=memorizerOutput[1]
-			var sd2=memorizerOutput2[1];
+			var imaginedSd=imaginedMemorizerOutput[1]
+			var realSd=realMemorizerOutput[1];
 
 			/*  Determine if the daydream result is anticipated to be closer to ideal 
 			    drive state than normal query. If yes, return daydream result. If no, 
 			    return normal query result. */
 
 			var imaginedClusterDist=sqDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
-			var curCluster2Dist=sqDist(curCluster2.stm.slice(-driveGoals.length), driveGoals);
+			var realCurClusterDist=sqDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
 
 			//Normalization: take the difference of distances, and add it to the closer cluster.
-			if(imaginedClusterDist<curCluster2Dist && imaginedClusterDist != 0){
-				sd1= sd1 + (curCluster2Dist-imaginedClusterDist);
+			if(imaginedClusterDist<realCurClusterDist && imaginedClusterDist != 0){
+				imaginedSd= imaginedSd + (realCurClusterDist-imaginedClusterDist);
 			}
-			if(curCluster2Dist<imaginedClusterDist && curCluster2Dist != 0){
-				sd2= sd2 + (imaginedClusterDist-curCluster2Dist);
+			if(realCurClusterDist<imaginedClusterDist && realCurClusterDist != 0){
+				realSd= realSd + (imaginedClusterDist-realCurClusterDist);
 			}
 
 			/*
 			Memorize the stimuli that has the lowest normalized drive differential,
 			while also setting the appropriate drive data first.
 			*/
-			if(imaginedClusterDist<curCluster2Dist /*|| Math.random()>.9*/ ){
+			if(imaginedClusterDist<realCurClusterDist /*|| Math.random()>.9*/ ){
 				drives.undo();
-				drivesOutput=drives.cycle(iostm, dt);
+				imaginedDrivesOutput=drives.cycle(iostm, dt);
 				memorizer.memorize(imaginedCluster);
 			}
 			else{
-				memorizer.memorize(curCluster2)
+				memorizer.memorize(realCurCluster)
 			}
 
 			//Separately, return memorizer output for data with lowest square distance score.
-			if(sd1<sd2){ //use daydream output
+			if(imaginedSd<realSd){ //use daydream output
 
 				//return imagined output back to ai agent
 				return {
-					reflexOutput:reflexOutput,
-					memorizerOutput:memorizerOutput,
-					drivesOutput:drivesOutput
+					reflexOutput:imaginedReflexOutput,
+					memorizerOutput:imaginedMemorizerOutput,
+					drivesOutput:imaginedDrivesOutput
 				};		
 			}
 			else{ //use regular stimuli query output
@@ -319,8 +319,8 @@ var Ihtai = (function(bundle){
 				//return queried output back to ai agent
 				return {
 					reflexOutput:reflexOutput2,
-					memorizerOutput:memorizerOutput2,
-					drivesOutput:drivesOutput2
+					memorizerOutput:realMemorizerOutput,
+					drivesOutput:realDrivesOutput
 				};									
 		
 			}
