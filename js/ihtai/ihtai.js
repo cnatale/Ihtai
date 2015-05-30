@@ -273,40 +273,39 @@ var Ihtai = (function(bundle){
 
 			var realMemorizerOutput=memorizer.query(realCurCluster);
 
-			//store the square distances to ideal drive states for imagined and real memorizer output
-			var imaginedSd=imaginedMemorizerOutput[1]
-			var realSd=realMemorizerOutput[1];
-
 			/*  Determine if the daydream result is anticipated to be closer to ideal 
 			    drive state than normal query. If yes, return daydream result. If no, 
 			    return normal query result. */
 
+			///////Normalization: take the difference of cluster distances from goal, and add it to the closer cluster output sd.////////
+
 			var imaginedClusterDist=sqDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
 			var realClusterDist=sqDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
 
-			//Normalization: take the difference of distances, and add it to the closer cluster.
+			//store the square distances to ideal drive states for imagined and real memorizer output
+			/*var imaginedOutputSd=imaginedMemorizerOutput[1]
+			var realOutputSd=realMemorizerOutput[1];			
+
 			if(imaginedClusterDist<realClusterDist && imaginedClusterDist != 0){
-				imaginedSd= imaginedSd + (realClusterDist-imaginedClusterDist);
+				imaginedOutputSd= imaginedOutputSd + (realClusterDist-imaginedClusterDist);
+				if(imaginedOutputSd<0)
+					imaginedOutputSd=0;
 			}
 			if(realClusterDist<imaginedClusterDist && realClusterDist != 0){
-				realSd= realSd + (imaginedClusterDist-realClusterDist);
-			}
+				realOutputSd= realOutputSd + (imaginedClusterDist-realClusterDist);
+				if(realOutputSd<0)
+					realOutputSd=0;
+			}*/
 
-			/*
-			Memorize the stimuli that has the lowest normalized drive differential,
-			while also setting the appropriate drive data first.
-			*/
-			if(imaginedClusterDist<realClusterDist /*|| Math.random()>.9*/ ){
-				drives.undo();
-				imaginedDrivesOutput=drives.cycle(iostm, dt);
-				memorizer.memorize(imaginedCluster);
-			}
-			else{
-				memorizer.memorize(realCurCluster)
-			}
+			////////////////////////////////////////////////////////////////////////////////////////////////
 
 			//Separately, return memorizer output for data with lowest square distance score.
-			if(imaginedSd<realSd){ //use daydream output
+			if(imaginedClusterDist<realClusterDist){ //use daydream output
+
+				//memorize the imagined cluster
+				drives.undo();
+				imaginedDrivesOutput=drives.cycle(iostm, dt);
+				memorizer.memorize(imaginedCluster);					
 
 				//return imagined output back to ai agent
 				return {
@@ -316,6 +315,9 @@ var Ihtai = (function(bundle){
 				};		
 			}
 			else{ //use regular stimuli query output
+
+				//memorize the real cluster
+				memorizer.memorize(realCurCluster)
 			
 				//return queried output back to ai agent
 				return {
