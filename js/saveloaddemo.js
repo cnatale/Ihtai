@@ -361,10 +361,7 @@ require(['physicsjs'], function(Physics){
 		    	//returns {reflexOutput:~, memorizerOutput:~}
 		
 		    	//use memorizer and reflex pellet recognition output to move circle 
-
-		    	/* TODO:change logic so that instead of acting on instinct randomly,
-		    	   daydream and act on response */
-		    	if(res.memorizerOutput[0] != null /*!isRavenous*/){
+		    	if(res.memorizerOutput[0] != null){
 		    			if(res.memorizerOutput[0][0]>50){ //has a pellet been detected?
 		    				moveVel=res.memorizerOutput[0][2];
 		    				//sometimes the above value will not come back as 0 or 100 due to compression.
