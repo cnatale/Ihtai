@@ -273,6 +273,7 @@ var Ihtai = (function(bundle){
 
 			var realMemorizerOutput=memorizer.query(realCurCluster);
 
+			//store the square distances to ideal drive states for imagined and real memorizer output
 			var imaginedSd=imaginedMemorizerOutput[1]
 			var realSd=realMemorizerOutput[1];
 
@@ -281,21 +282,21 @@ var Ihtai = (function(bundle){
 			    return normal query result. */
 
 			var imaginedClusterDist=sqDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
-			var realCurClusterDist=sqDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
+			var realClusterDist=sqDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
 
 			//Normalization: take the difference of distances, and add it to the closer cluster.
-			if(imaginedClusterDist<realCurClusterDist && imaginedClusterDist != 0){
-				imaginedSd= imaginedSd + (realCurClusterDist-imaginedClusterDist);
+			if(imaginedClusterDist<realClusterDist && imaginedClusterDist != 0){
+				imaginedSd= imaginedSd + (realClusterDist-imaginedClusterDist);
 			}
-			if(realCurClusterDist<imaginedClusterDist && realCurClusterDist != 0){
-				realSd= realSd + (imaginedClusterDist-realCurClusterDist);
+			if(realClusterDist<imaginedClusterDist && realClusterDist != 0){
+				realSd= realSd + (imaginedClusterDist-realClusterDist);
 			}
 
 			/*
 			Memorize the stimuli that has the lowest normalized drive differential,
 			while also setting the appropriate drive data first.
 			*/
-			if(imaginedClusterDist<realCurClusterDist /*|| Math.random()>.9*/ ){
+			if(imaginedClusterDist<realClusterDist /*|| Math.random()>.9*/ ){
 				drives.undo();
 				imaginedDrivesOutput=drives.cycle(iostm, dt);
 				memorizer.memorize(imaginedCluster);
