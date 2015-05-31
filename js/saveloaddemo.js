@@ -267,7 +267,7 @@ require(['physicsjs'], function(Physics){
 		var reflexes = [];
 
 	    ihtai = new Ihtai({
-			clusterCount:50000,
+			clusterCount:10000,
 			vectorDim:6,/*number of iostm values + drives*/
 			memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
