@@ -182,6 +182,7 @@ var Ihtai = (function(bundle){
 	}
 
 	function sqDist(a, b){
+		//not actually a sqdist right now due to its use for normalization in daydream method
 		var d=0;
 		//assumes a and b are the same length
 		for(var i=0;i<a.length;i++){
@@ -191,21 +192,6 @@ var Ihtai = (function(bundle){
 	}
 
 	function daydream(iostm, dt, outputIndices){
-		/*
-		TODO: change logic so that:
-		-the imagined cluster is a completely random cluster
-		-just memorize the normal stm, don't worry about the random cluster
-		-output should be whichever normalized sq dist is smaller: imagined memorizer.query()
-		  or original stm memorizer.query()
-		-maybe before sending back imagined query response, splice it. not sure if this is 
-		  necessary or not. maybe use optional param
-
-		External TODO:
-		-add 'frustration drive' that triggers daydreams, b/c this shouldn't run all the time,
-		  since the stimuli with a lower random marginal score isn't guaranteed to lead to a better result
-		  in current circumstances.
-		*/
-
 
 		var imaginedCombinedStm, imaginedCluster, imaginedDrivesOutput, origIostm=iostm.slice();	
 		var targetDriveVals=drives.getGoals();
