@@ -91,7 +91,7 @@ require(['physicsjs'], function(Physics){
 		// constrain objects to these bounds
 		var edgeBounce = Physics.behavior('edge-collision-detection', {
 			aabb: viewportBounds,
-			restitution: .25, //turn on bouncy physics
+			restitution: .25, //turn on bouncy walls with values approaching 1
 			cof: .4
 		});
 
@@ -142,7 +142,7 @@ require(['physicsjs'], function(Physics){
 							{x:60, y:0}
 
 						],
-						restitution:.25,
+						restitution:0,
 						name:'square'
 					}));
 			}
@@ -174,7 +174,7 @@ require(['physicsjs'], function(Physics){
 						{x:60, y:60},
 						{x:60, y:0}
 					],
-					restitution:.25,
+					restitution:0,
 					name:'square'
 				}));	
 			window.setTimeout(dropBox, /*30000*/10000);	
@@ -267,9 +267,9 @@ require(['physicsjs'], function(Physics){
 		var reflexes = [];
 
 	    ihtai = new Ihtai({
-			clusterCount:5000,
+			clusterCount:50000,
 			vectorDim:6,/*number of iostm values + drives*/
-			memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+			memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
