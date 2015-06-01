@@ -91,7 +91,7 @@ require(['physicsjs'], function(Physics){
 		// constrain objects to these bounds
 		var edgeBounce = Physics.behavior('edge-collision-detection', {
 			aabb: viewportBounds,
-			restitution: .25, //turn on bouncy walls with values approaching 1
+			restitution: .5, //turn on bouncy walls with values approaching 1
 			cof: .4
 		});
 
