@@ -268,26 +268,18 @@ var Ihtai = (function(bundle){
 			var imaginedClusterDist=sqDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
 			var realClusterDist=sqDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
 
-			//store the square distances to ideal drive states for imagined and real memorizer output
-			/*var imaginedOutputSd=imaginedMemorizerOutput[1]
-			var realOutputSd=realMemorizerOutput[1];			
+			//TODO: all we really care about here is which sd is closer. Try basing comparison on this
+			//instead of real and imagined cluster distance
 
-			if(imaginedClusterDist<realClusterDist && imaginedClusterDist != 0){
-				imaginedOutputSd= imaginedOutputSd + (realClusterDist-imaginedClusterDist);
-				if(imaginedOutputSd<0)
-					imaginedOutputSd=0;
-			}
-			if(realClusterDist<imaginedClusterDist && realClusterDist != 0){
-				realOutputSd= realOutputSd + (imaginedClusterDist-realClusterDist);
-				if(realOutputSd<0)
-					realOutputSd=0;
-			}*/
+			//store the square distances to ideal drive states for imagined and real memorizer output
+			var imaginedOutputSd=imaginedMemorizerOutput[1]
+			var realOutputSd=realMemorizerOutput[1];			
+			//debugger;
 
 			////////////////////////////////////////////////////////////////////////////////////////////////
 
 			//Separately, return memorizer output for data with lowest square distance score.
-			if(imaginedClusterDist<realClusterDist){ //use daydream output
-
+			if(typeof realOutputSd != 'undefined' && imaginedOutputSd<realOutputSd /*imaginedClusterDist<realClusterDist*/){ //use daydream output
 				//memorize the imagined cluster
 				drives.undo();
 				imaginedDrivesOutput=drives.cycle(iostm, dt);

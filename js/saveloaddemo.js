@@ -91,7 +91,7 @@ require(['physicsjs'], function(Physics){
 		// constrain objects to these bounds
 		var edgeBounce = Physics.behavior('edge-collision-detection', {
 			aabb: viewportBounds,
-			restitution: .25, //turn on bouncy walls with values approaching 1
+			restitution: .25/*.75*/, //turn on bouncy walls with values approaching 1
 			cof: .4
 		});
 
@@ -112,6 +112,7 @@ require(['physicsjs'], function(Physics){
 		        vx: 0, // velocity in x-direction
 		        vy: 0, // velocity in y-direction
 		        radius: 20,
+		        /*restitution:.75,*/
 		        name:'circle'
 		});
 
@@ -142,7 +143,7 @@ require(['physicsjs'], function(Physics){
 							{x:60, y:0}
 
 						],
-						restitution:0,
+						restitution:/*.75*/.25,
 						name:'square'
 					}));
 			}
@@ -174,7 +175,7 @@ require(['physicsjs'], function(Physics){
 						{x:60, y:60},
 						{x:60, y:0}
 					],
-					restitution:0,
+					restitution:/*.75*/.25,
 					name:'square'
 				}));	
 			window.setTimeout(dropBox, /*30000*/10000);	
@@ -273,7 +274,7 @@ require(['physicsjs'], function(Physics){
 			drivesList:drives,
 			reflexList:reflexes,
 			acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
-			backStimCt:0,
+			/*backStimCt:0,*/
 			distanceAlgo:"avg" /*avg or endState*/
 		});
 
@@ -400,6 +401,9 @@ require(['physicsjs'], function(Physics){
 		    		moveVel=100;
 		    	*/	
 		    	if(sleepMode){ //sleep comes before hunger
+		    		/*	
+					BUG: this logic causes tiredness score to increase even if not moving b/c of sleeping.
+		    		*/
 		    		moveVel=0;
 		    	}
 		    	
