@@ -181,12 +181,11 @@ var Ihtai = (function(bundle){
 		};
 	}
 
-	function sqDist(a, b){
-		//not actually a sqdist right now due to its use for normalization in daydream method
+	function absDist(a, b){
 		var d=0;
 		//assumes a and b are the same length
 		for(var i=0;i<a.length;i++){
-			d+= /*Math.pow(a[i]-b[i], 2);*/ Math.abs(a[i]-b[i]);
+			d+= Math.abs(a[i]-b[i]);
 		}
 		return d;		
 	}
@@ -265,8 +264,8 @@ var Ihtai = (function(bundle){
 
 			///////Normalization: take the difference of cluster distances from goal, and add it to the closer cluster output sd.////////
 
-			var imaginedClusterDist=sqDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
-			var realClusterDist=sqDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
+			//var imaginedClusterDist=absDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
+			//var realClusterDist=absDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
 
 			//TODO: all we really care about here is which sd is closer. Try basing comparison on this
 			//instead of real and imagined cluster distance
