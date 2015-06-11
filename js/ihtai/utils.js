@@ -20,6 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
 
+
+/**
+ * Utility Object required for Ihtai instances to run.
+ *
+ * @class IhtaiUtils
+ * @static
+ */
 if(typeof IhtaiUtils == "undefined")
 	var IhtaiUtils={};
 

@@ -20,6 +20,82 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 **/
 
+/**
+* Core Ihtai Module
+*
+* @module Ihtai
+*/
+
+/**
+ * Creates Ihtai instances which act based on a combination of preprogrammed reflex behaviors, ideal drive states which the agent constantly 
+ * strives to better reach, and subjective stimuli experience. 
+ *
+ * Besides manually created Drive Objects, programmers will typically only need to work with Ihtai instances, as well as the instance's cycle() and
+ * daydream() methods. All other library functionality is abstracted.
+ *
+ * @class Ihtai
+ * @constructor
+ * @param bundle {Object}
+ * @param bundle.clusterCount {Number} The maximum number of clusters this Ihtai instance will initialize before switching to 
+ * a kd-tree.
+ * @param bundle.vectorDim {Number} The number of input/output stimuli, plus the number of drives.
+ * @param bundle.memoryHeight {Number} The number of cycles in advance an Ihtai instance can look for best-case drive states to act on.
+ * @param bundle.drivesList {Array} An array of Drive objects representing all drives attached to this Ihtai instance.
+ * @param bundle.reflexList {Array} Deprecated. Pass in an empty array.
+ * @param [bundle.distanceAlgo] {String} Can be "avg" or "endState". Defaults to "avg".
+ * @param [bundle.acceptableRange] {Number} The maximum possible drive distance value that the Ihtai instance will accept as a suitable state to act on.
+ * Defaults to 10000000.
+ * @example
+
+	var hungerDrive={
+		hunger:100, prevHunger:0,
+		init:function(){
+			return this.hunger;
+		},
+		cycle:function(stm, dt){
+			this.prevHunger=this.hunger;
+			if(stm[3] < 10){
+				if(this.hunger>0){
+					this.hunger-= 1;
+				}
+				else
+					this.hunger=0;
+			}
+			else{
+				if(this.hunger<100){
+					this.hunger+= 1;
+				}
+				else{
+					this.hunger=100;
+				}
+			}
+
+			//clamp vals
+			this.hunger=Math.min(this.hunger, 100);
+			this.hunger=Math.max(this.hunger, 0);
+
+			return Math.round(this.hunger);
+		},
+		undo:function(){
+			this.hunger=this.prevHunger;
+			return Math.round(this.hunger);
+		},
+		targetval:0 //the goal value for hunger
+	};
+
+	var drives=[hungerDrive];
+
+ 	var ihtai = new Ihtai({
+		clusterCount:10000,
+		vectorDim:6, //number of iostm values + drives
+		memoryHeight:100, //how many steps ahead can ihtai look for an optimal stm trail?
+		drivesList:drives,
+		reflexList:[],
+		acceptableRange:9999, //acceptable range for optimal stm is in square dist
+		distanceAlgo:"avg" //avg or endState
+	});
+
+ */
 var Ihtai = (function(bundle){
 
 	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
@@ -102,7 +178,7 @@ var Ihtai = (function(bundle){
 			if(bundle.drivesList)
 				driveList=bundle.drivesList;
 			else
-				throw "Error: no 'drives' property found in initialization Object!"
+				throw "Error: no 'drivesList' property found in initialization Object!"
 			if(bundle.reflexList)
 				reflexList=bundle.reflexList;
 			else
@@ -129,6 +205,34 @@ var Ihtai = (function(bundle){
 	init(bundle);
 	}
 
+	/**
+	 * Updates an Ihtai instance's state based on new sensory information
+	 *
+	 * @method cycle
+	 * @param iostm {Array} An array of input and output stimuli from the previous/current cycle.
+	 * @param dt {Number} The difference in time between this cycle and the last one, in milliseconds.
+	 * @return {Object} Contains the following properties: reflexOutput, memorizerOutput, drivesOutput.
+	 * <ul><li>reflexOutput {Array} Deprecated. Do not rely on this.
+	 * <li>memorizerOutput {Array} The Drive and Input/Output Stimuli (DIOS) response that the Ihtai
+	 * instance associates with its best possible course of action based on current stimuli. Typically a developer
+	 * will have their Ihtai instance act based on the drive outputs included in this array.
+	 * <li>drivesOutput {Array} The current drive values, after cycle has finished executing. Note that
+	 * this is different from memorizerOutput in that memorizerOutput is a prediction of the best course of action.
+	 * drivesOutput is the current actual drive state.</ul>
+	 * @example
+
+	 	var result = ihtai.cycle(inputOutputStimuliArray, timeSinceLastCycle);
+	 	
+	 	// Assuming index 0 is a drive output we want the Ihtai instance to act with...
+	 	var movementSpeed = result.memorizerOutput[0];
+
+	 	if(movementSpeed != null){
+	 		// Let Ihtai decide how fast out virtual being should move in order to best reach its ideal
+	 		// drive state.
+			virtualBeing.speed=movementSpeed; 
+	 	}
+
+	 */
 	function cycle(iostm, dt){
 		var combinedstm, curCluster;
 
@@ -190,6 +294,61 @@ var Ihtai = (function(bundle){
 		return d;		
 	}
 
+	/**
+	 * Ihtai instance attempts to imagine carrying out alternative motor behavior than what actually
+	 * happened last iteration. 
+	 *
+	 * If the new Drive and Input/Output Stimuli (DIOS) vector has never been
+	 * experienced before, or the agent thinks it will result in a lower drive score than the input
+	 * DIOS, the agent will treat the imagined stimuli as actual stimuli for this cycle.
+	 *
+	 * The purpose of daydream is to give agents a way to act with novel motor behavior for situations
+	 * while still having a criteria as to whether these novel motor behaviors are more useful than prior
+	 * learned behaviors.
+	 *
+	 * Note that the daydream method's parameters and output have an identical form to Ihtai.cycle(), with the 
+	 * exception of the outputMotorIndices parameter.
+	 *
+	 * @method daydream
+	 * @param iostm {Array} An array of input and output stimuli from the previous/current cycle.
+	 * @param dt {Number} The difference in time between this cycle and the last one, in milliseconds.
+	 * @param outputMotorIndices {Array} An array of output motor indices for this Ihtai instance. These
+	 * are the indices that daydream will attempt to imagine alternatives to in order to find an action that
+	 * could result in a lower drive score than the actual stimuli response.
+	 * For example, if the Ihtai instance has only a movement output motor stimuli at index 2, then the developer
+	 * would pass [2] for this parameter.
+	 * @return {Object} Contains the following properties: reflexOutput, memorizerOutput, drivesOutput.
+	 * <ul><li>reflexOutput {Array} Deprecated. Do not rely on this.
+	 * <li>memorizerOutput {Array} The Drive and Input/Output Stimuli (DIOS) response that the Ihtai
+	 * instance associates with its best possible course of action based on current stimuli. Typically a developer
+	 * will have their Ihtai instance act based on the drive outputs included in this array.
+	 * <li>drivesOutput {Array} The current drive values, after cycle has finished executing. Note that
+	 * this is different from memorizerOutput in that memorizerOutput is a prediction of the best course of action.
+	 * drivesOutput is the current actual drive state.</ul>
+	 * @example
+
+	 	var result;
+
+	 	// Ihtai instances need at least one Cluster in memory as a seed before they can daydream.
+	 	// That means the programmer must run Ihtai.cycle at least once before calling daydream.
+	 	if(!firstCycle){
+	 		// Assumes that 2 is the sole output motor index in inputOutputStimuliArray (the third parameter)...
+			result = ihtai.daydream(inputOutputStimuliArray, timeSinceLastCycle, [2]);
+	 	}
+	 	else{
+			result = ihtai.cycle(inputOutputStimuliArray, timeSinceLastCycle);
+	 	}
+	 	
+	 	// Assuming index 0 is a drive output we want the Ihtai instance to act with...
+	 	var movementSpeed = result.memorizerOutput[0];
+
+	 	if(movementSpeed != null){
+	 		// Let Ihtai decide how fast out virtual being should move in order to best reach its ideal
+	 		// drive state.
+			virtualBeing.speed=movementSpeed; 
+	 	}
+
+	 */
 	function daydream(iostm, dt, outputIndices){
 
 		var imaginedCombinedStm, imaginedCluster, imaginedDrivesOutput, origIostm=iostm.slice();	
@@ -314,12 +473,23 @@ var Ihtai = (function(bundle){
 	function areReflexesEnabled(){
 		return _enableReflexes;
 	}
+	/**
+	* Enable or disable new memory creation. WARNING: experimental
+	* @method enableMemories
+	* @param state {Boolean} true for enable, false for disable
+	*/
 	function enableMemories(state){
 		_enableMemories=state;
 	}
+	/**
+	* Find out if new memory creation is enabled or disabled.
+	* @method areMemoriesEnabled
+	* @return {Boolean} True is yes, false if no.
+	*/	
 	function areMemoriesEnabled(){
 		return _enableMemories;
 	}
+
 	function toJsonString(fileName, suppressOutput){
 		var deflated={};
 
@@ -380,6 +550,11 @@ var Ihtai = (function(bundle){
 		return stringifiedAndDeflated;
 	}
 
+	/**
+	* Returns an Object containing all of an Ihtai instance's properties.
+	* @method getProperties
+	* @return {Object}
+	*/	
 	function getProperties(){
 		return {
 			clusterCount:clusterCount, 
