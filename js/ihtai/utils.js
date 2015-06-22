@@ -105,10 +105,13 @@ IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap){
 -remove/update from any place in heap
 -return element with lowest value
 */
-IhtaiUtils.MinHeap = (function(){
+IhtaiUtils.MinHeap = (function(_heap){
 	var heap;
 	function init(){
-		heap=[];
+		if(typeof _heap != 'undefined') //has this instance been passed an existing heap object to re-inflate?
+			heap=_heap;
+		else
+			heap=[];
 	}
 	init();
 

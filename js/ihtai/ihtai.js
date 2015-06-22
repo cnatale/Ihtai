@@ -45,6 +45,7 @@ THE SOFTWARE.
  * @param [bundle.distanceAlgo] {String} Can be "avg" or "endState". Defaults to "avg".
  * @param [bundle.acceptableRange] {Number} The maximum possible drive distance value that the Ihtai instance will accept as a suitable state to act on.
  * Defaults to 10000000.
+
  * @example
 
 	var hungerDrive={
@@ -105,19 +106,20 @@ var Ihtai = (function(bundle){
 
 	if(typeof bundle=="string"){ //load from stringified json instead of default initialization
 		var parsedFile=JSON.parse(bundle); 
-		//inflate clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
+		//inflate primitives attached to main json Object
 		clusterCount= parsedFile.clusterCount;
 		vectorDim=parsedFile.vectorDim;
 		memoryHeight=parsedFile.memoryHeight;
 		bStmCt=parsedFile.bStmCt;
 		acceptableRange=parsedFile.acceptableRange;
+		distanceAlgo=parsedFile.distanceAlgo;
 
 		//rebuild kd-tree from binary heap
-		var heap=parsedFile.clusterTreeHeap;
-		var treeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(heap);
+		var clusterHeap=parsedFile.clusterTreeHeap;
+		var clusterTreeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(clusterHeap);
 
 		//inflate clusters
-		clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt, _kdTree:treeRoot});
+		clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, _kdTree:clusterTreeRoot, bStmCt:bStmCt});
 
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
@@ -135,13 +137,14 @@ var Ihtai = (function(bundle){
 		reflexes = new Reflexes(inflatedReflexes);
 	
 		//inflate drives
-		//inflate indiv drive functions back from strings by eval'ing them
+		//inflate individual drive functions back from strings by eval'ing them
 		var deflatedDrives=parsedFile.drives,inflatedDrives=[],d;
 		for(var i=0;i<deflatedDrives.length;i++){
 			//convert functions to strings for storage
 			d={
 				init:eval(deflatedDrives[i].init),
 				cycle:eval(deflatedDrives[i].cycle),
+				undo:eval(deflatedDrives[i].undo),
 				targetval:deflatedDrives[i].targetval
 			};
 			inflatedDrives[i]=d;
@@ -153,10 +156,10 @@ var Ihtai = (function(bundle){
 		//inflate memorizer	
 		var buffer=parsedFile.memorizer.buffer;
 		var levels=parsedFile.memorizer.levels;
-		memorizer = new Memorizer(memoryHeight, drives.getGoals(), acceptableRange, buffer, levels);
-
+		var memorizerHeaps=parsedFile.memorizer.heaps;
+		memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo, _heaps:memorizerHeaps});
 	}
-	else{
+	else{ //default logic for new instantiation
 		function init(bundle){
 			if(typeof bundle == "undefined")
 				throw "Error: no initialization object!"
@@ -196,7 +199,7 @@ var Ihtai = (function(bundle){
 			if(bundle.bStmCt)
 				bStmCt=bundle.bStmCt;
 
-			clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt, _distribution:bundle.distribution});
+			clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt});
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
 			driveGoals=drives.getGoals();
@@ -490,15 +493,20 @@ var Ihtai = (function(bundle){
 		return _enableMemories;
 	}
 
-	function toJsonString(fileName, suppressOutput){
+	/**
+	* Converts an Ihtai instance into a json string for storage
+	* @method toJsonString
+	* @return {String} The stringified, deflated, json representation of the Ihtai instance.
+	*/
+	function toJsonString(){
 		var deflated={};
 
 		//store all information necessary to rebuild as json
 
 		//save clusterTree
-		var tree= clusters.getClusterTree();		
-		var heap=tree.toBinaryHeap();
-		deflated.clusterTreeHeap=heap;
+		var clusterTree=clusters.getClusterTree();		
+		var clusterHeap=clusterTree.toBinaryHeap(); //Since heaps can be stored as arrays, this allows us to store the tree as a json property.
+		deflated.clusterTreeHeap=clusterHeap;
 
 		//save clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
 		deflated.clusterCount=clusterCount;
@@ -513,9 +521,11 @@ var Ihtai = (function(bundle){
 			//convert functions to strings for storage
 			var init='('+String(driveFns[i].init)+')'.escapeSpecialChars();
 			var cycle='('+String(driveFns[i].cycle)+')'.escapeSpecialChars();
+			var undo='('+String(driveFns[i].undo)+')'.escapeSpecialChars();
 			d={
 				init:init,
 				cycle:cycle,
+				undo:undo,
 				targetval:driveFns[i].targetval
 			};
 			deflatedDrives[i]=d;
@@ -543,7 +553,8 @@ var Ihtai = (function(bundle){
 		//save Memorizer
 		deflated.memorizer={
 			buffer:memorizer.getBuffer(),
-			levels:memorizer.getLevels()
+			levels:memorizer.getLevels(),
+			heaps:memorizer.getHeaps() //TODO: figure out a way to store Memorizer's memory chain minheaps
 		};
 
 		var stringifiedAndDeflated=JSON.stringify(deflated);
@@ -599,7 +610,6 @@ var Memorizer = (function(bundle){
 		acceptableRange=10000000;
 
 	function init(){
-
 		if(typeof bundle._buffer != "undefined" && typeof bundle._levels != "undefined"){
 			//rebuild from existing buffer and level data
 			buffer=bundle._buffer;
@@ -618,6 +628,18 @@ var Memorizer = (function(bundle){
 			distanceAlgo=bundle._distanceAlgo;
 		else
 			distanceAlgo="avg";
+
+		if(typeof bundle._heaps != "undefined"){
+			minHeaps=bundle._heaps;
+			/*
+			Iterate through heaps, and for each index intantiate a new minheap, passing the index's heap as a param.
+			This is necessary because json stringifying the minheaps instances strips out their methods. 
+			*/
+			for(var elm in minHeaps){
+				minHeaps[elm]=new IhtaiUtils.MinHeap(minHeaps[elm].heap);
+			}
+
+		}
 
 		/*The default homeostasis goal val is for test purposes only. The _homeostasisGoal 
 		parameter should always be included when initializing Meorizer.*/
@@ -643,7 +665,12 @@ var Memorizer = (function(bundle){
 		each level[i].series[cluster.id] must be stored in a heap for this to work
 		*/
 		if(minHeaps.hasOwnProperty(cluster.id)){
+			try{
 			var min=minHeaps[cluster.id].getMin();
+			}
+			catch(e){
+				debugger;
+			}
 			var sd= min.sd;
 			if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ <= acceptableRange){
 				//console.log('lvl:'+ min.lvl);
@@ -856,17 +883,22 @@ var Memorizer = (function(bundle){
 		return homeostasisGoal;
 	}
 
+	function getHeaps(){
+		return minHeaps;
+	}
+
 	return {
 		query: query,
 		memorize: memorize,
 		getHeight: getHeight,
 		getLevels: getLevels,
-		getBuffer: getBuffer
+		getBuffer: getBuffer,
+		getHeaps: getHeaps
 	}
 });
 
 //clusters are 'buckets' that n-dimensional stm moments are placed inside
-//_kdTree is an optional param
+//_kdTree is an optional param for reconstruction from a json string file
 var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 	var vectorDim=bundle._vectorDim, clusterTree, cache={}, idCtr=0;
 	var numClusters = bundle._numClusters;	
@@ -893,19 +925,8 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		-randomly assign k clusters over n-dimensional vector space
 		@param {number} k
 	*/
-	function init(_kdTree, _distribution){	
-		var clusters=[];
-		/*
-		TODO: add ability to distribute random n-dimensional vals by weighted range,
-		as in rejection sampling: http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
-		*/
-
-		/*
-		TODO: think about distributing points using a low-discrepancy sequence instead of randomly
-		(http://stackoverflow.com/questions/10644154/uniform-distribution-of-points)
-		It seems like there are significant gaps in mapping space even with cluster vals of 100,000 with
-		pseudo-random uniform distribution.
-		*/
+	function init(_kdTree){	
+		var clusters=[], vStr;
 
 		//note that this function will be appended to indiv. clusters, meaning the bStms and
 		//stm variables will be relative to said cluster.
@@ -916,32 +937,14 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 			}
 			output=output.concat(this.stm);
 			return output;
-		}			
+		}		
 
-		/*if(typeof _kdTree == "undefined"){
-			//create clusters with id(needs to be unique) and stm properties
-			for(var i=0;i<numClusters;i++){
-				clusters[i]={id:i, stm:[], bStm:[]};
-				//map clusters to random points in n-dimensional space 
-				for(var j=0;j<vectorDim;j++){
-					//assumes vectors are normalized to a 0-100 scale
-					if(typeof _distribution != "undefined"){
-						clusters[i].stm[j]=IhtaiUtils.weightedRand(_distribution[j]);
-					}
-					else
-						clusters[i].stm[j]=Math.round(Math.random()*100);	
-				}
-
-				//randomly assign back-memory cluster ids
-				for(j=0; j<bStmCt; j++){
-					clusters[i].bStm[j]= Math.floor(Math.random()*(numClusters-1));
-				} 				
-			}
-
-			//populate kd-tree
-			clusterTree= new IhtaiUtils.KdTree(clusters, combinedSignal);
-		}
-		else{
+		/*
+		This conditional is only triggered when saved clusters are loaded and the number of allocated clusters exceeds
+		the user-defined maximum. We don't have to worry about checking for this here; the kd-tree won't be appended to the
+		json if it isn't created in the first place due to this condition.
+		*/
+		if(typeof _kdTree != "undefined"){
 			clusterTree= new IhtaiUtils.KdTree(_kdTree, combinedSignal, true);
 			//since function objects are ignored in json, clusters combinedSignal is stripped
 			//and needs to be added back to every object
@@ -955,16 +958,20 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 					return;
 				inorder(node.l);
 
-				clusters[node.val.id]=node.val; //rebuild clusters array to use as lookup table for bStm
+				/*
+				TODO: re-inflate cluster cache (the 'cache') property. This could be done without additional json storage by traversing 
+				the kd-tree, running Array.join() on the node's stimuli, and using that joined value as the key.
+				*/
+				vStr=node.val.stm.join();
+				cache[vStr]=node.val; //rebuild clusters array to use as lookup table for bStm
 
 				inorder(node.r);
 			}
 
 			inorder(node);
 		}
-		*/
 	}
-	init(bundle._kdTree, bundle._distribution);
+	init(bundle._kdTree);
 
 	/** 
 		-find nearest cluster to v
@@ -984,9 +991,9 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		*/
 		var vStr=v.join();
 		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
-			//once idCtr gets too high, stop caching and build the kd-tree.
-			//if not, memory gets so scarce that the gc is called constantly.	
 
+			//once idCtr gets too high, stop caching and build the kd-tree.
+			//if not, memory gets so scarce that the gc is called constantly.
 			if(idCtr<numClusters){
 				cache[vStr]={
 					id:idCtr++, stm:v, bStm:[]
@@ -1059,7 +1066,8 @@ var Drives = (function(_drives){
 		avgDriveCtr++;
 		for(var i=0;i<drives.length;i++){
 			//execute each method in drives once per cycle
-			var r=drives[i].cycle(ioStim, dt);
+			//var r=drives[i].cycle(ioStim, dt);
+			var r=drives[i].cycle.call(this, ioStim, dt);
 			response.push(r); //expects each drives method to return a Number 0-100
 			avgDriveval[i]= (avgDriveval[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
 		}
@@ -1070,7 +1078,14 @@ var Drives = (function(_drives){
 	function undo(){
 		var response=[];
 		for(var i=0;i<drives.length;i++){
-			var r=drives[i].undo();
+			try{
+				//var r=drives[i].undo();
+				var r=drives[i].undo.call(this);
+			}
+			catch(e){
+				debugger;
+			}
+
 			response.push(r);
 		}		
 		return response;
