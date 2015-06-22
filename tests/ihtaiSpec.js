@@ -38,23 +38,16 @@ describe('ihtai', function(){
 	    return v;
 	}
 
-	/*beforeEach(function(){
-	    jasmine.addMatchers({
-	        toBeJsonEqual: function(util, customEqualityTesters){
-	        	return {
-		        	compare:function(actual, expected){
-		            	var one = JSON.stringify(actual, replacer).replace(/(\\t|\\n)/g,''),
-		                two = JSON.stringify(expected, replacer).replace(/(\\t|\\n)/g,'');
-		                var passed= one === two;
-		                return {
-	                		pass: passed,
-	                		message: 'Expected ' + actual + (passed ? '' : ' not') + ' to equal ' + expected
-		                };
-		            }
-		        }
+	beforeEach(function(){
+	    this.addMatchers({
+	        toBeJsonEqual: function(expected){
+	            var one = JSON.stringify(this.actual, replacer).replace(/(\\t|\\n)/g,''),
+	                two = JSON.stringify(expected, replacer).replace(/(\\t|\\n)/g,'');
+
+	            return one === two;
 	        }
 	    });
-	});*/
+	});
 
 	afterEach(function(){
 
@@ -287,7 +280,7 @@ describe('ihtai', function(){
 			var resp=ihtai.toJsonString('ihtaiSave');
 			var rebuiltIhtai=new Ihtai(resp);
 			//re-inflated Ihtai should be identical to original instance
-			//expect(ihtai).toBeJsonEqual(rebuiltIhtai);
+			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
 
 			//compare cycle results from orig and rebuilt ihtai
 			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
