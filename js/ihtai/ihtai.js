@@ -116,7 +116,7 @@ var Ihtai = (function(bundle){
 
 		//rebuild kd-tree from binary heap
 		var clusterHeap=parsedFile.clusterTreeHeap;
-		var clusterTreeRoot=IhtaiUtils.binaryHeapToKdTreeRoot(clusterHeap);
+		var clusterTreeRoot=clusterHeap ? IhtaiUtils.binaryHeapToKdTreeRoot(clusterHeap) : null;
 
 		//inflate clusters
 		clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, _kdTree:clusterTreeRoot, bStmCt:bStmCt});
@@ -505,7 +505,7 @@ var Ihtai = (function(bundle){
 
 		//save clusterTree
 		var clusterTree=clusters.getClusterTree();		
-		var clusterHeap=clusterTree.toBinaryHeap(); //Since heaps can be stored as arrays, this allows us to store the tree as a json property.
+		var clusterHeap=clusterTree ? clusterTree.toBinaryHeap() : null; //Since heaps can be stored as arrays, this allows us to store the tree as a json property.
 		deflated.clusterTreeHeap=clusterHeap;
 
 		//save clusterCount, vectorDim, memoryHeight,acceptableRange (all primitives)
@@ -944,7 +944,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		the user-defined maximum. We don't have to worry about checking for this here; the kd-tree won't be appended to the
 		json if it isn't created in the first place due to this condition.
 		*/
-		if(typeof _kdTree != "undefined"){
+		if(typeof _kdTree != "undefined" && _kdTree != null){
 			clusterTree= new IhtaiUtils.KdTree(_kdTree, combinedSignal, true);
 			//since function objects are ignored in json, clusters combinedSignal is stripped
 			//and needs to be added back to every object
@@ -1066,8 +1066,8 @@ var Drives = (function(_drives){
 		avgDriveCtr++;
 		for(var i=0;i<drives.length;i++){
 			//execute each method in drives once per cycle
-			//var r=drives[i].cycle(ioStim, dt);
-			var r=drives[i].cycle.call(this, ioStim, dt);
+			var r=drives[i].cycle(ioStim, dt);
+			//var r=drives[i].cycle.call(this, ioStim, dt);
 			response.push(r); //expects each drives method to return a Number 0-100
 			avgDriveval[i]= (avgDriveval[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
 		}
@@ -1079,8 +1079,8 @@ var Drives = (function(_drives){
 		var response=[];
 		for(var i=0;i<drives.length;i++){
 			try{
-				//var r=drives[i].undo();
-				var r=drives[i].undo.call(this);
+				var r=drives[i].undo();
+				//var r=drives[i].undo.call(this);
 			}
 			catch(e){
 				debugger;
