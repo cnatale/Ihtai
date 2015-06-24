@@ -61,7 +61,7 @@ require(['physicsjs'], function(Physics){
 	    var renderer = Physics.renderer('canvas', {
 		    el: 'viewport',
 		    width: viewWidth,
-		    height: viewHeight,
+		    height: viewHeight, 
 		    meta: false/*, // don't display meta data
 		    styles: {
 		        // set colors for the circle bodies
@@ -232,6 +232,8 @@ require(['physicsjs'], function(Physics){
 				return this.tiredness;
 			},
 			cycle:function(stm,dt){
+				if(typeof sleepMode == 'undefined')
+					debugger;
 				this.prevTiredness=this.tiredness;
 				//use movevel to base movement on actual output stimuli from prev cycle, not daydreams 
 				if(stm[2] <= 50 || sleepMode){
@@ -268,7 +270,7 @@ require(['physicsjs'], function(Physics){
 		var reflexes = [];
 
 	    ihtai = new Ihtai({
-			clusterCount:10000,
+			clusterCount:100,
 			vectorDim:6,/*number of iostm values + drives*/
 			memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stm trail?*/
 			drivesList:drives,

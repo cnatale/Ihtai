@@ -175,7 +175,6 @@ describe('ihtai', function(){
 		beforeEach(function(){
 			//creates a simple drive object
 			var drive={
-				v:5,
 				init:function(){
 					this.v=5;
 					return this.v;
@@ -186,6 +185,9 @@ describe('ihtai', function(){
 					else
 						this.v++;
 					return this.v;
+				},
+				undo:function(){
+
 				},
 				targetval:0
 			};
