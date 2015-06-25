@@ -1,3 +1,4 @@
+"use strict";
 require.config({
     paths: {
         /*foo: 'libs/foo-1.1.3'*/
@@ -15,8 +16,8 @@ require.config({
 require(['physicsjs'], function(Physics){
 	//application starting point
 	var ihtai, ihtaiPaused=false, firstCycle=true;
-	var moveVel=0, lastTime, sleepMode=false, isRavenous=false, zeroMoveCtr=0;	
-
+	var moveVel=0, lastTime, sleepMode=false, isRavenous=false, zeroMoveCtr=0, dropBoxPos, dropBoxPosIndex, queryFn;	
+	window.sleepMode=false;
 	//////////// Load File Functionality /////////////////
 	if (window.File && window.FileReader && window.FileList && window.Blob) {
 	  // Great success! All the File APIs are supported.
@@ -232,11 +233,11 @@ require(['physicsjs'], function(Physics){
 				return this.tiredness;
 			},
 			cycle:function(stm,dt){
-				if(typeof sleepMode == 'undefined')
+				if(typeof window.sleepMode == 'undefined')
 					debugger;
 				this.prevTiredness=this.tiredness;
 				//use movevel to base movement on actual output stimuli from prev cycle, not daydreams 
-				if(stm[2] <= 50 || sleepMode){
+				if(stm[2] <= 50 || window.sleepMode){
 					if(this.tiredness>0){
 						this.tiredness-= 1 /*.01 * dt*/;
 					}
@@ -265,7 +266,7 @@ require(['physicsjs'], function(Physics){
 			},
 			targetval:0 //the goal value for hunger
 		};
-		drives=[hungerDrive, tiredDrive];
+		var drives=[hungerDrive, tiredDrive];
 
 		var reflexes = [];
 
@@ -387,10 +388,10 @@ require(['physicsjs'], function(Physics){
 		    	//use tiredness to decide if circle should stop moving regardless of pellet recognition
 		    	if (res.drivesOutput!=null){    		
 		    		if(res.drivesOutput[1]>=100){
-		    			sleepMode=true;
+		    			window.sleepMode=true;
 		    		}
 		    		if(res.drivesOutput[1]==0){ //circle has gotten enough sleep. wake it back up.
-		    			sleepMode=false;
+		    			window.sleepMode=false;
 		    		}
 		    		if(res.drivesOutput[0]==100){
 		    			isRavenous=true;
@@ -402,7 +403,7 @@ require(['physicsjs'], function(Physics){
 		    	/*if(isRavenous)
 		    		moveVel=100;
 		    	*/	
-		    	if(sleepMode){ //sleep comes before hunger
+		    	if(window.sleepMode){ //sleep comes before hunger
 		    		/*	
 					BUG: this logic causes tiredness score to increase even if not moving b/c of sleeping.
 		    		*/

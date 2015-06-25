@@ -98,7 +98,8 @@ THE SOFTWARE.
 
  */
 var Ihtai = (function(bundle){
-	var clusterCount, vectorDim, memoryHeight, driveList, reflexList, parentScope=arguments.callee.caller;
+	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
+	window.parentScope=arguments.callee.caller /*note this is deprecated. implement in a diff way if it works*/;
 	var clusters, memorizer, drives, reflexes, acceptableRange, distanceAlgo, _enableReflexes=true, _enableMemories=true;
 	var bStmCt=0, prevstm=[], driveGoals;
 	var outputstm =[]; //the output stm buffer;
@@ -127,12 +128,9 @@ var Ihtai = (function(bundle){
 		for(var i=0;i<deflatedReflexes.length;i++){
 			//convert functions to strings for storage
 			r={
-				/*init:eval(deflatedReflexes[i].init),
+				init:eval(deflatedReflexes[i].init),
 				matcher:eval(deflatedReflexes[i].matcher),
-				response:eval(deflatedReflexes[i].response)*/
-				init:eval.call(parentScope, deflatedReflexes[i].init),
-				matcher:eval.call(parentScope, deflatedReflexes[i].matcher),
-				response:eval.call(parentScope, deflatedReflexes[i].response)				
+				response:eval(deflatedReflexes[i].response)	
 			}
 			inflatedReflexes[i]=r; //convert function to string for storage
 		}
@@ -144,18 +142,14 @@ var Ihtai = (function(bundle){
 		for(var i=0;i<deflatedDrives.length;i++){
 			//convert functions to strings for storage
 			d={
-				/*init:eval(deflatedDrives[i].init),
+				init:eval(deflatedDrives[i].init),
 				cycle:eval(deflatedDrives[i].cycle),
 				undo:eval(deflatedDrives[i].undo),
-				targetval:deflatedDrives[i].targetval*/
-				init:eval.call(parentScope, deflatedDrives[i].init),
-				cycle:eval.call(parentScope, deflatedDrives[i].cycle),
-				undo:eval.call(parentScope, deflatedDrives[i].undo),
 				targetval:deflatedDrives[i].targetval
 			};
 			inflatedDrives[i]=d;
 		}
-		drives = new Drives(inflatedDrives, parentScope);
+		drives = new Drives(inflatedDrives);
 		drives.setAvgDriveval(parsedFile.avgDriveval);
 		drives.setAvgDriveCtr(parsedFile.avgDriveCtr);
 
@@ -207,7 +201,7 @@ var Ihtai = (function(bundle){
 
 			clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt});
 			reflexes = new Reflexes(reflexList);
-			drives = new Drives(driveList, parentScope);
+			drives = new Drives(driveList);
 			driveGoals=drives.getGoals();
 			memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
 		}
@@ -1055,8 +1049,8 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 
 	@params drives: Array. An array of drive methods. Each drive takes form {init:function, cycle:function}
 */
-var Drives = (function(_drives, _parentScope){
-	var drives = _drives; avgDriveval=[];avgDriveCtr=0, parentScope=_parentScope;
+var Drives = (function(_drives){
+	var drives = _drives; avgDriveval=[];avgDriveCtr=0;
 	function init(){
 		for(var i=0;i<drives.length;i++){
 			drives[i].init();
@@ -1070,7 +1064,8 @@ var Drives = (function(_drives, _parentScope){
 		avgDriveCtr++;
 		for(var i=0;i<drives.length;i++){
 			//execute each method in drives once per cycle
-			//var r=drives[i].cycle.call(parentScope, ioStim, dt);
+			
+			//var r=drives[i].cycle.call(window.parentScope, ioStim, dt);
 			var r=drives[i].cycle(ioStim, dt);
 			response.push(r); //expects each drives method to return a Number 0-100
 			avgDriveval[i]= (avgDriveval[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
