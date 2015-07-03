@@ -264,7 +264,7 @@ describe('ihtai', function(){
 				memoryHeight:2,
 				drivesList:drives,
 				reflexList:reflexes,
-				acceptableRange:9999, /*was 80 */
+				acceptableRange:9999,
 				distanceAlgo:"avg" /*avg or endState*/
 			});
 		});
@@ -293,7 +293,6 @@ describe('ihtai', function(){
 				return true;
 			}
 
-			//TODO: These tests aren't very good. Tighten them up.
 			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
 			ihtai.cycle([10, 20, 0, 30, 0, 50, 0, 50, 0], 33);
 			ihtai.cycle([0, 50, 0, 10, 0, 50, 30, 5, 10], 33);
@@ -307,14 +306,50 @@ describe('ihtai', function(){
 			//guarantee that all public functions have been declared in rebuilt instance.
 			expect(areAllFnsDeclared(rebuiltIhtai)).toBe(true);
 
-
-
 			//compare cycle results from orig and rebuilt ihtai
 			var rebuiltRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
 			var origRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
 		
 			expect(rebuiltRes.memorizerOutput[0]).toEqual(origRes.memorizerOutput[0]);
-			expect(rebuiltRes.memorizerOutput[1]).toEqual(origRes.memorizerOutput[1]);		
+			expect(rebuiltRes.memorizerOutput[1]).toEqual(origRes.memorizerOutput[1]);	
+
+			//Capture situation where cache is full and kd-tree is built before instance is saved.	
+			ihtai = new Ihtai({
+				clusterCount:4, /*note the low cluster count, which triggers kd-tree build early*/
+				vectorDim:10,
+				memoryHeight:2,
+				drivesList:drives,
+				reflexList:reflexes,
+				acceptableRange:9999,
+				distanceAlgo:"avg" /*avg or endState*/
+			});		
+
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([10, 20, 0, 30, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([0, 50, 0, 10, 0, 50, 30, 5, 10], 33);
+			ihtai.cycle([30, 10, 0, 0, 0, 0, 0, 0, 0], 33);		
+			
+			resp=ihtai.toJsonString('ihtaiSave');
+			rebuiltIhtai=new Ihtai(resp);
+			//re-inflated Ihtai should be identical to original instance
+			//check that the new object has been created (this check doesn't look for properties)
+			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
+			//guarantee that all public functions have been declared in rebuilt instance.
+			expect(areAllFnsDeclared(rebuiltIhtai)).toBe(true);
+
+			//Compare cycle results from orig and rebuilt ihtai using stimuli that both intances have already experienced.
+			rebuiltRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			origRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+		
+			expect(rebuiltRes.memorizerOutput[0]).toEqual(origRes.memorizerOutput[0]);
+			expect(rebuiltRes.memorizerOutput[1]).toEqual(origRes.memorizerOutput[1]);	
+
+			//Pass in novel stimuli to make sure kd-tree is selecting same nearest neighbor for both instances.
+			rebuiltRes=ihtai.cycle([99, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			origRes=ihtai.cycle([99, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+
+			expect(rebuiltRes.memorizerOutput[0]).toEqual(origRes.memorizerOutput[0]);
+			expect(rebuiltRes.memorizerOutput[1]).toEqual(origRes.memorizerOutput[1]);	
 		});
 
 		/*
