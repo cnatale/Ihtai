@@ -229,11 +229,13 @@ describe('ihtai', function(){
 					return this.v;
 				},
 				cycle:function(stm){
-					if(stm[0] > 50)
+					/*if(stm[0] > 50)
 						this.v=0;
 					else
-						this.v++;
+						this.v++;*/
 					return this.v;
+				},
+				undo:function(){
 				},
 				targetval:0
 			};
@@ -259,10 +261,11 @@ describe('ihtai', function(){
 			ihtai = new Ihtai({
 				clusterCount:1000,
 				vectorDim:10,
-				memoryHeight:100,
+				memoryHeight:2,
 				drivesList:drives,
 				reflexList:reflexes,
-				acceptableRange:80
+				acceptableRange:9999, /*was 80 */
+				distanceAlgo:"avg" /*avg or endState*/
 			});
 		});
 		afterEach(function(){
@@ -279,26 +282,39 @@ describe('ihtai', function(){
 		});	
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
+			function areAllFnsDeclared(a){
+				var fnNames=['areMemoriesEnabled','areReflexesEnabled','cycle','daydream','enableMemories','enableReflexes',
+					'getProperties','toJsonString'];
+				
+				for(var i=0;i<fnNames.length;i++){
+					if(typeof a[fnNames[i]]=='undefined')
+						return false;
+				}				
+				return true;
+			}
+
+			//TODO: These tests aren't very good. Tighten them up.
+			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([10, 20, 0, 30, 0, 50, 0, 50, 0], 33);
+			ihtai.cycle([0, 50, 0, 10, 0, 50, 30, 5, 10], 33);
+			ihtai.cycle([30, 10, 0, 0, 0, 0, 0, 0, 0], 33);			
+
 			var resp=ihtai.toJsonString('ihtaiSave');
 			var rebuiltIhtai=new Ihtai(resp);
 			//re-inflated Ihtai should be identical to original instance
+			//check that the new object has been created (this check doesn't look for properties)
 			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
+			//guarantee that all public functions have been declared in rebuilt instance.
+			expect(areAllFnsDeclared(rebuiltIhtai)).toBe(true);
+
+
 
 			//compare cycle results from orig and rebuilt ihtai
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			var rebuiltRes=rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
+			var rebuiltRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
 			var origRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-						
-			expect(rebuiltRes.memorizerOutput).toEqual(origRes.memorizerOutput);			
-
+		
+			expect(rebuiltRes.memorizerOutput[0]).toEqual(origRes.memorizerOutput[0]);
+			expect(rebuiltRes.memorizerOutput[1]).toEqual(origRes.memorizerOutput[1]);		
 		});
 
 		/*

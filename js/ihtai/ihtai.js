@@ -653,8 +653,8 @@ var Memorizer = (function(bundle){
 	/**
 		Takes a cluster containing vector representing current i/o stm state combined with current 
 		drive state.
-		@returns A vector representing the next action agent should take to minimize homeostasis differential.
-		If no vector is within acceptable range, return null.
+		@returns An array consisting of two parts: 1) A vector representing the next action agent should take to minimize homeostasis differential.
+		If no vector is within acceptable range, return null. 2) The square distance of the returned action stimuli from ideal drive state.
 	*/
 	function query(cluster){
 		var outputstm=null, stimDist, sd;
@@ -982,12 +982,8 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 	var clusterTreeCreated=false;
 	function findNearestCluster(v){
 		var nearestCluster;
-
-		/*
-		TODO: cluster creation and caching should be moved here. return cluster from cache.
-		build kdtree off of cache on startup.
-		*/
 		var vStr=v.join();
+
 		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
 
 			//once idCtr gets too high, stop caching and build the kd-tree.
@@ -1014,12 +1010,13 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 					clusterTreeCreated=true;
 				}
 				console.log('accessing cluster tree');
-				//find nearest neighbor 
+				//find nearest neighbor from kd-tree
 				nearestCluster = clusterTree.nearestNeighbor(v);
 				return nearestCluster;
 			}
 		}	
 
+		//Successful match with stimuli already in cache. Return the cached stimuli.
 		nearestCluster=cache[vStr];		
 		return nearestCluster;
 	}
