@@ -271,10 +271,10 @@
             world.addBody(plane);
 
             //create walls
-            var leftWallShape = new p2.Box({ width: 1, height: 100 }),            
+            var leftWallShape = new p2.Box({ width: 5, height: 10 }),            
             leftWall = new p2.Body({
-                mass: 1000,
-                position: [-5, 50],
+                mass: 10000,
+                position: [-8, 5],
             });
             leftWall.addShape(leftWallShape);
             leftWall.collisionGroup = GROUND;
@@ -284,10 +284,10 @@
             leftWallShape.collisionGroup = WALLS;
             leftWallShape.collisionMask =  BODYPARTS|OTHER|GROUND;
 
-            var rightWallShape = new p2.Box({ width: 1, height: 100 }),            
+            var rightWallShape = new p2.Box({ width: 5, height: 10 }),            
             rightWall = new p2.Body({
-                mass: 1000,
-                position: [5, 50],
+                mass: 10000,
+                position: [8, 5],
             });
             rightWall.addShape(rightWallShape);
             rightWall.collisionGroup = GROUND;
@@ -316,6 +316,7 @@
                 //check if torso is reasonably upright (within +/- 45 deg.)
                 if(stm[0] >= 0 && stm[0] <= Math.PI/4 || stm[0] >= (7*Math.PI)/4 && stm[0] <= 2*Math.PI ){
                     this.isUpright=true;
+                    console.log('UPRIGHT');
                 }
                 else{
                     this.isUpright=false;
