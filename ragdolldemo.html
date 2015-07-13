@@ -307,7 +307,7 @@
 
         //initialize Ihtai
         var uprightDrive={
-            isUpright:0, prevIsUpright:0,
+            isUpright:false, prevIsUpright:false,
             init:function(){
             },
             cycle:function(stm,dt){
@@ -323,20 +323,20 @@
                 }
 
                 //$("#tiredness").html("tiredness: "+/*Math.floor(*/this.tiredness/*)*/);
-                return this.isUpright;
+                return this.isUpright?0:10;
             },
             undo:function(){
                 this.isUpright=this.prevIsUpright;
-                return this.isUpright;
+                return this.isUpright?0:10;
             },
-            targetval:0 //the goal value for hunger
+            targetval:0 //the goal value
         };
         var drives=[uprightDrive];
         var reflexes=[];
         var ihtai = new Ihtai({
             clusterCount:5000,
-            vectorDim:7,/*number of iostm values + drives*/
-            memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+            vectorDim:10,/*number of iostm values + drives*/
+            memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
             reflexList:reflexes,
             acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
@@ -348,6 +348,7 @@
 
         var lowerLeftLegForce=0, lowerRightLegForce=0, lowerLeftArmForce=0, lowerRightArmForce=0;
         var firstCycle=true;
+        var lastTime=new Date().getTime(), currentTime=new Date().getTime(), dt;
         //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
         function mainLoop(){
             var normalizedAngle=normalizeAngle(pelvis.angle);
@@ -363,11 +364,11 @@
             var res;
 
             if(Math.random() > 1 || firstCycle){
-                res=ihtai.cycle(inputStm, 33);
+                res=ihtai.cycle(inputStm, dt);
                 firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
             }
             else{
-                res=ihtai.daydream(inputStm, 33, [1,2,3,4]);
+                res=ihtai.daydream(inputStm, dt, [1,2,3,4]);
             }
 
             //////// apply forces based on ihtai response ////////
@@ -385,14 +386,19 @@
                 lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
                 lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
                 lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
-                lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});               
+                lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});              
             }
 
             //apply forces on body parts
-            lowerLeftLeg.applyForce([lowerLeftLegForce,0],[0,0]);
-            lowerRightLeg.applyForce([lowerRightLegForce,0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce,0],[0,0]);
-            lowerRightArm.applyForce([lowerRightArmForce,0],[0,0]);
+            //TODO:normalize force applied based on difference in time between cycles
+            currentTime= new Date().getTime();
+            dt= currentTime-lastTime;
+            //console.log('dt: '+dt)
+            lowerLeftLeg.applyForce([lowerLeftLegForce * 2/*(dt/4)*/,0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce * 2/*(dt/4)*/,0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * 2/*(dt/4)*/,0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce * 2/*(dt/4)*/,0],[0,0]);
+            lastTime=currentTime;
         }
         window.setInterval(mainLoop,0);
 
