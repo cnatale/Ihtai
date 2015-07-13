@@ -20,7 +20,17 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
 <body>
+    <script src="js/ihtai/ihtai.js"></script>
+    <script src="js/ihtai/utils.js"></script>
     <script>
+        function normalizeAngle(angle){
+            angle = angle % (2*Math.PI);
+            if(angle < 0){
+                angle += (2*Math.PI);
+            }
+            return angle;
+        }
+        var pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;        
 
         var shouldersDistance = 0.5,
             upperArmLength = 0.4,
@@ -43,28 +53,39 @@
                 BODYPARTS = Math.pow(2,2),
                 GROUND =    Math.pow(2,3),
                 OTHER =     Math.pow(2,4),
+                WALLS =     Math.pow(2,5),
                 bodyPartShapes = [];
 
-            var headShape =      new p2.Circle(headRadius),
-                upperArmShape =  new p2.Rectangle(upperArmLength,upperArmSize),
-                lowerArmShape =  new p2.Rectangle(lowerArmLength,lowerArmSize),
-                upperBodyShape = new p2.Rectangle(shouldersDistance,upperBodyLength),
-                pelvisShape =    new p2.Rectangle(shouldersDistance,pelvisLength),
-                upperLegShape =  new p2.Rectangle(upperLegSize,upperLegLength),
-                lowerLegShape =  new p2.Rectangle(lowerLegSize,lowerLegLength);
+            var headShape = new p2.Circle({ radius: headRadius }),
+                upperArmShapeLeft = new p2.Box({ width: upperArmLength, height: upperArmSize }),
+                upperArmShapeRight = new p2.Box({ width: upperArmLength, height: upperArmSize }),
+                lowerArmShapeLeft = new p2.Box({ width: lowerArmLength, height: lowerArmSize }),
+                lowerArmShapeRight = new p2.Box({ width: lowerArmLength, height: lowerArmSize }),
+                upperBodyShape = new p2.Box({ width: shouldersDistance, height: upperBodyLength }),
+                pelvisShape = new p2.Box({ width: shouldersDistance, height: pelvisLength }),
+                upperLegShapeLeft = new p2.Box({ width: upperLegSize, height: upperLegLength }),
+                upperLegShapeRight = new p2.Box({ width: upperLegSize, height: upperLegLength }),
+                lowerLegShapeLeft = new p2.Box({ width: lowerLegSize, height: lowerLegLength }),
+                lowerLegShapeRight = new p2.Box({ width: lowerLegSize, height: lowerLegLength });
 
-            bodyPartShapes.push(headShape,
-                                upperArmShape,
-                                lowerArmShape,
-                                upperBodyShape,
-                                pelvisShape,
-                                upperLegShape,
-                                lowerLegShape);
+            bodyPartShapes.push(
+                headShape,
+                upperArmShapeRight,
+                upperArmShapeLeft,
+                lowerArmShapeRight,
+                lowerArmShapeLeft,
+                upperBodyShape,
+                pelvisShape,
+                upperLegShapeRight,
+                upperLegShapeLeft,
+                lowerLegShapeRight,
+                lowerLegShapeLeft
+            );
 
             for(var i=0; i<bodyPartShapes.length; i++){
                 var s = bodyPartShapes[i];
                 s.collisionGroup = BODYPARTS;
-                s.collisionMask =  GROUND|OTHER;
+                s.collisionMask = GROUND|OTHER|WALLS;
             }
 
             var world = new p2.World({
@@ -77,16 +98,16 @@
             world.solver.tolerance = 0.002;
 
             // Lower legs
-            var lowerLeftLeg = new p2.Body({
+            lowerLeftLeg = new p2.Body({
                 mass: 1,
                 position: [-shouldersDistance/2,lowerLegLength / 2],
             });
-            var lowerRightLeg = new p2.Body({
+            lowerRightLeg = new p2.Body({
                 mass: 1,
                 position: [shouldersDistance/2,lowerLegLength / 2],
             });
-            lowerLeftLeg.addShape(lowerLegShape);
-            lowerRightLeg.addShape(lowerLegShape);
+            lowerLeftLeg.addShape(lowerLegShapeLeft);
+            lowerRightLeg.addShape(lowerLegShapeRight);
             world.addBody(lowerLeftLeg);
             world.addBody(lowerRightLeg);
 
@@ -99,13 +120,13 @@
                 mass: 1,
                 position: [shouldersDistance/2,lowerRightLeg.position[1]+lowerLegLength/2+upperLegLength / 2],
             });
-            upperLeftLeg.addShape(upperLegShape);
-            upperRightLeg.addShape(upperLegShape);
+            upperLeftLeg.addShape(upperLegShapeLeft);
+            upperRightLeg.addShape(upperLegShapeRight);
             world.addBody(upperLeftLeg);
             world.addBody(upperRightLeg);
 
             // Pelvis
-            var pelvis = new p2.Body({
+            pelvis = new p2.Body({
                 mass: 1,
                 position: [0, upperLeftLeg.position[1]+upperLegLength/2+pelvisLength/2],
             });
@@ -137,24 +158,24 @@
                 mass: 1,
                 position: [shouldersDistance/2+upperArmLength/2, upperBody.position[1]+upperBodyLength/2],
             });
-            upperLeftArm.addShape(upperArmShape);
-            upperRightArm.addShape(upperArmShape);
+            upperLeftArm.addShape(upperArmShapeLeft);
+            upperRightArm.addShape(upperArmShapeRight);
             world.addBody(upperLeftArm);
             world.addBody(upperRightArm);
 
             // lower arms
-            var lowerLeftArm = new p2.Body({
+            lowerLeftArm = new p2.Body({
                 mass: 1,
                 position: [ upperLeftArm.position[0] - lowerArmLength/2 - upperArmLength/2,
                             upperLeftArm.position[1]],
             });
-            var lowerRightArm = new p2.Body({
+            lowerRightArm = new p2.Body({
                 mass: 1,
                 position: [ upperRightArm.position[0] + lowerArmLength/2 + upperArmLength/2,
                             upperRightArm.position[1]],
             });
-            lowerLeftArm.addShape(lowerArmShape);
-            lowerRightArm.addShape(lowerArmShape);
+            lowerLeftArm.addShape(lowerArmShapeLeft);
+            lowerRightArm.addShape(lowerArmShapeRight);
             world.addBody(lowerLeftArm);
             world.addBody(lowerRightArm);
 
@@ -233,17 +254,146 @@
 
             // Create ground
             var planeShape = new p2.Plane();
+            /*var leftWallShape = new p2.Box({ 
+                width: 1, 
+                height: 100,
+            });
+            leftWallShape.collisionGroup = GROUND;
+            leftWallShape.collisionMask = BODYPARTS|OTHER|WALLS;
+            */
             var plane = new p2.Body({
                 position:[0,-1],
             });
             plane.addShape(planeShape);
+            //plane.addShape(leftWallShape);
             planeShape.collisionGroup = GROUND;
-            planeShape.collisionMask =  BODYPARTS|OTHER;
+            planeShape.collisionMask =  BODYPARTS|OTHER|WALLS;
             world.addBody(plane);
 
-            this.newShapeCollisionGroup = OTHER;
-            this.newShapeCollisionMask =  BODYPARTS|OTHER|GROUND;
+            //create walls
+            var leftWallShape = new p2.Box({ width: 1, height: 100 }),            
+            leftWall = new p2.Body({
+                mass: 1000,
+                position: [-5, 50],
+            });
+            leftWall.addShape(leftWallShape);
+            leftWall.collisionGroup = GROUND;
+            leftWall.collisionMask = BODYPARTS|OTHER;
+            world.addBody(leftWall);
+
+            leftWallShape.collisionGroup = WALLS;
+            leftWallShape.collisionMask =  BODYPARTS|OTHER|GROUND;
+
+            var rightWallShape = new p2.Box({ width: 1, height: 100 }),            
+            rightWall = new p2.Body({
+                mass: 1000,
+                position: [5, 50],
+            });
+            rightWall.addShape(rightWallShape);
+            rightWall.collisionGroup = GROUND;
+            rightWall.collisionMask = BODYPARTS|OTHER;
+            world.addBody(rightWall);
+
+            rightWallShape.collisionGroup = WALLS;
+            rightWallShape.collisionMask =  BODYPARTS|OTHER|GROUND;            
         });
+
+
+        /*
+        ex:
+        lowerLeftLeg.applyForce([-100,0],[0,0]); //apply rightward force to leg
+        lowerLeftLeg.angle //get/set angle
+        */
+
+        //initialize Ihtai
+        var uprightDrive={
+            isUpright:0, prevIsUpright:0,
+            init:function(){
+            },
+            cycle:function(stm,dt){
+                this.prevIsUpright=this.isUpright;
+                //stm[0]  is the upright angle, normalized
+                //check if torso is reasonably upright (within +/- 45 deg.)
+                if(stm[0] >= 0 && stm[0] <= Math.PI/4 || stm[0] >= (7*Math.PI)/4 && stm[0] <= 2*Math.PI ){
+                    this.isUpright=true;
+                }
+                else{
+                    this.isUpright=false;
+                }
+
+                //$("#tiredness").html("tiredness: "+/*Math.floor(*/this.tiredness/*)*/);
+                return this.isUpright;
+            },
+            undo:function(){
+                this.isUpright=this.prevIsUpright;
+                return this.isUpright;
+            },
+            targetval:0 //the goal value for hunger
+        };
+        var drives=[uprightDrive];
+        var reflexes=[];
+        var ihtai = new Ihtai({
+            clusterCount:5000,
+            vectorDim:7,/*number of iostm values + drives*/
+            memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+            drivesList:drives,
+            reflexList:reflexes,
+            acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
+            /*backStimCt:0,*/
+            distanceAlgo:"avg" /*avg or endState*/
+
+        });
+
+
+        var lowerLeftLegForce=0, lowerRightLegForce=0, lowerLeftArmForce=0, lowerRightArmForce=0;
+        var firstCycle=true;
+        //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
+        function mainLoop(){
+            var normalizedAngle=normalizeAngle(pelvis.angle);
+            var lllegAngle = normalizeAngle(lowerLeftLeg.angle);
+            var lrlegAngle = normalizeAngle(lowerRightLeg.angle);
+            var llarmAngle = normalizeAngle(lowerLeftArm.angle);
+            var lrarmAngle = normalizeAngle(lowerRightArm.angle);
+            //console.log(normalizedAngle);
+
+            var inputStm=[normalizedAngle, lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce,
+               lllegAngle, lrlegAngle, llarmAngle, lrarmAngle 
+            ];
+            var res;
+
+            if(Math.random() > 1 || firstCycle){
+                res=ihtai.cycle(inputStm, 33);
+                firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
+            }
+            else{
+                res=ihtai.daydream(inputStm, 33, [1,2,3,4]);
+            }
+
+            //////// apply forces based on ihtai response ////////
+            if(res.memorizerOutput[0] != null){
+                console.log('memorizer');
+                //handle movement conditions for each
+                lowerLeftLegForce=res.memorizerOutput[0][1];
+                lowerRightLegForce=res.memorizerOutput[0][2];
+                lowerLeftArmForce=res.memorizerOutput[0][3];
+                lowerRightArmForce=res.memorizerOutput[0][4];
+            }
+            else{
+                console.log('reflex')
+                //apply random movement signals to each muscle
+                lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
+                lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
+                lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
+                lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});               
+            }
+
+            //apply forces on body parts
+            lowerLeftLeg.applyForce([lowerLeftLegForce,0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce,0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce,0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce,0],[0,0]);
+        }
+        window.setInterval(mainLoop,0);
 
     </script>
 </body>
