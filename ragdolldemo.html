@@ -254,13 +254,6 @@
 
             // Create ground
             var planeShape = new p2.Plane();
-            /*var leftWallShape = new p2.Box({ 
-                width: 1, 
-                height: 100,
-            });
-            leftWallShape.collisionGroup = GROUND;
-            leftWallShape.collisionMask = BODYPARTS|OTHER|WALLS;
-            */
             var plane = new p2.Body({
                 position:[0,-1],
             });
@@ -271,11 +264,16 @@
             world.addBody(plane);
 
             //create walls
-            var leftWallShape = new p2.Box({ width: 5, height: 10 }),            
-            leftWall = new p2.Body({
-                mass: 10000,
-                position: [-8, 5],
+            var leftWallShape = new p2.Plane();
+            var leftWall = new p2.Body({
+                position:[-8,0],
+                angle:[3*Math.PI/2]
             });
+            /*var leftWallShape = new p2.Box({ width: 10, height: 15 }),            
+            leftWall = new p2.Body({
+                mass: 100000,
+                position: [-10, 5],
+            });*/
             leftWall.addShape(leftWallShape);
             leftWall.collisionGroup = GROUND;
             leftWall.collisionMask = BODYPARTS|OTHER;
@@ -284,26 +282,43 @@
             leftWallShape.collisionGroup = WALLS;
             leftWallShape.collisionMask =  BODYPARTS|OTHER|GROUND;
 
-            var rightWallShape = new p2.Box({ width: 5, height: 10 }),            
-            rightWall = new p2.Body({
-                mass: 10000,
-                position: [8, 5],
+            var rightWallShape = new p2.Plane();
+            var rightWall = new p2.Body({
+                position:[8,0],
+                angle:[Math.PI/2]
             });
+
+            /*var rightWallShape = new p2.Box({ width: 10, height: 15 }),            
+            rightWall = new p2.Body({
+                mass: 100000,
+                position: [10, 5],
+            });*/
             rightWall.addShape(rightWallShape);
             rightWall.collisionGroup = GROUND;
             rightWall.collisionMask = BODYPARTS|OTHER;
             world.addBody(rightWall);
 
             rightWallShape.collisionGroup = WALLS;
-            rightWallShape.collisionMask =  BODYPARTS|OTHER|GROUND;            
+            rightWallShape.collisionMask =  BODYPARTS|OTHER|GROUND;       
+
+            var topWallShape = new p2.Plane();
+            var topWall = new p2.Body({
+                position:[0,10],
+                angle:[Math.PI]
+            });
+            /*var topWallShape = new p2.Box({ width: 40, height: 10 }),            
+            topWall = new p2.Body({
+                mass: 100000,
+                position: [0, 20],
+            });*/
+            topWall.addShape(topWallShape);
+            topWall.collisionGroup = GROUND;
+            topWall.collisionMask = BODYPARTS|OTHER;
+            world.addBody(topWall);
+
+            topWallShape.collisionGroup = OTHER;
+            topWallShape.collisionMask =  BODYPARTS|WALLS|GROUND;                  
         });
-
-
-        /*
-        ex:
-        lowerLeftLeg.applyForce([-100,0],[0,0]); //apply rightward force to leg
-        lowerLeftLeg.angle //get/set angle
-        */
 
         //initialize Ihtai
         var uprightDrive={
@@ -334,9 +349,9 @@
         var drives=[uprightDrive];
         var reflexes=[];
         var ihtai = new Ihtai({
-            clusterCount:5000,
+            clusterCount:10000,
             vectorDim:10,/*number of iostm values + drives*/
-            memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+            memoryHeight:300,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
             reflexList:reflexes,
             acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
@@ -351,6 +366,9 @@
         var lastTime=new Date().getTime(), currentTime=new Date().getTime(), dt;
         //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
         function mainLoop(){
+            currentTime= new Date().getTime();
+            dt= currentTime-lastTime;
+
             var normalizedAngle=normalizeAngle(pelvis.angle);
             var lllegAngle = normalizeAngle(lowerLeftLeg.angle);
             var lrlegAngle = normalizeAngle(lowerRightLeg.angle);
@@ -390,17 +408,15 @@
             }
 
             //apply forces on body parts
-            //TODO:normalize force applied based on difference in time between cycles
-            currentTime= new Date().getTime();
-            dt= currentTime-lastTime;
             //console.log('dt: '+dt)
-            lowerLeftLeg.applyForce([lowerLeftLegForce * 2/*(dt/4)*/,0],[0,0]);
-            lowerRightLeg.applyForce([lowerRightLegForce * 2/*(dt/4)*/,0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce * 2/*(dt/4)*/,0],[0,0]);
-            lowerRightArm.applyForce([lowerRightArmForce * 2/*(dt/4)*/,0],[0,0]);
+            //adding a relative force based on dt breaks learning. investigate.
+            lowerLeftLeg.applyForce([lowerLeftLegForce * 2.5/*(dt/6)*/,0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce * 2.5/*(dt/6)*/,0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * 2.5/*(dt/6)*/,0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce * 2.5/*(dt/6)*/,0],[0,0]);
             lastTime=currentTime;
         }
-        window.setInterval(mainLoop,0);
+        window.setInterval(mainLoop,0);//for some reason setting this to anything other than zero is breaking code. character just collapses after switch to kd tree. not sure why.
 
     </script>
 </body>
