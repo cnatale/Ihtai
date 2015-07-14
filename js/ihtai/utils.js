@@ -124,9 +124,12 @@ IhtaiUtils.MinHeap = (function(_heap){
 		heap.push(node);
 
 		var par, tmp;
+		//TODO:think about changing this to a non-recursive approach for smaller memory footprint
 		function compare(node){
-			par=par(node);
-			if(par >= 0 && heap[node].sd < heap[par].sd){
+			par=par(node); //the parent node index
+			//If current node's sd is less than parent, swap positions with parent.
+			//TODO: add an other check if the sd's are equal, and their corresponding placement in temporal list
+			if( (par >= 0 && heap[node].sd < heap[par].sd) || (par >= 0 && heap[node].sd == heap[par].sd && heap[node].lvl < heap[par].lvl) ){
 				tmp=heap[node];
 				heap[node]=heap[par];
 				heap[par]=tmp;
@@ -139,7 +142,7 @@ IhtaiUtils.MinHeap = (function(_heap){
 			}		
 		}
 
-		compare(heap.length-1);
+		compare(heap.length-1); //start at last element in heap and recurse backwards
 	}
 
 	function minHeapifyAll(){
@@ -153,12 +156,12 @@ IhtaiUtils.MinHeap = (function(_heap){
 		function siftDown(i){
 			l=left(i); 
 			r=right(i);
-			if(heap[l] && heap[l].sd < heap[i].sd)
+			if( (heap[l] && heap[l].sd < heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
 				smallest= l;
 			else
 				smallest= i;
 
-			if(heap[r] && heap[r].sd < heap[smallest].sd)
+			if( (heap[r] && heap[r].sd < heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl)  )
 				smallest= r;
 
 			if(smallest != i){
@@ -196,12 +199,12 @@ IhtaiUtils.MinHeap = (function(_heap){
 			l=left(i); 
 			r=right(i); 
 
-			if(heap[l] && heap[l].sd < heap[i].sd)
+			if( (heap[l] && heap[l].sd < heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
 				smallest= l;
 			else
 				smallest= i;
 
-			if(heap[r] && heap[r].sd < heap[smallest].sd)
+			if( (heap[r] && heap[r].sd < heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl) )
 				smallest= r;
 
 			if(smallest != i){

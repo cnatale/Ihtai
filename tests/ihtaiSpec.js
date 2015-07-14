@@ -521,12 +521,12 @@ describe('ihtai utils', function(){
 		var minHeap;
 		beforeEach(function(){
 			minHeap=IhtaiUtils.MinHeap();
-			minHeap.insert({sd:9});
-			minHeap.insert({sd:3});
-			minHeap.insert({sd:7});
-			minHeap.insert({sd:5});
-			minHeap.insert({sd:2});
-			minHeap.insert({sd:8});			
+			minHeap.insert({sd:9, lvl:10});
+			minHeap.insert({sd:3, lvl:20});
+			minHeap.insert({sd:7, lvl:30});
+			minHeap.insert({sd:5, lvl:40});
+			minHeap.insert({sd:2, lvl:50});
+			minHeap.insert({sd:8, lvl:60});			
 
 		});
 
@@ -547,12 +547,25 @@ describe('ihtai utils', function(){
 			}
 		});
 
+		it('should maintain secondary sorting based on lvl property', function(){
+			var minHeap=IhtaiUtils.MinHeap();
+			minHeap.insert({sd:8, lvl:60});
+			minHeap.insert({sd:8, lvl:20});
+			minHeap.insert({sd:8, lvl:30});
+			minHeap.insert({sd:8, lvl:40});
+			minHeap.insert({sd:8, lvl:10});
+			minHeap.insert({sd:8, lvl:60});	
+
+			var minElm=minHeap.popMin();
+			expect(minElm.lvl).toEqual(10);		
+		})
+
 		it('should generate a lot of points, add to heap, while always keeping minimum value in position 0', function(){
 			var minVal=Infinity, minHeap, curVal, numElms=10000;
 			minHeap=IhtaiUtils.MinHeap();
 			for(var i=0;i<numElms;i++){
 				curVal=Math.round(Math.random()*100);
-				minHeap.insert({sd:curVal});
+				minHeap.insert({sd:curVal, lvl:i});
 				if(curVal<minVal)
 					minVal=curVal;
 			}

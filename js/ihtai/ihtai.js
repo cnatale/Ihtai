@@ -842,7 +842,7 @@ var Memorizer = (function(bundle){
 						lvl: i /*logging purposes only*/
 					};		
 					//add to fsid's minHeap, or create minHeap if it doesn't exist	
-					//TODO: calculate sqdist between es and drive goals. store this value and use it to key minheap
+					//calculate sqdist between es and drive goals. store this value and use it to key minheap
 					if(!minHeaps.hasOwnProperty(fsid))
 						minHeaps[fsid]= new IhtaiUtils.MinHeap();
 	
