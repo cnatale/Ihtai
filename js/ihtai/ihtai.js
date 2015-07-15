@@ -438,7 +438,6 @@ var Ihtai = (function(bundle){
 
 			////////////////////////////////////////////////////////////////////////////////////////////////
 
-			//Separately, return memorizer output for data with lowest square distance score.
 			if(typeof realOutputSd != 'undefined' && imaginedOutputSd<realOutputSd /*imaginedClusterDist<realClusterDist*/){ //use daydream output
 				//memorize the imagined cluster
 				drives.undo();

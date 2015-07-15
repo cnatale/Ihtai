@@ -30,6 +30,7 @@
             }
             return angle;
         }
+        var world;
         var pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;        
 
         var shouldersDistance = 0.5,
@@ -88,7 +89,7 @@
                 s.collisionMask = GROUND|OTHER|WALLS;
             }
 
-            var world = new p2.World({
+            world = new p2.World({
                 gravity : [0,-10]
             });
 
@@ -350,7 +351,7 @@
         var reflexes=[];
         var ihtai = new Ihtai({
             clusterCount:10000,
-            vectorDim:10,/*number of iostm values + drives*/
+            vectorDim:14,/*number of iostm values + drives*/
             memoryHeight:300,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
             reflexList:reflexes,
@@ -359,6 +360,81 @@
             distanceAlgo:"avg" /*avg or endState*/
 
         });
+
+        /*
+        TODO: add touch [0 or 1] sensing for btm left arm, btm right arm, btm left leg, btm right leg.
+        -note: the 3 contact methods are beginContact, endContact, presolve
+        -note: both bodies and shapes have an id property. can use this to determine which element is touching
+        bodies: lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
+        */
+        var lowerLeftLegTouch=0, lowerRightLegTouch=0,lowerLeftArmTouch=0,lowerRightArmTouch=0;
+        function onBeginContact(payload){
+            switch(payload.bodyA.id){
+                case lowerLeftLeg.id:
+                    lowerLeftLegTouch=1;
+                break;
+                case lowerRightLeg.id:
+                    lowerRightLegTouch=1;
+                break;
+                case lowerLeftArm.id:
+                    lowerLeftArmTouch=1;
+                break;
+                case lowerRightArm.id:
+                    lowerRightArmTouch=1;
+                break;
+            }
+            switch(payload.bodyB.id){
+                case lowerLeftLeg.id:
+                    lowerLeftLegTouch=1;
+                break;
+                case lowerRightLeg.id:
+                    lowerRightLegTouch=1;
+                break;
+                case lowerLeftArm.id:
+                    lowerLeftArmTouch=1;
+                break;
+                case lowerRightArm.id:
+                    lowerRightArmTouch=1;
+                break;               
+            }
+            //debugger;
+            //a=1;
+        }        
+        function onEndContact(payload){
+            switch(payload.bodyA.id){
+                case lowerLeftLeg.id:
+                    lowerLeftLegTouch=0;
+                break;
+                case lowerRightLeg.id:
+                    lowerRightLegTouch=0;
+                break;
+                case lowerLeftArm.id:
+                    lowerLeftArmTouch=0;
+                break;
+                case lowerRightArm.id:
+                    lowerRightArmTouch=0;
+                break;
+            }
+            switch(payload.bodyB.id){
+                case lowerLeftLeg.id:
+                    lowerLeftLegTouch=0;
+                break;
+                case lowerRightLeg.id:
+                    lowerRightLegTouch=0;
+                break;
+                case lowerLeftArm.id:
+                    lowerLeftArmTouch=0;
+                break;
+                case lowerRightArm.id:
+                    lowerRightArmTouch=0;
+                break;               
+            }
+            //debugger;
+            //a=1;
+        }   
+
+        world.on("beginContact", onBeginContact);
+        world.on("endContact", onEndContact);
 
 
         var lowerLeftLegForce=0, lowerRightLegForce=0, lowerLeftArmForce=0, lowerRightArmForce=0;
@@ -377,7 +453,7 @@
             //console.log(normalizedAngle);
 
             var inputStm=[normalizedAngle, lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce,
-               lllegAngle, lrlegAngle, llarmAngle, lrarmAngle 
+               lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch
             ];
             var res;
 
@@ -410,10 +486,10 @@
             //apply forces on body parts
             //console.log('dt: '+dt)
             //adding a relative force based on dt breaks learning. investigate.
-            lowerLeftLeg.applyForce([lowerLeftLegForce * 2.5/*(dt/6)*/,0],[0,0]);
-            lowerRightLeg.applyForce([lowerRightLegForce * 2.5/*(dt/6)*/,0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce * 2.5/*(dt/6)*/,0],[0,0]);
-            lowerRightArm.applyForce([lowerRightArmForce * 2.5/*(dt/6)*/,0],[0,0]);
+            lowerLeftLeg.applyForce([lowerLeftLegForce * 4/*(dt/3)*/,0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce * 4/*(dt/3)*/,0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * 4/*(dt/3)*/,0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce * 4/*(dt/3)*/,0],[0,0]);
             lastTime=currentTime;
         }
         window.setInterval(mainLoop,0);//for some reason setting this to anything other than zero is breaking code. character just collapses after switch to kd tree. not sure why.
