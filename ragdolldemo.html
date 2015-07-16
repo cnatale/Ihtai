@@ -15,14 +15,26 @@
     }
     </style>
 
-    <meta name="description" content="Shows how to build a rag doll.">
+    <meta name="description" content="A rag doll learning to stand upright using IHTAI.">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
 <body>
+    <!-- the slider to control amount of daydreaming (between 0 and 1) -->
+    <label style="z-index:9999;position:absolute;">Daydreaming</label>
+    <input id="daydreamRange" type=range id=weight min=0 value=1 max=1 step=.05
+    style="z-index:9999;position:absolute;left:100px">
+
     <script src="js/ihtai/ihtai.js"></script>
     <script src="js/ihtai/utils.js"></script>
     <script>
+        var daydreamRange=document.getElementById('daydreamRange');
+        var daydreamPct=1;
+        //update the pct of time agent daydreams (1=100pct of time)
+        daydreamRange.addEventListener('change', function(e){
+            daydreamPct=Number(e.currentTarget.value);
+        });
+
         function normalizeAngle(angle){
             angle = angle % (2*Math.PI);
             if(angle < 0){
@@ -330,7 +342,7 @@
                 this.prevIsUpright=this.isUpright;
                 //stm[0]  is the upright angle, normalized
                 //check if torso is reasonably upright (within +/- 45 deg.)
-                if(stm[0] >= 0 && stm[0] <= Math.PI/4 || stm[0] >= (7*Math.PI)/4 && stm[0] <= 2*Math.PI ){
+                if(stm[0] >= 0 && stm[0] <= Math.PI/8 || stm[0] >= (15*Math.PI)/8 && stm[0] <= 2*Math.PI ){
                     this.isUpright=true;
                     console.log('UPRIGHT');
                 }
@@ -350,9 +362,9 @@
         var drives=[uprightDrive];
         var reflexes=[];
         var ihtai = new Ihtai({
-            clusterCount:10000,
+            clusterCount:9000,
             vectorDim:14,/*number of iostm values + drives*/
-            memoryHeight:300,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+            memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
             reflexList:reflexes,
             acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
@@ -361,11 +373,15 @@
 
         });
 
+        function roundToTenth(num){
+            num*=10
+            num=num >> 0;
+            num/=10;
+            return num;
+        }
+
         /*
-        TODO: add touch [0 or 1] sensing for btm left arm, btm right arm, btm left leg, btm right leg.
-        -note: the 3 contact methods are beginContact, endContact, presolve
-        -note: both bodies and shapes have an id property. can use this to determine which element is touching
-        bodies: lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
+        add touch [0 or 1] sensing for btm left arm, btm right arm, btm left leg, btm right leg.
         */
         var lowerLeftLegTouch=0, lowerRightLegTouch=0,lowerLeftArmTouch=0,lowerRightArmTouch=0;
         function onBeginContact(payload){
@@ -445,11 +461,11 @@
             currentTime= new Date().getTime();
             dt= currentTime-lastTime;
 
-            var normalizedAngle=normalizeAngle(pelvis.angle);
-            var lllegAngle = normalizeAngle(lowerLeftLeg.angle);
-            var lrlegAngle = normalizeAngle(lowerRightLeg.angle);
-            var llarmAngle = normalizeAngle(lowerLeftArm.angle);
-            var lrarmAngle = normalizeAngle(lowerRightArm.angle);
+            var normalizedAngle=roundToTenth(normalizeAngle(pelvis.angle));
+            var lllegAngle = roundToTenth(normalizeAngle(lowerLeftLeg.angle));
+            var lrlegAngle = roundToTenth(normalizeAngle(lowerRightLeg.angle));
+            var llarmAngle = roundToTenth(normalizeAngle(lowerLeftArm.angle));
+            var lrarmAngle = roundToTenth(normalizeAngle(lowerRightArm.angle));
             //console.log(normalizedAngle);
 
             var inputStm=[normalizedAngle, lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce,
@@ -457,7 +473,7 @@
             ];
             var res;
 
-            if(Math.random() > 1 || firstCycle){
+            if(Math.random() > daydreamPct || firstCycle){
                 res=ihtai.cycle(inputStm, dt);
                 firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
             }
@@ -486,10 +502,10 @@
             //apply forces on body parts
             //console.log('dt: '+dt)
             //adding a relative force based on dt breaks learning. investigate.
-            lowerLeftLeg.applyForce([lowerLeftLegForce * 4/*(dt/3)*/,0],[0,0]);
-            lowerRightLeg.applyForce([lowerRightLegForce * 4/*(dt/3)*/,0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce * 4/*(dt/3)*/,0],[0,0]);
-            lowerRightArm.applyForce([lowerRightArmForce * 4/*(dt/3)*/,0],[0,0]);
+            lowerLeftLeg.applyForce([lowerLeftLegForce * 3/*(dt/1),0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce * 3/*(dt/1)*/,0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * 3/*(dt/1)*/,0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce * 3/*(dt/1)*/,0],[0,0]);
             lastTime=currentTime;
         }
         window.setInterval(mainLoop,0);//for some reason setting this to anything other than zero is breaking code. character just collapses after switch to kd tree. not sure why.
