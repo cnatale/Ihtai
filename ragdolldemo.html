@@ -335,34 +335,38 @@
 
         //initialize Ihtai
         var uprightDrive={
-            isUpright:false, prevIsUpright:false,
             init:function(){
+                this.uprightVal=0;
+                this.prevUprightVal=0;
             },
             cycle:function(stm,dt){
-                this.prevIsUpright=this.isUpright;
+                this.prevUprightVal=this.uprightVal;
+
                 //stm[0]  is the upright angle, normalized
-                //check if torso is reasonably upright (within +/- 45 deg.)
+                //check if torso is reasonably upright
                 if(stm[0] >= 0 && stm[0] <= Math.PI/8 || stm[0] >= (15*Math.PI)/8 && stm[0] <= 2*Math.PI ){
-                    this.isUpright=true;
+                    this.uprightVal<=0?this.uprightVal=0:this.uprightVal-=1;
+                    //this.uprightVal=0;
                     console.log('UPRIGHT');
                 }
-                else{
-                    this.isUpright=false;
+                else{    
+                    this.uprightVal>=30?this.uprightVal=30:this.uprightVal+=1;                    
+                    //this.uprightVal=30;
                 }
 
-                //$("#tiredness").html("tiredness: "+/*Math.floor(*/this.tiredness/*)*/);
-                return this.isUpright?0:10;
+                //return this.isUpright?0:10;
+                return this.uprightVal;
             },
-            undo:function(){
-                this.isUpright=this.prevIsUpright;
-                return this.isUpright?0:10;
+            undo:function(){         
+                this.uprightVal=this.prevUprightVal;
+                return this.uprightVal;
             },
             targetval:0 //the goal value
         };
         var drives=[uprightDrive];
         var reflexes=[];
         var ihtai = new Ihtai({
-            clusterCount:9000,
+            clusterCount:500,
             vectorDim:14,/*number of iostm values + drives*/
             memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,

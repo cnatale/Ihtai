@@ -600,7 +600,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=10, minHeaps={};
+	var level, buffer, homeostasisGoal, maxCollisions=1000/*was 10*/, minHeaps={};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
@@ -686,6 +686,7 @@ var Memorizer = (function(bundle){
 	/**
 		Memorizes stm
 	*/
+	var temporalPlanners=0;
 	function memorize(cluster){
 		/*TODO: change es to be the average value of all time steps, starting at ss, in memory.*/
 
@@ -759,7 +760,7 @@ var Memorizer = (function(bundle){
 					/////// stimuli endstate averaging algorithm used in all cases //////
 
 					/*
-					If same first and second states are the same, store the memory
+					If first and second states are the same, store the memory
 					as weighted average of the two memories(same firstState and ss, es drive vals become
 					weighted average)
 
@@ -832,6 +833,13 @@ var Memorizer = (function(bundle){
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					//console.log('new memory created')
 
+					/*TODO:add memory cutoff so that we don't create more of these
+					level[i].series[fsid] Objects after too many have been made, preventing 
+					engine from grinding to a halt.
+					*/
+					if(temporalPlanners>3274926)
+						return;
+
 					level[i].series[fsid]={
 						fs: buffer[fs].stm/*.slice()*/, 
 						ss: buffer[ss].stm/*.slice()*/,
@@ -846,6 +854,12 @@ var Memorizer = (function(bundle){
 						minHeaps[fsid]= new IhtaiUtils.MinHeap();
 	
 					minHeaps[fsid].insert(level[i].series[fsid]);	
+
+					/*Keep track of total # of level[i].series[fsid] Objects created.
+					Multiply with IHTAI's clustercount property to get rough estimate of memory
+					used by IHTAI. Check that against cutoff value.
+					*/
+					temporalPlanners++;
 				}
 			}
 		}
