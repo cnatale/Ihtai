@@ -128,7 +128,11 @@ describe('ihtai', function(){
 			*/
 	
 			expect(res[0]).toEqual([50,40,30,20,10]);
-		})
+		});
+
+		it('should test copyTemporalData method', function(){
+			//TODO: add tests for copyTemporalData method
+		});
 
 	});
 
