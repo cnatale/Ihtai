@@ -158,6 +158,7 @@ var Ihtai = (function(bundle){
 		var levels=parsedFile.memorizer.levels;
 		var memorizerHeaps=parsedFile.memorizer.heaps;
 		memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo, _heaps:memorizerHeaps});
+		clusters.setMemorizerRef(memorizer);
 	}
 	else{ //default logic for new instantiation
 		function init(bundle){
@@ -204,6 +205,7 @@ var Ihtai = (function(bundle){
 			drives = new Drives(driveList);
 			driveGoals=drives.getGoals();
 			memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
+			clusters.setMemorizerRef(memorizer);
 		}
 	init(bundle);
 	}
@@ -607,6 +609,33 @@ var Memorizer = (function(bundle){
 	else
 		acceptableRange=10000000;
 
+	function copyTemporalData(fromCluster, toCluster){
+		if(typeof toCluster == 'undefined' || typeof fromCluster == 'undefined'){
+			throw "Error: toCluster and fromCluster must both be of valid Cluster type with an id attribute."
+		}
+
+		var fromId=fromCluster.id, toId=toCluster.id;
+		minHeaps[toId]= new IhtaiUtils.MinHeap();
+		//copy each level's series[id] from fromCluster to toCluster
+		for(var i=0; i<height; i++){
+			//deep copy the cluster temporal node
+			if(level[i].series.hasOwnProperty(fromId)){
+				level[i].series[toId]={
+					cs: level[i].series[fromId].cs,
+					es: level[i].series[fromId].es.slice(),
+					fs: level[i].series[fromId].fs.slice(),
+					lvl: level[i].series[fromId].lvl,
+					sd: level[i].series[fromId].sd,
+					ss: level[i].series[fromId].ss.slice()
+				};
+				
+				//...and the cluster's minheap
+				minHeaps[toId].insert(level[i].series[toId]);
+			}
+		}
+
+	}
+
 	function init(){
 		if(typeof bundle._buffer != "undefined" && typeof bundle._levels != "undefined"){
 			//rebuild from existing buffer and level data
@@ -734,7 +763,7 @@ var Memorizer = (function(bundle){
 						}
 						else{
 							//add current stimuli 
-							//skip iterating over non-homeostasisGoal values to
+							//skips iterating over non-homeostasisGoal values for performance gain
 							var kl=avg.length-homeostasisGoal.length;
 							for(var k=kl;k<avg.length;k++){
 								avg[k]+=buffer[j].stm[k];
@@ -742,7 +771,7 @@ var Memorizer = (function(bundle){
 						}
 					}
 
-					//loop over each index, dividing by total number of values
+					//loop over each index, dividing by total number of values. gives average drive values over time series.
 					for(k=0;k<avg.length;k++){
 						avg[k]= avg[k]/ctr;
 					}
@@ -833,9 +862,9 @@ var Memorizer = (function(bundle){
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					//console.log('new memory created')
 
-					/*TODO:add memory cutoff so that we don't create more of these
-					level[i].series[fsid] Objects after too many have been made, preventing 
-					engine from grinding to a halt.
+					/*memory cutoff so that we don't create more of these
+					level[i].series[fsid] Objects after too many have been made. prevents 
+					engine from grinding to a halt due to lack of available memory.
 					*/
 					if(temporalPlanners>3274926)
 						return;
@@ -844,7 +873,7 @@ var Memorizer = (function(bundle){
 						fs: buffer[fs].stm/*.slice()*/, 
 						ss: buffer[ss].stm/*.slice()*/,
 						es: distanceAlgo=="avg"?avg:buffer[es].stm.slice(),
-						cs:0,
+						cs: 0,
 						sd:sqDist(distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal),
 						lvl: i /*logging purposes only*/
 					};		
@@ -904,14 +933,15 @@ var Memorizer = (function(bundle){
 		getHeight: getHeight,
 		getLevels: getLevels,
 		getBuffer: getBuffer,
-		getHeaps: getHeaps
+		getHeaps: getHeaps,
+		copyTemporalData: copyTemporalData
 	}
 });
 
 //clusters are 'buckets' that n-dimensional stm moments are placed inside
 //_kdTree is an optional param for reconstruction from a json string file
 var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
-	var vectorDim=bundle._vectorDim, clusterTree, cache={}, idCtr=0;
+	var vectorDim=bundle._vectorDim, clusterTree, cache={}, idCtr=0, memorizerRef;
 	var numClusters = bundle._numClusters;	
 	bStmCt=bundle.bStmCt;
 
@@ -922,7 +952,11 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		}
 		output=output.concat(this.stm);
 		return output;
-	}		
+	}	
+
+	function setMemorizerRef(ref){
+		memorizerRef=ref;
+	}	
 
 	/**
 		Individual clusters have the following properties:
@@ -997,11 +1031,37 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		var nearestCluster;
 		var vStr=v.join();
 
-		if(!cache[vStr]){ //create new cluster. TODO: implement backstim
+		if(!cache[vStr]){ //create new cluster or get nearest cluster from kd tree.
+			/*
+			TODO: change logic so that:
+			-1.✓the kd tree is built every 500 newly added clusters in addition to final time
+			 when idCtr=numClusters
+			-2.✓get nearest neighbor cluster before adding new cluster.
+			-3.✓assign copies of nearest neighbor's minheap and memory chain for each lvl to new cluster
+			*/
 
 			//once idCtr gets too high, stop caching and build the kd-tree.
 			//if not, memory gets so scarce that the gc is called constantly.
 			if(idCtr<numClusters){
+
+				/////////// 1. new logic /////////////
+				/*var rebuildTreeCt=500;
+				if(idCtr == rebuildTreeCt && idCtr != 0){
+					var cacheArr=[];
+					for(var key in cache){
+						if(cache.hasOwnProperty(key))
+							cacheArr.push(cache[key]);
+					}
+					clusterTree= new IhtaiUtils.KdTree(cacheArr, combinedSignal);
+				
+				}*/				
+
+				// 2.
+				/*if(idCtr >= rebuildTreeCt)
+					nearestCluster = clusterTree.nearestNeighbor(v);
+				*/
+				//////////////////////////////////
+
 				cache[vStr]={
 					id:idCtr++, stm:v, bStm:[]
 				}; 
@@ -1009,6 +1069,12 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 				for(j=0; j<bStmCt; j++){
 					cache[vStr].bStm[j]= Math.floor(Math.random()*(idCtr-1));
 				} 	
+
+				///////// 3. ////////
+				/*if(idCtr > rebuildTreeCt){
+					memorizerRef.copyTemporalData(nearestCluster, cache[vStr]);
+				}*/
+				///////////////////
 			}
 			else{
 				//init clustertree from cache values,
@@ -1048,7 +1114,8 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		findNearestCluster: findNearestCluster,
 		getClusterTree: getClusterTree,
 		getSize: function(){return idCtr;},
-		getRandomCluster: getRandomCluster
+		getRandomCluster: getRandomCluster,
+		setMemorizerRef: setMemorizerRef
 	};
 });
 
