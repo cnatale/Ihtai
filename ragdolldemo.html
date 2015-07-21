@@ -29,7 +29,7 @@
     <script src="js/ihtai/utils.js"></script>
     <script>
         var daydreamRange=document.getElementById('daydreamRange');
-        var daydreamPct=1;
+        var daydreamPct=.9;
         //update the pct of time agent daydreams (1=100pct of time)
         daydreamRange.addEventListener('change', function(e){
             daydreamPct=Number(e.currentTarget.value);
@@ -346,15 +346,12 @@
                 //check if torso is reasonably upright
                 if(stm[0] >= 0 && stm[0] <= Math.PI/8 || stm[0] >= (15*Math.PI)/8 && stm[0] <= 2*Math.PI ){
                     this.uprightVal<=0?this.uprightVal=0:this.uprightVal-=1;
-                    //this.uprightVal=0;
                     console.log('UPRIGHT');
                 }
                 else{    
                     this.uprightVal>=30?this.uprightVal=30:this.uprightVal+=1;                    
-                    //this.uprightVal=30;
                 }
 
-                //return this.isUpright?0:10;
                 return this.uprightVal;
             },
             undo:function(){         
@@ -365,8 +362,9 @@
         };
         var drives=[uprightDrive];
         var reflexes=[];
+        var numClusters=500;
         var ihtai = new Ihtai({
-            clusterCount:500,
+            clusterCount:numClusters,
             vectorDim:14,/*number of iostm values + drives*/
             memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
@@ -417,8 +415,6 @@
                     lowerRightArmTouch=1;
                 break;               
             }
-            //debugger;
-            //a=1;
         }        
         function onEndContact(payload){
             switch(payload.bodyA.id){
@@ -449,19 +445,18 @@
                     lowerRightArmTouch=0;
                 break;               
             }
-            //debugger;
-            //a=1;
         }   
 
         world.on("beginContact", onBeginContact);
         world.on("endContact", onEndContact);
 
-
         var lowerLeftLegForce=0, lowerRightLegForce=0, lowerLeftArmForce=0, lowerRightArmForce=0;
         var firstCycle=true;
         var lastTime=new Date().getTime(), currentTime=new Date().getTime(), dt;
         //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
+        var allInput='', ct=0;
         function mainLoop(){
+            ct++;
             currentTime= new Date().getTime();
             dt= currentTime-lastTime;
 
@@ -470,14 +465,17 @@
             var lrlegAngle = roundToTenth(normalizeAngle(lowerRightLeg.angle));
             var llarmAngle = roundToTenth(normalizeAngle(lowerLeftArm.angle));
             var lrarmAngle = roundToTenth(normalizeAngle(lowerRightArm.angle));
-            //console.log(normalizedAngle);
+
+            ///////////
+            //allInput+=(lowerLeftLegForce+ '+' + lowerRightLegForce + '+' + lowerLeftArmForce + '+' + lowerRightArmForce + '\r\n');
+            ///////////
 
             var inputStm=[normalizedAngle, lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce,
                lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch
             ];
             var res;
 
-            if(Math.random() > daydreamPct || firstCycle){
+            if((Math.random() > daydreamPct && ct<numClusters)  || firstCycle){
                 res=ihtai.cycle(inputStm, dt);
                 firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
             }
@@ -497,22 +495,27 @@
             else{
                 console.log('reflex')
                 //apply random movement signals to each muscle
-                lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
-                lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
-                lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
-                lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});              
+                lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.4, '0':.5, '100':.1});
+                lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.4, '0':.5, '100':.1});
+                lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.4, '0':.5, '100':.1});
+                lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.4, '0':.5, '100':.1});              
             }
 
             //apply forces on body parts
-            //console.log('dt: '+dt)
-            //adding a relative force based on dt breaks learning. investigate.
-            lowerLeftLeg.applyForce([lowerLeftLegForce * 3/*(dt/1),0],[0,0]);
-            lowerRightLeg.applyForce([lowerRightLegForce * 3/*(dt/1)*/,0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce * 3/*(dt/1)*/,0],[0,0]);
-            lowerRightArm.applyForce([lowerRightArmForce * 3/*(dt/1)*/,0],[0,0]);
+            lowerLeftLeg.applyForce([lowerLeftLegForce * (dt/2.5),0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce * (dt/2.5),0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * (dt/2.5),0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce * (dt/2.5),0],[0,0]);
             lastTime=currentTime;
         }
-        window.setInterval(mainLoop,0);//for some reason setting this to anything other than zero is breaking code. character just collapses after switch to kd tree. not sure why.
+        window.setInterval(mainLoop,33);
+
+        //window.setTimeout(afterOneMin, 10*1000);
+        function afterOneMin(){
+            var inputcsv=allInput;
+            var csv=ihtai.exportTemporalDataAsCSV();
+            debugger;
+        }
 
     </script>
 </body>

@@ -355,7 +355,6 @@ var Ihtai = (function(bundle){
 
 	 */
 	function daydream(iostm, dt, outputIndices){
-
 		var imaginedCombinedStm, imaginedCluster, imaginedDrivesOutput, origIostm=iostm.slice();	
 		var targetDriveVals=drives.getGoals();
 
@@ -389,13 +388,31 @@ var Ihtai = (function(bundle){
 		//run memorizer.query with cluster selected based on iostm's modified value
 		imaginedMemorizerOutput = memorizer.query(imaginedCluster);
 
-		//Check if a stimuli with this pattern has ever been memorized before.
+		//Check if a stimuli with this pattern has ever been memorized before. Possible if 
+		//cluster was just created and hasn't propagated through buffer into memory chains yet.
 		if(imaginedMemorizerOutput[0]==null){
 			//If no, try the imagined memory no matter what.
 			memorizer.memorize(imaginedCluster);
-			/*drives.undo();
-			drives.cycle(origIostm, dt);
+
+			/*TODO: fix bug where app can get stuck in an unchanging external stimuli loop b/c
+			the first cluster created's motor stm gets copied into every subsequent imagined
+			cluster, creating no clusters where the motor stm doesn't match the first cluster's.
+
+			NOTE: I'm currently commenting out the fix addressing it in the ragdoll demo itself, 
+			because I found that generating only one of the clusters and not both results in 
+			better performance. Ideally this should be fixed in the engine itself though, so 
+			leaving this comment until I figure out a better way to handle this problem.
+			*/			
+
+			/////// adding this step to fix just one motor stm combo bug ///////////
+			/*var realDrivesOutput=drives.cycle(origIostm, dt);
+			var realCombinedStm=origIostm.concat(realDrivesOutput);
+
+			if(Math.random() > .95)
+				var realCurCluster=clusters.findNearestCluster(realCombinedStm);
 			*/
+			///////////////////////////////////////////////
+
 			//return imagined reflex output and memorizer output back to ai agent
 			return {
 				reflexOutput:imaginedReflexOutput,
@@ -426,21 +443,13 @@ var Ihtai = (function(bundle){
 			    drive state than normal query. If yes, return daydream result. If no, 
 			    return normal query result. */
 
-			///////Normalization: take the difference of cluster distances from goal, and add it to the closer cluster output sd.////////
-
-			//var imaginedClusterDist=absDist(imaginedCluster.stm.slice(-driveGoals.length), driveGoals);
-			//var realClusterDist=absDist(realCurCluster.stm.slice(-driveGoals.length), driveGoals);
-
-			//TODO: all we really care about here is which sd is closer. Try basing comparison on this
-			//instead of real and imagined cluster distance
-
 			//store the square distances to ideal drive states for imagined and real memorizer output
 			var imaginedOutputSd=imaginedMemorizerOutput[1]
 			var realOutputSd=realMemorizerOutput[1];			
 
 			////////////////////////////////////////////////////////////////////////////////////////////////
-
-			if(typeof realOutputSd != 'undefined' && imaginedOutputSd<realOutputSd /*imaginedClusterDist<realClusterDist*/){ //use daydream output
+			//if the real stimuli hasn't been experienced yet, or if it has a smaller sd the the imagined stm, memorize it
+			if(typeof realOutputSd != 'undefined' && imaginedOutputSd<realOutputSd){ //use daydream output
 				//memorize the imagined cluster
 				drives.undo();
 				imaginedDrivesOutput=drives.cycle(iostm, dt);
@@ -562,6 +571,18 @@ var Ihtai = (function(bundle){
 	}
 
 	/**
+	 * Exports all hierarchical temporal data in an IHTAI instance as CSV data
+	 *
+	 * @method exportTemporalDataAsCSV
+	 * @return {String} A String containing the instance's temporal data as csv. 
+	 * The row number corresponds with the Cluster id.
+	*/
+	function exportTemporalDataAsCSV(){
+		//call through to the memorizer, which holds this information
+		return memorizer.exportTemporalDataAsCSV(clusterCount);
+	}	
+
+	/**
 	* Returns an Object containing all of an Ihtai instance's properties.
 	* @method getProperties
 	* @return {Object}
@@ -583,6 +604,7 @@ var Ihtai = (function(bundle){
 			_enableMemories:_enableMemories
 		};
 	}
+
 	return {
 		cycle:cycle,
 		daydream:daydream,
@@ -591,7 +613,8 @@ var Ihtai = (function(bundle){
 		enableMemories:enableMemories,
 		areMemoriesEnabled:areMemoriesEnabled,
 		toJsonString:toJsonString,
-		getProperties:getProperties
+		getProperties:getProperties,
+		exportTemporalDataAsCSV:exportTemporalDataAsCSV
 	};
 });
 
@@ -688,8 +711,8 @@ var Memorizer = (function(bundle){
 		var outputstm=null, stimDist, sd;
 
 		/*
-		implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
-		each level[i].series[cluster.id] must be stored in a heap for this to work
+		Implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
+		Each level[i].series[cluster.id] must be stored in a heap keyed off of cluster id for this to work.
 		*/
 		if(minHeaps.hasOwnProperty(cluster.id)){
 			try{
@@ -927,6 +950,27 @@ var Memorizer = (function(bundle){
 		return minHeaps;
 	}
 
+	function exportTemporalDataAsCSV(clusterCount){
+		var csv="";
+
+		/*
+		TODO: loop through. Outer loop is Cluster id, inner loop is level
+		*/
+		for(var i=0;i<clusterCount;i++){
+
+			for(var j=0;j<height;j++){
+				if(typeof level[j].series[i] != 'undefined'){
+					//csv+= level[j].series[i].ss.join(' + ');
+					csv+=( level[j].series[i].fs[1] + '+' + level[j].series[i].fs[2] + '+' + level[j].series[i].fs[3] + '+' + level[j].series[i].fs[4] );
+					csv+=",";
+				}
+			}
+			csv+="\r\n";
+		}
+
+		return csv;
+	}
+
 	return {
 		query: query,
 		memorize: memorize,
@@ -934,7 +978,8 @@ var Memorizer = (function(bundle){
 		getLevels: getLevels,
 		getBuffer: getBuffer,
 		getHeaps: getHeaps,
-		copyTemporalData: copyTemporalData
+		copyTemporalData: copyTemporalData,
+		exportTemporalDataAsCSV: exportTemporalDataAsCSV
 	}
 });
 

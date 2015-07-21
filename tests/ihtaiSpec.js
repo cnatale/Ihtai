@@ -415,6 +415,10 @@ describe('ihtai', function(){
 		});
 */		
 	})
+
+	it('Should test exportTemporalDataAsCSV method', function(){
+		//TODO: add exportTemporalDataAsCSV method
+	});
 });
 
 describe('ihtai utils', function(){
