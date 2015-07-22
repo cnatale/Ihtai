@@ -405,12 +405,12 @@ var Ihtai = (function(bundle){
 			*/			
 
 			/////// adding this step to fix just one motor stm combo bug ///////////
-			/*var realDrivesOutput=drives.cycle(origIostm, dt);
+			var realDrivesOutput=drives.cycle(origIostm, dt);
 			var realCombinedStm=origIostm.concat(realDrivesOutput);
 
-			if(Math.random() > .95)
-				var realCurCluster=clusters.findNearestCluster(realCombinedStm);
-			*/
+			//if(Math.random() > .95)
+			var realCurCluster=clusters.findNearestCluster(realCombinedStm);
+			
 			///////////////////////////////////////////////
 
 			//return imagined reflex output and memorizer output back to ai agent
@@ -625,7 +625,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1000/*was 10*/, minHeaps={};
+	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, minHeaps={};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
