@@ -394,14 +394,9 @@ var Ihtai = (function(bundle){
 			//If no, try the imagined memory no matter what.
 			memorizer.memorize(imaginedCluster);
 
-			/*TODO: fix bug where app can get stuck in an unchanging external stimuli loop b/c
+			/*the next few lines fix bug where app can get stuck in an unchanging external stimuli loop b/c
 			the first cluster created's motor stm gets copied into every subsequent imagined
 			cluster, creating no clusters where the motor stm doesn't match the first cluster's.
-
-			NOTE: I'm currently commenting out the fix addressing it in the ragdoll demo itself, 
-			because I found that generating only one of the clusters and not both results in 
-			better performance. Ideally this should be fixed in the engine itself though, so 
-			leaving this comment until I figure out a better way to handle this problem.
 			*/			
 
 			/////// adding this step to fix just one motor stm combo bug ///////////
