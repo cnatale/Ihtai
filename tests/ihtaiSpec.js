@@ -63,16 +63,19 @@ describe('ihtai', function(){
 
 		});
 
-
 		it('should find nearest cluster for a vector', function(){
 			clusters= new Clusters({_numClusters:1000, _vectorDim:5});
-			var startDate=new Date();
 			var res=clusters.findNearestCluster([50,50,50,50,50]);
-			var endDate=new Date();
-		
-			var timeDiff=endDate.getTime()-startDate.getTime();
-			console.log('findNearestCluster time: '+timeDiff);
-			expect(res.id).toBe(0); //cluster 0 is specifically given this val during initialization
+			expect(res.id).toBe(0);
+			expect(res.stm).toEqual([50,50,50,50,50]);
+		});
+
+		it('should add a cluster when passed a vector', function(){
+			clusters= new Clusters({_numClusters:1000, _vectorDim:5});
+			clusters.addCluster([50,50,50,50,50]);
+			var res=clusters.getRandomCluster();
+			expect(res.id).toBe(0);
+			expect(res.stm).toEqual([50,50,50,50,50]);			
 		});
 	});
 

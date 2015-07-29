@@ -363,9 +363,18 @@ var Ihtai = (function(bundle){
 		var randomStm=randomCluster.stm.slice();
 
 		//Replace iostm's values for the indices which equal index values in new array param.
-		for(var i=0; i<outputIndices.length;i++){
-			iostm.splice(outputIndices[i], 1, randomStm[outputIndices[i]]);
-		}
+		//TODO:rework this. don't just replace motor drive, replace other chunks in signal randomly.
+		//if(Math.random() <= .3){ //replace specific indices with random value
+			for(var i=0; i<outputIndices.length;i++){
+				iostm.splice(outputIndices[i], 1, randomStm[outputIndices[i]]);
+			}
+		//}
+		//else{ //replace the entire stimuli with a random cluster
+		//	var len=iostm.length;
+		//	var args=[0, iostm.length].concat(randomStm);
+		//	Array.prototype.splice.apply(iostm,args);	
+		//	iostm.splice(len,99999999);
+		//}
 
 		imaginedDrivesOutput = drives.cycle(iostm, dt);					
 		imaginedCombinedStm = iostm.concat(imaginedDrivesOutput);
@@ -400,11 +409,9 @@ var Ihtai = (function(bundle){
 			*/			
 
 			/////// adding this step to fix just one motor stm combo bug ///////////
-			var realDrivesOutput=drives.cycle(origIostm, dt);
-			var realCombinedStm=origIostm.concat(realDrivesOutput);
-
-			//if(Math.random() > .95)
-			var realCurCluster=clusters.findNearestCluster(realCombinedStm);
+			//var realDrivesOutput=drives.cycle(origIostm, dt);
+			//var realCombinedStm=origIostm.concat(realDrivesOutput);
+			//var realCurCluster=clusters.findNearestCluster(realCombinedStm);
 			
 			///////////////////////////////////////////////
 
@@ -620,7 +627,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, minHeaps={};
+	var level, buffer, homeostasisGoal, maxCollisions=1000/*was 10*/, minHeaps={};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
@@ -1058,63 +1065,53 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 	}
 	init(bundle._kdTree);
 
+
+	/**
+	* Adds a stimuli Array to Clusters list, if there is space and if Cluster with
+	* matching stimuli has not already been added.
+	* @method addCluster
+	* @param {Array} v The stimuli to be added as a Cluster, in Array form.
+	* @param {String} _vStr The vector v in comma-delimited String form. Saves 
+	* computation so that if we've already performed String.join() on v, we don't have
+	* to do it again.
+	* @return nothing
+	*/
+	function addCluster(v, _vStr){
+		var vStr;
+		if(idCtr<numClusters){
+			if(typeof _vStr != 'string')
+				vStr= v.join();
+			else
+				vStr = _vStr; 
+
+			cache[vStr]={
+				id:idCtr++, stm:v, bStm:[]
+			}; 
+			//randomly assign back-memory cluster ids
+			for(j=0; j<bStmCt; j++){
+				cache[vStr].bStm[j]= Math.floor(Math.random()*(idCtr-1));
+			} 	
+		}	
+	}
+
+	var clusterTreeCreated=false;
 	/** 
 		-find nearest cluster to v
 		-calculate distance between v and nearest cluster
 		-move cluster v a small amount closer to v's position
-
-		@returns {Object} the nearest cluster to v
+		@method findNearestCluster
+		@return {Object} the nearest cluster to v
 	*/
-
-	var clusterTreeCreated=false;
 	function findNearestCluster(v){
 		var nearestCluster;
 		var vStr=v.join();
 
 		if(!cache[vStr]){ //create new cluster or get nearest cluster from kd tree.
-			/*
-			TODO: change logic so that:
-			-1.✓the kd tree is built every 500 newly added clusters in addition to final time
-			 when idCtr=numClusters
-			-2.✓get nearest neighbor cluster before adding new cluster.
-			-3.✓assign copies of nearest neighbor's minheap and memory chain for each lvl to new cluster
-			*/
 
 			//once idCtr gets too high, stop caching and build the kd-tree.
 			//if not, memory gets so scarce that the gc is called constantly.
 			if(idCtr<numClusters){
-
-				/////////// 1. new logic /////////////
-				/*var rebuildTreeCt=500;
-				if(idCtr == rebuildTreeCt && idCtr != 0){
-					var cacheArr=[];
-					for(var key in cache){
-						if(cache.hasOwnProperty(key))
-							cacheArr.push(cache[key]);
-					}
-					clusterTree= new IhtaiUtils.KdTree(cacheArr, combinedSignal);
-				
-				}*/				
-
-				// 2.
-				/*if(idCtr >= rebuildTreeCt)
-					nearestCluster = clusterTree.nearestNeighbor(v);
-				*/
-				//////////////////////////////////
-
-				cache[vStr]={
-					id:idCtr++, stm:v, bStm:[]
-				}; 
-				//randomly assign back-memory cluster ids
-				for(j=0; j<bStmCt; j++){
-					cache[vStr].bStm[j]= Math.floor(Math.random()*(idCtr-1));
-				} 	
-
-				///////// 3. ////////
-				/*if(idCtr > rebuildTreeCt){
-					memorizerRef.copyTemporalData(nearestCluster, cache[vStr]);
-				}*/
-				///////////////////
+				addCluster(v, vStr);
 			}
 			else{
 				//init clustertree from cache values,
@@ -1144,6 +1141,12 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		return clusterTree;
 	}
 
+	/**
+	* Returns a random Cluster from the collection of Clusters. Note that this 
+	* does not create new Clusters, but only gives a reference to an existing one.
+	* @method getRandomCluster
+	* @return {Cluster} A random cluster that has already been created.
+	*/
 	function getRandomCluster(){
 		var keys=Object.keys(cache);
 		var randomKey=Math.round(Math.random()*(keys.length-1));
@@ -1155,7 +1158,8 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		getClusterTree: getClusterTree,
 		getSize: function(){return idCtr;},
 		getRandomCluster: getRandomCluster,
-		setMemorizerRef: setMemorizerRef
+		setMemorizerRef: setMemorizerRef,
+		addCluster: addCluster		
 	};
 });
 
