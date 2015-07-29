@@ -355,6 +355,7 @@ var Ihtai = (function(bundle){
 
 	 */
 	function daydream(iostm, dt, outputIndices){
+		clusters.addCluster(iostm); //always attempt to add input stm to clusters list		
 		var imaginedCombinedStm, imaginedCluster, imaginedDrivesOutput, origIostm=iostm.slice();	
 		var targetDriveVals=drives.getGoals();
 
@@ -364,11 +365,16 @@ var Ihtai = (function(bundle){
 
 		//Replace iostm's values for the indices which equal index values in new array param.
 		//TODO:rework this. don't just replace motor drive, replace other chunks in signal randomly.
-		//if(Math.random() <= .3){ //replace specific indices with random value
-			for(var i=0; i<outputIndices.length;i++){
-				iostm.splice(outputIndices[i], 1, randomStm[outputIndices[i]]);
-			}
-		//}
+		/*outputIndices=[];
+		var changedIndex= Math.random()*(randomStm.length-1) >> 0;
+		var changedIndex2= Math.random()*(randomStm.length-1) >> 0;
+		iostm.splice(outputIndices[changedIndex], 1, randomStm[changedIndex]);
+		iostm.splice(outputIndices[changedIndex2], 1, randomStm[changedIndex2]);
+		*/
+		for(var i=0; i<outputIndices.length;i++){
+			iostm.splice(outputIndices[i], 1, randomStm[outputIndices[i]]);
+		}
+		
 		//else{ //replace the entire stimuli with a random cluster
 		//	var len=iostm.length;
 		//	var args=[0, iostm.length].concat(randomStm);
@@ -400,20 +406,8 @@ var Ihtai = (function(bundle){
 		//Check if a stimuli with this pattern has ever been memorized before. Possible if 
 		//cluster was just created and hasn't propagated through buffer into memory chains yet.
 		if(imaginedMemorizerOutput[0]==null){
-			//If no, try the imagined memory no matter what.
+			//If no, try the imagined memory no matter what.	
 			memorizer.memorize(imaginedCluster);
-
-			/*the next few lines fix bug where app can get stuck in an unchanging external stimuli loop b/c
-			the first cluster created's motor stm gets copied into every subsequent imagined
-			cluster, creating no clusters where the motor stm doesn't match the first cluster's.
-			*/			
-
-			/////// adding this step to fix just one motor stm combo bug ///////////
-			//var realDrivesOutput=drives.cycle(origIostm, dt);
-			//var realCombinedStm=origIostm.concat(realDrivesOutput);
-			//var realCurCluster=clusters.findNearestCluster(realCombinedStm);
-			
-			///////////////////////////////////////////////
 
 			//return imagined reflex output and memorizer output back to ai agent
 			return {
