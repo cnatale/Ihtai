@@ -1119,7 +1119,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 					clusterTree= new IhtaiUtils.KdTree(cacheArr, combinedSignal);
 					clusterTreeCreated=true;
 				}
-				console.log('accessing cluster tree');
+				//console.log('accessing cluster tree');
 				//find nearest neighbor from kd-tree
 				nearestCluster = clusterTree.nearestNeighbor(v);
 				return nearestCluster;
