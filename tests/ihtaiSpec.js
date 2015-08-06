@@ -139,44 +139,6 @@ describe('ihtai', function(){
 
 	});
 
-	describe('Reflexes', function(){
-		var reflexes;
-		beforeEach(function(){
-			var input=[];
-			reflexes = new Reflexes([{
-				init:function(){},
-				matcher: function(stm){
-					if(stm[3]===40)
-						return true;
-					else
-						return false;
-				}, 
-				response: function(stm){
-					return {
-						indices:[4],
-						signal:[10]
-					}
-				}
-			}]);
-
-		});
-		afterEach(function(){
-
-		});
-
-		it('should trigger reflexes', function(){
-			var memory=[10,20,30,40,50];
-			var cluster = {id:0, stm:memory};
-			var res=reflexes.cycle(cluster);
-
-			expect(res.length).toBe(1);
-			expect(res[0].indices).toEqual([4]);
-			expect(res[0].signal).toEqual([10]);
-		});
-
-
-	});
-
 	describe('Drives', function(){
 		var drives, cluster;
 		beforeEach(function(){
@@ -247,22 +209,6 @@ describe('ihtai', function(){
 				targetval:0
 			};
 			drives=[drive];
-
-			reflexes = [{
-				init: function(){},
-				matcher: function(stm){
-					if(stm[3]===40)
-						return true;
-					else
-						return false;
-				}, 
-				response: function(stm){
-					return {
-						indices:[4],
-						signal:[10]
-					}
-				}
-			}];
 
 			//initiliaze an ihtai with 9 dimensional i/o signal and 1d drive signal
 			ihtai = new Ihtai({
@@ -359,64 +305,6 @@ describe('ihtai', function(){
 			expect(rebuiltRes.memorizerOutput[1]).toEqual(origRes.memorizerOutput[1]);	
 		});
 
-		/*
-		TODO: test save and load with the following recently-added functionality:
-		-weighted distribution of cluster vectors
-		-new Memorizer cluster averaging and selection algorithmic data
-		*/
-
-		it('should create an Ihtai instance with back-stm', function(){
-			var ihtai2 = new Ihtai({
-				clusterCount:1000,
-				vectorDim:10,
-				memoryHeight:100,
-				drivesList:drives,
-				reflexList:reflexes,
-				acceptableRange:80,
-				bStmCt:1
-			});
-
-			ihtai2.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai2.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai2.cycle([50, 50, 50, 50, 50, 50, 50, 50, 50], 33);
-		});
-
-/*		it('should implement back-stm correctly on re-inflated Ihtai instances', function(){
-			var ihtai = new Ihtai({
-				clusterCount:1000,
-				vectorDim:10,
-				memoryHeight:100,
-				drivesList:drives,
-				reflexList:reflexes,
-				acceptableRange:100000,
-				bStmCt:1
-			});
-
-			var resp=ihtai.toJsonString('ihtaiSave');
-			var rebuiltIhtai=new Ihtai(resp);
-			//re-inflated Ihtai should be identical to original instance
-			expect(ihtai).toBeJsonEqual(rebuiltIhtai);
-
-			//compare cycle results from orig and rebuilt ihtai
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			var rebuiltRes=rebuiltIhtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-			var origRes=ihtai.cycle([0, 50, 0, 50, 0, 50, 0, 50, 0], 33);
-					
-			expect(rebuiltRes.memorizerOutput).toEqual(origRes.memorizerOutput);	
-		});
-*/		
 	})
 
 	it('Should test exportTemporalDataAsCSV method', function(){

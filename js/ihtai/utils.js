@@ -127,8 +127,7 @@ IhtaiUtils.MinHeap = (function(_heap){
 		//TODO:think about changing this to a non-recursive approach for smaller memory footprint
 		function compare(node){
 			par=par(node); //the parent node index
-			//If current node's sd is less than parent, swap positions with parent.
-			//TODO: add an other check if the sd's are equal, and their corresponding placement in temporal list
+			//If current node's sd is less than parent, swap positions with parent. Secondary key is lvl.
 			if( (par >= 0 && heap[node].sd < heap[par].sd) || (par >= 0 && heap[node].sd == heap[par].sd && heap[node].lvl < heap[par].lvl) ){
 				tmp=heap[node];
 				heap[node]=heap[par];
@@ -308,7 +307,6 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 		return root;
 
 		function createNode(data, lvl){
-			//TODO:step through this method, checking to see if it works with backStimuli
 			var node;
 
 			if(data.length<2){
@@ -444,9 +442,12 @@ IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 			}
 
 			if(typeof comparisonProp==="function"){
+				try{
 				if(!cache[bestPt.id])
 					cache[bestPt.id]=comparisonProp.call(bestPt);
 				bpv=cache[bestPt.id];
+				}
+				catch(e){debugger;}
 			}
 			else if(typeof comparisonProp=="string"){
 				bpv=bestPt[comparisonProp];

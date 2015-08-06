@@ -404,7 +404,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
 
                 //stm[0]  is the upright angle, normalized
                 //check if torso is reasonably upright
-                if(stm[0] >= 0 && stm[0] <= Math.PI/8 || stm[0] >= (15*Math.PI)/8 && stm[0] <= 2*Math.PI ){
+                if(stm[0][0] >= 0 && stm[0][0] <= Math.PI/8 || stm[0][0] >= (15*Math.PI)/8 && stm[0][0] <= 2*Math.PI ){
                     this.uprightVal<=0?this.uprightVal=0:this.uprightVal-=1;
                     //console.log('UPRIGHT');
                 }
@@ -422,10 +422,12 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=5000;
+        var numClusters=500;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
-            vectorDim:14,/*number of iostm values + drives*/
+            inputClusterDim:9,
+            outputClusterDim:4,
+            driveClusterDim:1,
             memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
             reflexList:reflexes,
@@ -533,8 +535,9 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             //allInput+=(lowerLeftLegForce+ '+' + lowerRightLegForce + '+' + lowerLeftArmForce + '+' + lowerRightArmForce + '\r\n');
             ///////////
 
-            var inputStm=[normalizedAngle, lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce,
-               lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch
+            var inputStm=[
+                [normalizedAngle, lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch],
+                [lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce]
             ];
             var res;
 
@@ -543,7 +546,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                 firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
             }
             else{
-                res=ihtai.daydream(inputStm, dt*1000, [1,2,3,4]);
+                res=ihtai.daydream(inputStm, dt*1000);
             }
             /*res={};
             res.memorizerOutput=[null];

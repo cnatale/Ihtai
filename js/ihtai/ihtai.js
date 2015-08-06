@@ -98,9 +98,8 @@ THE SOFTWARE.
 
  */
 var Ihtai = (function(bundle){
-	var clusterCount, vectorDim, memoryHeight, driveList, reflexList;
-	window.parentScope=arguments.callee.caller /*note this is deprecated. implement in a diff way if it works*/;
-	var clusters, memorizer, drives, reflexes, acceptableRange, distanceAlgo, _enableReflexes=true, _enableMemories=true;
+	var clusterCount, inputClusterDim, outputClusterDim, driveClusterDim, memoryHeight, driveList, reflexList;
+	var inputClusters, outputClusters, driveClusters, memorizer, drives, reflexes, acceptableRange, distanceAlgo, _enableReflexes=true, _enableMemories=true;
 	var bStmCt=0, prevstm=[], driveGoals;
 	var outputstm =[]; //the output stm buffer;
 
@@ -108,7 +107,9 @@ var Ihtai = (function(bundle){
 		var parsedFile=JSON.parse(bundle); 
 		//inflate primitives attached to main json Object
 		clusterCount= parsedFile.clusterCount;
-		vectorDim=parsedFile.vectorDim;
+		inputClusterDim=parsedFile.inputClusterDim;
+		outputClusterDim=parsedFile.outputClusterDim;
+		driveClusterDim=parsedFile.driveClusterDim;
 		memoryHeight=parsedFile.memoryHeight;
 		bStmCt=parsedFile.bStmCt;
 		acceptableRange=parsedFile.acceptableRange;
@@ -119,7 +120,11 @@ var Ihtai = (function(bundle){
 		var clusterTreeRoot=clusterHeap ? IhtaiUtils.binaryHeapToKdTreeRoot(clusterHeap) : null;
 
 		//inflate clusters
-		clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, _kdTree:clusterTreeRoot, bStmCt:bStmCt});
+		//TODO: rework inflation now that we have 3 clusters Objects
+		inputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:inputClusterDim, _kdTree:clusterTreeRoot, bStmCt:bStmCt});
+		outputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:outputClusterDim, _kdTree:clusterTreeRoot, bStmCt:bStmCt});
+		driveClusters = new Clusters({_numClusters:clusterCount, _vectorDim:driveClusterDim, _kdTree:clusterTreeRoot, bStmCt:bStmCt});
+
 
 		//inflate reflexes
 		//inflate indiv reflex functions back from strings by eval'ing them
@@ -171,10 +176,18 @@ var Ihtai = (function(bundle){
 				clusterCount= bundle.clusterCount;
 			else
 				throw "Error: no 'clusterCount' property found in initialization Object!"
-			if(bundle.vectorDim)
-				vectorDim=bundle.vectorDim;
+			if(bundle.inputClusterDim)
+				inputClusterDim=bundle.inputClusterDim;
 			else
-				throw "Error: no 'vectorDim' property found in initialization Object!"		
+				throw "Error: no 'inputClusterDim' property found in initialization Object!"		
+			if(bundle.outputClusterDim)
+				outputClusterDim=bundle.outputClusterDim;
+			else
+				throw "Error: no 'outputClusterDim' property found in initialization Object!"	
+			if(bundle.driveClusterDim)
+				driveClusterDim=bundle.driveClusterDim;
+			else
+				throw "Error: no 'vectorDim' property found in initialization Object!"								
 			if(!isNaN(bundle.memoryHeight))
 				memoryHeight=bundle.memoryHeight;
 			else
@@ -200,12 +213,16 @@ var Ihtai = (function(bundle){
 			if(bundle.bStmCt)
 				bStmCt=bundle.bStmCt;
 
-			clusters = new Clusters({_numClusters:clusterCount, _vectorDim:vectorDim, bStmCt:bStmCt});
+			inputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:inputClusterDim, bStmCt:bStmCt});
+			outputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:outputClusterDim, bStmCt:bStmCt});
+			driveClusters = new Clusters({_numClusters:clusterCount, _vectorDim:driveClusterDim, bStmCt:bStmCt});
 			reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
 			driveGoals=drives.getGoals();
 			memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
-			clusters.setMemorizerRef(memorizer);
+			inputClusters.setMemorizerRef(memorizer);
+			outputClusters.setMemorizerRef(memorizer);
+			driveClusters.setMemorizerRef(memorizer);
 		}
 	init(bundle);
 	}
@@ -239,52 +256,33 @@ var Ihtai = (function(bundle){
 
 	 */
 	function cycle(iostm, dt){
-		var combinedstm, curCluster;
+		//iostm is now divided into sub-arrays: index 0 is input, index 1 is output, index 2 is drives
+
+		var combinedstm, curClusters=[];
 
 		//cycle drives
 		var drivesOutput=drives.cycle(iostm, dt);
 
 		//merge iostm and drives output
-		combinedstm = iostm.concat(drivesOutput);
-
-		/*
-		Keep track of last bStmCt stm, Array.concat combinedstm onto
-		aforementioned stm. Set combinedstm to this val instead.
-
-		Only call clusters.findNearestCluster, reflexes.cycle memorizer.memorizer and memorizer.query
-		if we have last bStmCt stm in memory (dependent on curCluster)
-		*/		
-
+		//TODO: no longer merge, send drivesOutput as its own stm
+		iostm[2]=drivesOutput;
+		combinedstm = iostm;
+	
 		var reflexOutput=[], memorizerOutput=null;
-		if(prevstm.length === bStmCt){ //wait for prevstm buffer to fill up
-			var backAndCurrentstm=[];
-			for(var i=0;i<prevstm.length;i++){
-				backAndCurrentstm= backAndCurrentstm.concat(prevstm[i]);
-			}
-			backAndCurrentstm=backAndCurrentstm.concat(combinedstm);
 
-			//get nearest cluster for combined stm
-			curCluster= clusters.findNearestCluster(backAndCurrentstm);
+		//get nearest cluster for combined stm
+		curClusters[0]=inputClusters.findNearestCluster(iostm[0]);
+		curClusters[1]=outputClusters.findNearestCluster(iostm[1]);
+		curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
 
-			//cycle reflexes
-			if(_enableReflexes)
-				reflexOutput=reflexes.cycle(curCluster, dt);
-
-			//cycle memorizer	
-			if(_enableMemories){
-				memorizerOutput=memorizer.query(curCluster);
-				memorizer.memorize(curCluster);
-			}
+		//cycle memorizer	
+		if(_enableMemories){
+			memorizerOutput=memorizer.query(curClusters);
+			memorizer.memorize(curClusters);
 		}
-
-		//update previous stm buffer
-		prevstm.push(combinedstm);
-		if(prevstm.length>bStmCt)
-			prevstm.shift();
 	
 		//send reflex output and memorizer output back to ai agent
 		return {
-			reflexOutput:reflexOutput,
 			memorizerOutput:memorizerOutput,
 			drivesOutput:drivesOutput
 		};
@@ -354,64 +352,44 @@ var Ihtai = (function(bundle){
 	 	}
 
 	 */
-	function daydream(iostm, dt, outputIndices){
-		clusters.addCluster(iostm); //always attempt to add input stm to clusters list		
-		var imaginedCombinedStm, imaginedCluster, imaginedDrivesOutput, origIostm=iostm.slice();	
+	function daydream(iostm, dt){
+		//iostm is now divided into sub-arrays: index 0 is input, index 1 is output
+
+		inputClusters.addCluster(iostm[0]); //always attempt to add input stm to clusters list	
+		outputClusters.addCluster(iostm[1]);
+
+		var imaginedStm, imaginedClusters=[], imaginedDrivesOutput, origIostm=[];
+		origIostm[0]=iostm[0].slice();
+		origIostm[1]=iostm[1].slice();	
 		var targetDriveVals=drives.getGoals();
 
 		//choose a random cluster
-		var randomCluster=clusters.getRandomCluster();
-		var randomStm=randomCluster.stm.slice();
+		var randomOutputCluster=outputClusters.getRandomCluster();
+		var randomOutputStm=randomOutputCluster.stm.slice();
+		iostm[1]=randomOutputStm;
 
-		//Replace iostm's values for the indices which equal index values in new array param.
-		//TODO:rework this. don't just replace motor drive, replace other chunks in signal randomly.
-		/*outputIndices=[];
-		var changedIndex= Math.random()*(randomStm.length-1) >> 0;
-		var changedIndex2= Math.random()*(randomStm.length-1) >> 0;
-		iostm.splice(outputIndices[changedIndex], 1, randomStm[changedIndex]);
-		iostm.splice(outputIndices[changedIndex2], 1, randomStm[changedIndex2]);
-		*/
-		for(var i=0; i<outputIndices.length;i++){
-			iostm.splice(outputIndices[i], 1, randomStm[outputIndices[i]]);
-		}
-		
-		//else{ //replace the entire stimuli with a random cluster
-		//	var len=iostm.length;
-		//	var args=[0, iostm.length].concat(randomStm);
-		//	Array.prototype.splice.apply(iostm,args);	
-		//	iostm.splice(len,99999999);
-		//}
+		imaginedDrivesOutput = drives.cycle(iostm, dt);		
+		imaginedStm = iostm;			
+		imaginedStm[2] = imaginedDrivesOutput;
 
-		imaginedDrivesOutput = drives.cycle(iostm, dt);					
-		imaginedCombinedStm = iostm.concat(imaginedDrivesOutput);
-
-		var imaginedReflexOutput=[], imaginedMemorizerOutput=null;
-
-		var backAndCurrentstm=[];
-		for(var i=0;i<prevstm.length;i++){
-			backAndCurrentstm = backAndCurrentstm.concat(prevstm[i]);
-		}
-		backAndCurrentstm = backAndCurrentstm.concat(imaginedCombinedStm);
+		var imaginedMemorizerOutput=null;
 
 		//get nearest cluster for combined stm
-		imaginedCluster = clusters.findNearestCluster(backAndCurrentstm);
-
-		//cycle reflexes
-		if(_enableReflexes)
-			imaginedReflexOutput = reflexes.cycle(imaginedCluster, dt);
+		imaginedClusters[0] = inputClusters.findNearestCluster(imaginedStm[0]);
+		imaginedClusters[1] = outputClusters.findNearestCluster(imaginedStm[1]);
+		imaginedClusters[2] = driveClusters.findNearestCluster(imaginedStm[2]);
 
 		//run memorizer.query with cluster selected based on iostm's modified value
-		imaginedMemorizerOutput = memorizer.query(imaginedCluster);
+		imaginedMemorizerOutput = memorizer.query(imaginedClusters);
 
 		//Check if a stimuli with this pattern has ever been memorized before. Possible if 
 		//cluster was just created and hasn't propagated through buffer into memory chains yet.
 		if(imaginedMemorizerOutput[0]==null){
 			//If no, try the imagined memory no matter what.	
-			memorizer.memorize(imaginedCluster);
+			memorizer.memorize(imaginedClusters);
 
 			//return imagined reflex output and memorizer output back to ai agent
 			return {
-				reflexOutput:imaginedReflexOutput,
 				memorizerOutput:imaginedMemorizerOutput,
 				drivesOutput:imaginedDrivesOutput
 			};				
@@ -422,26 +400,25 @@ var Ihtai = (function(bundle){
 			  that of the queried output. If yes, memorize the imagined output. If no, revert 
 			  back to queried output, re-run drives.cycle(), and memorize the queried output.
 			*/
-			//NOTE:this isn't taking into account backStm
 			
 			//call each drive's undo() method to revert previous cycle
 			drives.undo();
 			var realDrivesOutput=drives.cycle(origIostm, dt);
-			var realCombinedStm=origIostm.concat(realDrivesOutput);
+			origIostm[2]=realDrivesOutput;
 
-			var realCurCluster=clusters.findNearestCluster(realCombinedStm);
-			if(_enableReflexes)
-				var reflexOutput2=reflexes.cycle(realCurCluster, dt);			
-
-			var realMemorizerOutput=memorizer.query(realCurCluster);
+			var realClusters=[];
+			realClusters[0] = inputClusters.findNearestCluster(origIostm[0]);	
+			realClusters[1] = outputClusters.findNearestCluster(origIostm[1]);
+			realClusters[2] = driveClusters.findNearestCluster(origIostm[2]);
+			var realMemorizerOutput=memorizer.query(realClusters);
 
 			/*  Determine if the daydream result is anticipated to be closer to ideal 
 			    drive state than normal query. If yes, return daydream result. If no, 
 			    return normal query result. */
 
 			//store the square distances to ideal drive states for imagined and real memorizer output
-			var imaginedOutputSd=imaginedMemorizerOutput[1]
-			var realOutputSd=realMemorizerOutput[1];			
+			var imaginedOutputSd=imaginedMemorizerOutput[1]; //the queried sd
+			var realOutputSd=realMemorizerOutput[1]; //the queried sd
 
 			////////////////////////////////////////////////////////////////////////////////////////////////
 			//if the real stimuli hasn't been experienced yet, or if it has a smaller sd the the imagined stm, memorize it
@@ -449,11 +426,10 @@ var Ihtai = (function(bundle){
 				//memorize the imagined cluster
 				drives.undo();
 				imaginedDrivesOutput=drives.cycle(iostm, dt);
-				memorizer.memorize(imaginedCluster);					
+				memorizer.memorize(imaginedClusters);					
 
 				//return imagined output back to ai agent
 				return {
-					reflexOutput:imaginedReflexOutput,
 					memorizerOutput:imaginedMemorizerOutput,
 					drivesOutput:imaginedDrivesOutput
 				};		
@@ -461,11 +437,10 @@ var Ihtai = (function(bundle){
 			else{ //use regular stimuli query output
 
 				//memorize the real cluster
-				memorizer.memorize(realCurCluster)
+				memorizer.memorize(realClusters);
 			
 				//return queried output back to ai agent
 				return {
-					reflexOutput:reflexOutput2,
 					memorizerOutput:realMemorizerOutput,
 					drivesOutput:realDrivesOutput
 				};									
@@ -640,12 +615,12 @@ var Memorizer = (function(bundle){
 			//deep copy the cluster temporal node
 			if(level[i].series.hasOwnProperty(fromId)){
 				level[i].series[toId]={
-					cs: level[i].series[fromId].cs,
-					es: level[i].series[fromId].es.slice(),
 					fs: level[i].series[fromId].fs.slice(),
+					ss: level[i].series[fromId].ss.slice(),
+					es: level[i].series[fromId].es.slice(),					
 					lvl: level[i].series[fromId].lvl,
-					sd: level[i].series[fromId].sd,
-					ss: level[i].series[fromId].ss.slice()
+					ct: level[i].series[fromId].ct,					
+					sd: level[i].series[fromId].sd
 				};
 				
 				//...and the cluster's minheap
@@ -697,28 +672,26 @@ var Memorizer = (function(bundle){
 	}
 	init();
 
+	function toCombinedStmUID(clusters){
+		var combinedClustersId = clusters[0].id + "+" + clusters[1].id + "+" + clusters[2].id;
+		return combinedClustersId;		
+	}
+
 	/**
 		Takes a cluster containing vector representing current i/o stm state combined with current 
 		drive state.
 		@returns An array consisting of two parts: 1) A vector representing the next action agent should take to minimize homeostasis differential.
 		If no vector is within acceptable range, return null. 2) The square distance of the returned action stimuli from ideal drive state.
 	*/
-	function query(cluster){
-		var outputstm=null, stimDist, sd;
+	function query(clusters){
+		var outputstm=null, stimDist, sd, combinedClustersId = toCombinedStmUID(clusters);
 
-		/*
-		Implement using new IhtaiUtils.MinHeap.getMin() to avoid the O(n) possible lookup.
-		Each level[i].series[cluster.id] must be stored in a heap keyed off of cluster id for this to work.
-		*/
-		if(minHeaps.hasOwnProperty(cluster.id)){
-			try{
-			var min=minHeaps[cluster.id].getMin();
-			}
-			catch(e){
-				debugger;
-			}
+		if(minHeaps.hasOwnProperty(combinedClustersId)){
+			try{ var min=minHeaps[combinedClustersId].getMin(); }
+			catch(e){ throw "Error: Memorizer.query() failed to execute minHeaps.getMin"; };
+			
 			var sd= min.sd;
-			if(sd/**(1/(1+level[i].series[cluster.id].cs/maxCollisions))*/ <= acceptableRange){
+			if(sd/**(1/(1+level[i].series[cluster.id].ct/maxCollisions))*/ <= acceptableRange){
 				//console.log('lvl:'+ min.lvl);
 				//console.log('min.ss: '+min.ss);
 				//console.log('min.es:'+min.es);
@@ -735,7 +708,7 @@ var Memorizer = (function(bundle){
 		Memorizes stm
 	*/
 	var temporalPlanners=0;
-	function memorize(cluster){
+	function memorize(clusters){
 		/*TODO: change es to be the average value of all time steps, starting at ss, in memory.*/
 
 		/*
@@ -753,46 +726,42 @@ var Memorizer = (function(bundle){
 		var sd1,sd2,size, fs, ss, es, fsid, s, sd;
 
 		//update the buffer
-		buffer.push(cluster);
+		buffer.push(clusters);
 		if(buffer.length>height)
 			buffer.shift(); //this may be an O(n) implementation. Think about changing.
 
 		/*
-		go through each level, and select the level with least sq distance if it is below threshold. 
+		Iterate through each level, and select the level with least sq distance if it is below threshold. 
 		*/
 		for(var i=0; i<height; i++){
-
-
 			size=i+2;
 			//Once we have a buffer full enough for this level, add a memory every cycle
-			//TODO:make sure the '&& size<=height' isn't introducing bugs into code
 			if(buffer.length>=size && size<=height){
 				fs=buffer.length-size;
 				ss=buffer.length-size+1;
 				es=buffer.length-1;
-				fsid=buffer[fs].id;
+				fsid=toCombinedStmUID(buffer[fs]);
 				s=level[i].series[fsid];				
 
 				var avg=[], ctr=0;
+
 				if(distanceAlgo == "avg"){
 					for(var j=ss;j<=es;j++){
 						ctr++;
-						if(j==ss){ //first iteration; set array to second state
-							avg=buffer[ss].stm.slice();
+						if(j==ss){ //first iteration; set array to second state's drive values
+							avg=buffer[ss][2];
 						}
 						else{
-							//add current stimuli 
-							//skips iterating over non-homeostasisGoal values for performance gain
-							var kl=avg.length-homeostasisGoal.length;
-							for(var k=kl;k<avg.length;k++){
-								avg[k]+=buffer[j].stm[k];
+							//add drive stimuli for each moment in time between second state and end state.
+							for(var k=0;k<avg.length;k++){
+								avg.stm[k]+=buffer[j][2].stm[k];
 							}
 						}
 					}
 
 					//loop over each index, dividing by total number of values. gives average drive values over time series.
-					for(k=0;k<avg.length;k++){
-						avg[k]= avg[k]/ctr;
+					for(k=0;k<avg.stm.length;k++){
+						avg.stm[k] = avg.stm[k]/ctr;
 					}
 				}
 				
@@ -805,8 +774,6 @@ var Memorizer = (function(bundle){
 				at this start state, store it regardless.
 				*/				
 				if(level[i].series.hasOwnProperty(fsid)){
-					/////// stimuli endstate averaging algorithm used in all cases //////
-
 					/*
 					If first and second states are the same, store the memory
 					as weighted average of the two memories(same firstState and ss, es drive vals become
@@ -817,9 +784,9 @@ var Memorizer = (function(bundle){
 					increase fitness. 
 
 					It also simulates how behavior "hardens" as it is carried out more and more often
-					by using a weighted average that increases with number of cs (collisions).
+					by using a weighted average that increases with number of ct (collisions count).
 					The averaging step is weighted in favor of the existing drive es,
-					based on how many ss cs have occurred. The more cs, the more the
+					based on how many ss ct have occurred. The more ct, the more the
 					averaging step is weighted towards the existing drive es. This requires storing an 
 					extra number holding the ss collision count, reset every time new ss and es
 					is selected (as opposed to non-weighted average).
@@ -827,35 +794,37 @@ var Memorizer = (function(bundle){
 					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
 					by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
 					*/		
-					if(sqDist(buffer[ss].stm, s.ss) === 0){
-						var bufferGoalDist = distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length);
-						var esGoalDist = s.es.slice(-homeostasisGoal.length);
-						s.cs++;
+					if(sqDist(buffer[ss][2].stm, s.ss) === 0){
+						var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
+						var esGoalDist = s.es/*[2]*/.stm.slice();
+						s.ct++;
 						//clamp upper bound to keep memory from getting too 'stuck'
-						if(s.cs>maxCollisions)
-							s.cs=maxCollisions;
+						if(s.ct>maxCollisions)
+							s.ct=maxCollisions;
 
 						for(var j=0;j<bufferGoalDist.length;j++){
-							var cs=s.cs;
-							esGoalDist[j]= ((esGoalDist[j]*cs)+bufferGoalDist[j])/(cs+1);
+							var ct=s.ct;
+							esGoalDist[j]= ((esGoalDist[j]*ct)+bufferGoalDist[j])/(ct+1);
 						}
-						var args = [-homeostasisGoal.length, homeostasisGoal.length].concat(esGoalDist);
-						Array.prototype.splice.apply(s.es, args);	
+						var args = [0, homeostasisGoal.length].concat(esGoalDist);
+						Array.prototype.splice.apply(s.es/*[2]*/.stm, args);	
 						//console.log('existing memory updated');
 
 						
 						//update sqdist of endstate from drive goals and store in s
-						s.sd= sqDist(s.es.slice(-homeostasisGoal.length), homeostasisGoal);
+						s.sd= sqDist(s.es/*[2]*/.stm, homeostasisGoal);
 					}
 					else{ 
 
 						//second states are different. Figure out which one leads to better outcome.
 						//sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
-						sd1= sqDist(distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
-						sd2 = sqDist(s.es.slice(-homeostasisGoal.length), homeostasisGoal);
+						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][2].stm.slice(), homeostasisGoal);
+						try{
+						sd2 = sqDist(s.es/*[2]*/.stm.slice(), homeostasisGoal);
+						}catch(e){debugger;}
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
-						if(sd1 < sd2/**(1/(1+s.cs/maxCollisions))*/){
+						if(sd1 < sd2/**(1/(1+s.ct/maxCollisions))*/){
 							/* 
 							-Store nearest neighbor clusters. When an Ihtai is JSON stringified, store the
 							cluster id instead of the array. 
@@ -868,10 +837,10 @@ var Memorizer = (function(bundle){
 							/*TODO:doesn't look like s.fs is being used by anything. get rid of it?
 							WARNING: s.fs is used for fsid property. you'd need to directly store to make this work*/
 
-							s.fs=buffer[fs].stm/*.slice()*/;
-							s.ss=buffer[ss].stm/*.slice()*/;
-							s.es=distanceAlgo=="avg"?avg:buffer[es].stm.slice();
-							s.cs=0;
+							s.fs=buffer[fs];
+							s.ss=buffer[ss];
+							s.es=distanceAlgo=="avg" ?  avg : buffer[es]; /*.stm.slice();*/
+							s.ct=0;
 							s.sd=sd1;
 						}	
 						//If sd1>=sd2, ignore the stm b/c acting on it isn't as effective as acting on currently stored stm.
@@ -889,11 +858,11 @@ var Memorizer = (function(bundle){
 						return;
 
 					level[i].series[fsid]={
-						fs: buffer[fs].stm/*.slice()*/, 
-						ss: buffer[ss].stm/*.slice()*/,
-						es: distanceAlgo=="avg"?avg:buffer[es].stm.slice(),
-						cs: 0,
-						sd:sqDist(distanceAlgo=="avg"?avg.slice(-homeostasisGoal.length):buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal),
+						fs: buffer[fs], 
+						ss: buffer[ss],
+						es: distanceAlgo=="avg" ?  avg: buffer[es] /*.stm.slice()*/,
+						ct: 0,
+						sd:sqDist(distanceAlgo=="avg" ? avg : buffer[es][2].stm.slice(), homeostasisGoal),
 						lvl: i /*logging purposes only*/
 					};		
 					//add to fsid's minHeap, or create minHeap if it doesn't exist	
@@ -981,16 +950,13 @@ var Memorizer = (function(bundle){
 
 //clusters are 'buckets' that n-dimensional stm moments are placed inside
 //_kdTree is an optional param for reconstruction from a json string file
-var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
-	var vectorDim=bundle._vectorDim, clusterTree, cache={}, idCtr=0, memorizerRef;
+var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
+	var clusterTree, cache={}, idCtr=0, memorizerRef;
 	var numClusters = bundle._numClusters;	
 	bStmCt=bundle.bStmCt;
 
 	var combinedSignal = function(){
 		var output=[];
-		for(var i=0;i<this.bStm.length;i++){
-			output= output.concat(clusters[this.bStm[i]].stm);
-		}
 		output=output.concat(this.stm);
 		return output;
 	}	
@@ -1018,9 +984,6 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 		//stm variables will be relative to said cluster.
 		var combinedSignal = function(){
 			var output=[];
-			for(var i=0;i<this.bStm.length;i++){
-				output= output.concat(clusters[this.bStm[i]].stm);
-			}
 			output=output.concat(this.stm);
 			return output;
 		}		
@@ -1079,7 +1042,7 @@ var Clusters = (function(/*_numClusters, _vectorDim, bStmCt, _kdTree*/bundle){
 				vStr = _vStr; 
 
 			cache[vStr]={
-				id:idCtr++, stm:v, bStm:[]
+				id:idCtr++, stm:v
 			}; 
 			//randomly assign back-memory cluster ids
 			for(j=0; j<bStmCt; j++){
@@ -1179,8 +1142,6 @@ var Drives = (function(_drives){
 		avgDriveCtr++;
 		for(var i=0;i<drives.length;i++){
 			//execute each method in drives once per cycle
-			
-			//var r=drives[i].cycle.call(window.parentScope, ioStim, dt);
 			var r=drives[i].cycle(ioStim, dt);
 			response.push(r); //expects each drives method to return a Number 0-100
 			avgDriveval[i]= (avgDriveval[i]*avgDriveCtr + r)/(avgDriveCtr + 1);
