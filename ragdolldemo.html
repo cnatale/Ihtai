@@ -422,7 +422,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=500;
+        var numClusters=50;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
@@ -553,15 +553,15 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             */
             //////// apply forces based on ihtai response ////////
             if(res.memorizerOutput[0] != null){
-                //console.log('memorizer');
+                console.log('act on memory');
                 //handle movement conditions for each
-                lowerLeftLegForce=res.memorizerOutput[0][1];
-                lowerRightLegForce=res.memorizerOutput[0][2];
-                lowerLeftArmForce=res.memorizerOutput[0][3];
-                lowerRightArmForce=res.memorizerOutput[0][4];
+                lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
+                lowerRightLegForce=res.memorizerOutput[0][1].stm[1];
+                lowerLeftArmForce=res.memorizerOutput[0][1].stm[2];
+                lowerRightArmForce=res.memorizerOutput[0][1].stm[3];
             }
             else{
-                //console.log('reflex')
+                console.log('act on reflex')
                 //apply random movement signals to each muscle
                 lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
                 lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});

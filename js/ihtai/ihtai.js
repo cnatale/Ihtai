@@ -366,15 +366,15 @@ var Ihtai = (function(bundle){
 		//choose a random cluster
 		var randomOutputCluster=outputClusters.getRandomCluster();
 		var randomOutputStm=randomOutputCluster.stm.slice();
-		iostm[1]=randomOutputStm;
 
+		imaginedStm = iostm.slice();
+		imaginedStm[1]=randomOutputStm;
 		imaginedDrivesOutput = drives.cycle(iostm, dt);		
-		imaginedStm = iostm;			
 		imaginedStm[2] = imaginedDrivesOutput;
 
 		var imaginedMemorizerOutput=null;
 
-		//get nearest cluster for combined stm
+		//get nearest cluster for imagined stms
 		imaginedClusters[0] = inputClusters.findNearestCluster(imaginedStm[0]);
 		imaginedClusters[1] = outputClusters.findNearestCluster(imaginedStm[1]);
 		imaginedClusters[2] = driveClusters.findNearestCluster(imaginedStm[2]);
@@ -749,7 +749,7 @@ var Memorizer = (function(bundle){
 					for(var j=ss;j<=es;j++){
 						ctr++;
 						if(j==ss){ //first iteration; set array to second state's drive values
-							avg=buffer[ss][2];
+							avg={stm:buffer[ss][2].stm.slice()};
 						}
 						else{
 							//add drive stimuli for each moment in time between second state and end state.
@@ -1044,10 +1044,6 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 			cache[vStr]={
 				id:idCtr++, stm:v
 			}; 
-			//randomly assign back-memory cluster ids
-			for(j=0; j<bStmCt; j++){
-				cache[vStr].bStm[j]= Math.floor(Math.random()*(idCtr-1));
-			} 	
 		}	
 	}
 
