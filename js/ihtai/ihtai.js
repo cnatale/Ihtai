@@ -794,7 +794,7 @@ var Memorizer = (function(bundle){
 					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
 					by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
 					*/		
-					if(sqDist(buffer[ss][2].stm, s.ss) === 0){
+					if(sqDist(buffer[ss][2].stm, s.ss[2].stm) === 0){
 						var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
 						var esGoalDist = s.es/*[2]*/.stm.slice();
 						s.ct++;
@@ -824,7 +824,7 @@ var Memorizer = (function(bundle){
 						}catch(e){debugger;}
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
-						if(sd1 < sd2/**(1/(1+s.ct/maxCollisions))*/){
+						if(sd1 < sd2/**(1/(1+s.ct/maxCollisions))*/){ //replace current memory with a closer new memory.
 							/* 
 							-Store nearest neighbor clusters. When an Ihtai is JSON stringified, store the
 							cluster id instead of the array. 
