@@ -406,10 +406,10 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                 //check if torso is reasonably upright
                 if(stm[0][0] >= 0 && stm[0][0] <= Math.PI/8 || stm[0][0] >= (15*Math.PI)/8 && stm[0][0] <= 2*Math.PI ){
                     this.uprightVal<=0?this.uprightVal=0:this.uprightVal-=1;
-                    //console.log('UPRIGHT');
+                    console.log('UPRIGHT');
                 }
                 else{    
-                    this.uprightVal>=30?this.uprightVal=30:this.uprightVal+=1;                    
+                    this.uprightVal>=10?this.uprightVal=10:this.uprightVal+=10;                    
                 }
 
                 return this.uprightVal;
@@ -422,11 +422,11 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=50;
+        var numClusters=100;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
-            outputClusterDim:4,
+            outputClusterDim:1,
             driveClusterDim:1,
             memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
@@ -537,7 +537,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
 
             var inputStm=[
                 [normalizedAngle, lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch],
-                [lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce]
+                [/*lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, */lowerRightArmForce]
             ];
             var res;
 
@@ -555,24 +555,24 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             if(res.memorizerOutput[0] != null){
                 console.log('act on memory');
                 //handle movement conditions for each
-                lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
+                /*lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
                 lowerRightLegForce=res.memorizerOutput[0][1].stm[1];
-                lowerLeftArmForce=res.memorizerOutput[0][1].stm[2];
-                lowerRightArmForce=res.memorizerOutput[0][1].stm[3];
+                lowerLeftArmForce=res.memorizerOutput[0][1].stm[2];*/
+                lowerRightArmForce=res.memorizerOutput[0][1].stm[0];
             }
             else{
                 console.log('act on reflex')
                 //apply random movement signals to each muscle
-                lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
+                /*lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
                 lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
-                lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
+                lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});*/
                 lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});                  
             }
 
             //apply forces on body parts
-            lowerLeftLeg.applyForce([lowerLeftLegForce * (dt*1000/2.5),0],[0,0]);
+            /*lowerLeftLeg.applyForce([lowerLeftLegForce * (dt*1000/2.5),0],[0,0]);
             lowerRightLeg.applyForce([lowerRightLegForce * (dt*1000/2.5),0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce * (dt*1000/2.5),0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * (dt*1000/2.5),0],[0,0]);*/
             lowerRightArm.applyForce([lowerRightArmForce * (dt*1000/2.5),0],[0,0]);
 
             // Move physics bodies forward in time
