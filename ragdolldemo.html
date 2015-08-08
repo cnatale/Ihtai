@@ -409,7 +409,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                     console.log('UPRIGHT');
                 }
                 else{    
-                    this.uprightVal>=10?this.uprightVal=10:this.uprightVal+=10;                    
+                    this.uprightVal>=10?this.uprightVal=10:this.uprightVal+=1;                    
                 }
 
                 return this.uprightVal;
@@ -422,7 +422,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=100;
+        var numClusters=5000;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
@@ -537,7 +537,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
 
             var inputStm=[
                 [normalizedAngle, lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch],
-                [/*lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, */lowerRightArmForce]
+                [/*lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce,*/ lowerRightArmForce]
             ];
             var res;
 
@@ -557,7 +557,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                 //handle movement conditions for each
                 /*lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
                 lowerRightLegForce=res.memorizerOutput[0][1].stm[1];
-                lowerLeftArmForce=res.memorizerOutput[0][1].stm[2];*/
+                lowerLeftArmForce=res.memorizerOutput[0][1].stm[0];*/
                 lowerRightArmForce=res.memorizerOutput[0][1].stm[0];
             }
             else{

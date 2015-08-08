@@ -425,7 +425,7 @@ var Ihtai = (function(bundle){
 			if(typeof realOutputSd != 'undefined' && imaginedOutputSd<realOutputSd){ //use daydream output
 				//memorize the imagined cluster
 				drives.undo();
-				imaginedDrivesOutput=drives.cycle(iostm, dt);
+				imaginedDrivesOutput=drives.cycle(imaginedStm/*iostm*/, dt);
 				memorizer.memorize(imaginedClusters);					
 
 				//return imagined output back to ai agent
@@ -1041,9 +1041,11 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 			else
 				vStr = _vStr; 
 
-			cache[vStr]={
-				id:idCtr++, stm:v
-			}; 
+			if(typeof cache[vStr] == 'undefined'){
+				cache[vStr]={
+					id:idCtr++, stm:v
+				}; 
+			}
 		}	
 	}
 
