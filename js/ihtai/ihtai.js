@@ -802,9 +802,9 @@ var Memorizer = (function(bundle){
 						if(s.ct>maxCollisions)
 							s.ct=maxCollisions;
 
-						for(var j=0;j<bufferGoalDist.length;j++){
+						for(var j=0;j<bufferGoalDist.stm.length;j++){
 							var ct=s.ct;
-							esGoalDist[j]= ((esGoalDist[j]*ct)+bufferGoalDist[j])/(ct+1);
+							esGoalDist[j]= ((esGoalDist[j]*ct)+bufferGoalDist.stm[j])/(ct+1);
 						}
 						var args = [0, homeostasisGoal.length].concat(esGoalDist);
 						Array.prototype.splice.apply(s.es/*[2]*/.stm, args);	
