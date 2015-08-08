@@ -753,7 +753,7 @@ var Memorizer = (function(bundle){
 						}
 						else{
 							//add drive stimuli for each moment in time between second state and end state.
-							for(var k=0;k<avg.length;k++){
+							for(var k=0;k<avg.stm.length;k++){
 								avg.stm[k]+=buffer[j][2].stm[k];
 							}
 						}
