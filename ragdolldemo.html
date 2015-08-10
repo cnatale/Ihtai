@@ -82,7 +82,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         ctx.lineWidth = 1/zoom;
 
         var daydreamRange=document.getElementById('daydreamRange');
-        var daydreamPct=.9, world;
+        var daydreamPct=.1, world;
         var pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
 
         //update the pct of time agent daydreams (1=100pct of time)
@@ -422,11 +422,11 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=5000;
+        var numClusters=30;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
-            outputClusterDim:1,
+            outputClusterDim:4,
             driveClusterDim:1,
             memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
             drivesList:drives,
@@ -537,7 +537,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
 
             var inputStm=[
                 [normalizedAngle, lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch],
-                [/*lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce,*/ lowerRightArmForce]
+                [lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce]
             ];
             var res;
 
@@ -552,28 +552,29 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             res.memorizerOutput=[null];
             */
             //////// apply forces based on ihtai response ////////
-            if(res.memorizerOutput[0] != null){
+            if(res.memorizerOutput[0] != null && res.memorizerOutput[1] < 9.9){
                 console.log('act on memory');
+                console.log('selected cluster expected distance: ' + res.memorizerOutput[1]);
                 //handle movement conditions for each
-                /*lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
+                lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
                 lowerRightLegForce=res.memorizerOutput[0][1].stm[1];
-                lowerLeftArmForce=res.memorizerOutput[0][1].stm[0];*/
-                lowerRightArmForce=res.memorizerOutput[0][1].stm[0];
+                lowerLeftArmForce=res.memorizerOutput[0][1].stm[2];
+                lowerRightArmForce=res.memorizerOutput[0][1].stm[3];
             }
             else{
                 console.log('act on reflex')
                 //apply random movement signals to each muscle
-                /*lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
-                lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});
-                lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});*/
-                lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.33, '0':.33, '100':.33});                  
+                lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});
+                lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});
+                lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});
+                lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});                  
             }
 
             //apply forces on body parts
-            /*lowerLeftLeg.applyForce([lowerLeftLegForce * (dt*1000/2.5),0],[0,0]);
-            lowerRightLeg.applyForce([lowerRightLegForce * (dt*1000/2.5),0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce * (dt*1000/2.5),0],[0,0]);*/
-            lowerRightArm.applyForce([lowerRightArmForce * (dt*1000/2.5),0],[0,0]);
+            lowerLeftLeg.applyForce([lowerLeftLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
 
             // Move physics bodies forward in time
             //world.step(timeStep, dt, maxSubSteps);

@@ -85,23 +85,24 @@ describe('ihtai', function(){
 					
 			memorizer = new Memorizer({_memoryHeight:100});
 
-			memory=[10,20,30,40,50];
+			memory=[[10,20,30],[40],[50]];
 			cluster = {id:0, stm:memory};
 			memorizer.memorize(cluster);
-			var memory2=[50,40,30,20,10];
+			var memory2=[[50,40,30],[20],[10]];
 			var cluster2 = {id:1, stm:memory2};
+
 			memorizer.memorize(cluster2);
-			var memory3=[0,0,0,0,0];
+			var memory3=[[0,0,0],[0],[0]];
 			var cluster3 = {id:2, stm:memory3};
 			memorizer.memorize(cluster3);
 
-			var memory4=[30,30,30,30,30];
+			var memory4=[[30,30,30],[30],[30]];
 			var cluster4 = {id:3, stm:memory4};
 			memorizer.memorize(cluster4);
-			var memory5=[35,35,35,35,35];
+			var memory5=[[35,35,35],[35],[35]];
 			var cluster5 = {id:4, stm:memory5};
 			memorizer.memorize(cluster5);
-			var memory6=[40,40,40,40,40];
+			var memory6=[[40,40,40],[40],[40]];
 			var cluster6 = {id:5, stm:memory6};
 			memorizer.memorize(cluster6);			
 		});

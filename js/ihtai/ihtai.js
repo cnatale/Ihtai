@@ -274,7 +274,7 @@ var Ihtai = (function(bundle){
 		curClusters[0]=inputClusters.findNearestCluster(iostm[0]);
 		curClusters[1]=outputClusters.findNearestCluster(iostm[1]);
 		curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
-
+		console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
 		//cycle memorizer	
 		if(_enableMemories){
 			memorizerOutput=memorizer.query(curClusters);
@@ -697,6 +697,8 @@ var Memorizer = (function(bundle){
 				//console.log('min.es:'+min.es);
 				//console.log('min.sd:'+min.sd);
 				//console.log('acceptablerange:'+acceptableRange);
+
+				console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
 				outputstm = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in minheap
 			}
 		}
@@ -794,7 +796,13 @@ var Memorizer = (function(bundle){
 					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
 					by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
 					*/		
-					if(sqDist(buffer[ss][2].stm, s.ss[2].stm) === 0){
+
+					/*
+					TODO: maybe do a check to see if id's of s.ss[0] and s.ss[1] == their buffer counterparts for this
+					check instead of current logic
+					*/
+					//if(sqDist(buffer[ss][2].stm, s.ss[2].stm) === 0){
+					if(buffer[ss][1].id == s.ss[1].id){
 						var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
 						var esGoalDist = s.es/*[2]*/.stm.slice();
 						s.ct++;
@@ -817,7 +825,6 @@ var Memorizer = (function(bundle){
 					else{ 
 
 						//second states are different. Figure out which one leads to better outcome.
-						//sd1 = sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal);
 						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][2].stm.slice(), homeostasisGoal);
 						try{
 						sd2 = sqDist(s.es/*[2]*/.stm.slice(), homeostasisGoal);
