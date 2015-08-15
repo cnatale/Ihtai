@@ -82,7 +82,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         ctx.lineWidth = 1/zoom;
 
         var daydreamRange=document.getElementById('daydreamRange');
-        var daydreamPct=.1, world;
+        var daydreamPct=1, world;
         var pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
 
         //update the pct of time agent daydreams (1=100pct of time)
@@ -409,7 +409,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                     console.log('UPRIGHT');
                 }
                 else{    
-                    this.uprightVal>=10?this.uprightVal=10:this.uprightVal+=1;                    
+                    this.uprightVal>=5?this.uprightVal=5:this.uprightVal+=1;                    
                 }
 
                 return this.uprightVal;
@@ -422,7 +422,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=30;
+        var numClusters=/*30*/17;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
@@ -516,7 +516,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         var firstCycle=true;
         var lastTime, dt, t=0;
         //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
-        var allInput='', ct=0;
+        var allInput='', ct=0, lastSD;
 
         function mainLoop(t){
             requestAnimationFrame(mainLoop);
@@ -541,20 +541,18 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             ];
             var res;
 
-            if(Math.random() > daydreamPct /*|| (ct<numClusters && Math.random() > .8 )*/ || firstCycle){
+            //TODO:try these settings again tomorrow
+            if(typeof lastSD == 'undefined' || Math.random() < Math.max(Math.min(lastSD/5, .1), 0) || firstCycle){
                 res=ihtai.cycle(inputStm, dt*1000);
                 firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
             }
             else{
                 res=ihtai.daydream(inputStm, dt*1000);
             }
-            /*res={};
-            res.memorizerOutput=[null];
-            */
+
             //////// apply forces based on ihtai response ////////
-            if(res.memorizerOutput[0] != null && res.memorizerOutput[1] < 9.9){
+            if(res.memorizerOutput[0] != null && res.memorizerOutput[1] < /*9.9*/4.9){
                 console.log('act on memory');
-                console.log('selected cluster expected distance: ' + res.memorizerOutput[1]);
                 //handle movement conditions for each
                 lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
                 lowerRightLegForce=res.memorizerOutput[0][1].stm[1];
@@ -570,6 +568,13 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                 lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});                  
             }
 
+            //if(typeof res.memorizerOutput[1]=='undefined')debugger;
+
+            //memorizeroutput[1] is the predicted score of selected action for the next cycle
+            //drivesOutput[0] is the actual drive value from the previous iteration
+            //console.log('current drive value: ' + res.memorizerOutput[1]/*res.drivesOutput[0]*/);            
+            lastSD = res.memorizerOutput[1]/*res.drivesOutput[0]*/;
+
             //apply forces on body parts
             lowerLeftLeg.applyForce([lowerLeftLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
             lowerRightLeg.applyForce([lowerRightLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
@@ -584,7 +589,6 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             render();
             lastTime = t / 1000;
         }
-
 
         //window.setTimeout(afterOneMin, 10*1000);
         function afterOneMin(){

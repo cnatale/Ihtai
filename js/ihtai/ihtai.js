@@ -274,7 +274,9 @@ var Ihtai = (function(bundle){
 		curClusters[0]=inputClusters.findNearestCluster(iostm[0]);
 		curClusters[1]=outputClusters.findNearestCluster(iostm[1]);
 		curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
-		console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
+
+		if(typeof drivesOutput=='undefined')debugger;
+		//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
 		//cycle memorizer	
 		if(_enableMemories){
 			memorizerOutput=memorizer.query(curClusters);
@@ -388,6 +390,7 @@ var Ihtai = (function(bundle){
 			//If no, try the imagined memory no matter what.	
 			memorizer.memorize(imaginedClusters);
 
+			if(typeof imaginedDrivesOutput=='undefined')debugger;
 			//return imagined reflex output and memorizer output back to ai agent
 			return {
 				memorizerOutput:imaginedMemorizerOutput,
@@ -428,6 +431,7 @@ var Ihtai = (function(bundle){
 				imaginedDrivesOutput=drives.cycle(imaginedStm/*iostm*/, dt);
 				memorizer.memorize(imaginedClusters);					
 
+				if(typeof imaginedDrivesOutput=='undefined')debugger;
 				//return imagined output back to ai agent
 				return {
 					memorizerOutput:imaginedMemorizerOutput,
@@ -439,6 +443,7 @@ var Ihtai = (function(bundle){
 				//memorize the real cluster
 				memorizer.memorize(realClusters);
 			
+				if(typeof realDrivesOutput=='undefined')debugger;
 				//return queried output back to ai agent
 				return {
 					memorizerOutput:realMemorizerOutput,
@@ -596,7 +601,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1000/*was 10*/, minHeaps={};
+	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, minHeaps={};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
@@ -698,7 +703,7 @@ var Memorizer = (function(bundle){
 				//console.log('min.sd:'+min.sd);
 				//console.log('acceptablerange:'+acceptableRange);
 
-				console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
+				//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
 				outputstm = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in minheap
 			}
 		}
