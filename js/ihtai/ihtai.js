@@ -803,10 +803,11 @@ var Memorizer = (function(bundle){
 					*/		
 
 					/*
-					TODO: maybe do a check to see if id's of s.ss[0] and s.ss[1] == their buffer counterparts for this
-					check instead of current logic
+					Note that we are comparing second state output stimuli here. If the buffer and stored memory
+					have the same output values at their second state, average their drive values. This is a way of
+					saying, "we started at the same state. The next step's output was also the same. These are 
+					effectively the same actions taken by the agent, so average their resulting drive scores."
 					*/
-					//if(sqDist(buffer[ss][2].stm, s.ss[2].stm) === 0){
 					if(buffer[ss][1].id == s.ss[1].id){
 						var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
 						var esGoalDist = s.es/*[2]*/.stm.slice();
