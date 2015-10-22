@@ -1,0 +1,549 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ragdoll demo - p2.js physics engine</title>
+    <script src="js/external/p2/p2.js"></script>
+    <script src="js/external/p2/p2.renderer.js"></script>
+    <style>
+    html,body {
+        margin:0;
+        padding:0;
+        width:100%;
+        height:100%;
+        overflow: hidden;
+    }
+    </style>
+
+    <meta name="description" content="A rag doll learning to stand upright using IHTAI.">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<body>
+    <!-- the slider to control amount of daydreaming (between 0 and 1) -->
+    <label style="z-index:9999;position:absolute;">Daydreaming</label>
+    <input id="daydreamRange" type=range id=weight min=0 value=1 max=1 step=.05
+    style="z-index:9999;position:absolute;left:100px">
+
+    <script src="js/ihtai/ihtai.js"></script>
+    <script src="js/ihtai/utils.js"></script>
+    <script>
+
+p2.Plane.prototype.computeAABB = function(out, position, angle){
+    var a = angle % (2 * Math.PI);
+    var set = p2.vec2.set;
+    var max = 1e7;
+    var lowerBound = out.lowerBound;
+    var upperBound = out.upperBound;
+
+    // Set max bounds
+    set(lowerBound, -max, -max);
+    set(upperBound,  max,  max);
+
+    if(a === 0){
+        // y goes from -inf to 0
+        upperBound[1] = 0;
+
+    } else if(a === Math.PI / 2){
+
+        // x goes from 0 to inf
+        lowerBound[0] = 0;
+
+    } else if(a === Math.PI){
+
+        // y goes from 0 to inf
+        lowerBound[1] = 0;
+
+    } else if(a === 3*Math.PI/2){
+
+        // x goes from -inf to 0
+        upperBound[0] = 0;
+
+    }
+};
+
+
+
+
+
+        // Create demo application
+        var app = new p2.WebGLRenderer(function(){
+            var daydreamRange=document.getElementById('daydreamRange');
+            var daydreamPct=1, world;
+            var pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
+
+            //update the pct of time agent daydreams (1=100pct of time)
+            daydreamRange.addEventListener('change', function(e){
+                daydreamPct=Number(e.currentTarget.value);
+            });
+
+            function normalizeAngle(angle){
+                angle = angle % (2*Math.PI);
+                if(angle < 0){
+                    angle += (2*Math.PI);
+                }
+                return angle;
+            }    
+
+            var shouldersDistance = 0.5,
+                upperArmLength = 0.4,
+                lowerArmLength = 0.4,
+                upperArmSize = 0.2,
+                lowerArmSize = 0.2,
+                neckLength = 0.1,
+                headRadius = 0.25,
+                upperBodyLength = 0.6,
+                pelvisLength = 0.4,
+                upperLegLength = 0.5,
+                upperLegSize = 0.2,
+                lowerLegSize = 0.2,
+                lowerLegLength = 0.5;
+
+            var OTHER =     Math.pow(2,1),
+                BODYPARTS = Math.pow(2,2),
+                WALLS =     Math.pow(2,3),
+                bodyPartShapes = [];
+
+            var headShape = new p2.Circle({ radius: headRadius }),
+                upperArmShapeLeft = new p2.Box({ width: upperArmLength, height: upperArmSize }),
+                upperArmShapeRight = new p2.Box({ width: upperArmLength, height: upperArmSize }),
+                lowerArmShapeLeft = new p2.Box({ width: lowerArmLength, height: lowerArmSize }),
+                lowerArmShapeRight = new p2.Box({ width: lowerArmLength, height: lowerArmSize }),
+                upperBodyShape = new p2.Box({ width: shouldersDistance, height: upperBodyLength }),
+                pelvisShape = new p2.Box({ width: shouldersDistance, height: pelvisLength }),
+                upperLegShapeLeft = new p2.Box({ width: upperLegSize, height: upperLegLength }),
+                upperLegShapeRight = new p2.Box({ width: upperLegSize, height: upperLegLength }),
+                lowerLegShapeLeft = new p2.Box({ width: lowerLegSize, height: lowerLegLength }),
+                lowerLegShapeRight = new p2.Box({ width: lowerLegSize, height: lowerLegLength });
+
+            bodyPartShapes.push(
+                headShape,
+                upperArmShapeRight,
+                upperArmShapeLeft,
+                lowerArmShapeRight,
+                lowerArmShapeLeft,
+                upperBodyShape,
+                pelvisShape,
+                upperLegShapeRight,
+                upperLegShapeLeft,
+                lowerLegShapeRight,
+                lowerLegShapeLeft
+            );
+
+            for(var i=0; i<bodyPartShapes.length; i++){
+                var s = bodyPartShapes[i];
+                s.collisionGroup = BODYPARTS;
+                s.collisionMask = OTHER|WALLS;
+            }
+
+            world = new p2.World({
+                gravity : [0,-10]
+            });        
+
+            this.setWorld(world);
+
+            //world.solver.iterations = 100;
+            //world.solver.tolerance = 0.002;
+            world.solver.iterations = 20;
+            world.solver.tolerance = 0.001;                
+
+            // Lower legs
+            lowerLeftLeg = new p2.Body({
+                mass: 1,
+                position: [-shouldersDistance/2,lowerLegLength / 2],
+            });
+            lowerRightLeg = new p2.Body({
+                mass: 1,
+                position: [shouldersDistance/2,lowerLegLength / 2],
+            });
+            lowerLeftLeg.addShape(lowerLegShapeLeft);
+            lowerRightLeg.addShape(lowerLegShapeRight);
+            world.addBody(lowerLeftLeg);
+            world.addBody(lowerRightLeg);
+
+            // Upper legs
+            var upperLeftLeg = new p2.Body({
+                mass: 1,
+                position: [-shouldersDistance/2,lowerLeftLeg.position[1]+lowerLegLength/2+upperLegLength / 2],
+            });
+            var upperRightLeg = new p2.Body({
+                mass: 1,
+                position: [shouldersDistance/2,lowerRightLeg.position[1]+lowerLegLength/2+upperLegLength / 2],
+            });
+            upperLeftLeg.addShape(upperLegShapeLeft);
+            upperRightLeg.addShape(upperLegShapeRight);
+            world.addBody(upperLeftLeg);
+            world.addBody(upperRightLeg);
+
+            // Pelvis
+            pelvis = new p2.Body({
+                mass: 1,
+                position: [0, upperLeftLeg.position[1]+upperLegLength/2+pelvisLength/2],
+            });
+            pelvis.addShape(pelvisShape);
+            world.addBody(pelvis);
+
+            // Upper body
+            var upperBody = new p2.Body({
+                mass: 1,
+                position: [0,pelvis.position[1]+pelvisLength/2+upperBodyLength/2],
+            });
+            upperBody.addShape(upperBodyShape);
+            world.addBody(upperBody);
+
+            // Head
+            var head = new p2.Body({
+                mass: 1,
+                position: [0,upperBody.position[1]+upperBodyLength/2+headRadius+neckLength],
+            });
+            head.addShape(headShape);
+            world.addBody(head);
+
+            // Upper arms
+            var upperLeftArm = new p2.Body({
+                mass: 1,
+                position: [-shouldersDistance/2-upperArmLength/2, upperBody.position[1]+upperBodyLength/2],
+            });
+            var upperRightArm = new p2.Body({
+                mass: 1,
+                position: [shouldersDistance/2+upperArmLength/2, upperBody.position[1]+upperBodyLength/2],
+            });
+            upperLeftArm.addShape(upperArmShapeLeft);
+            upperRightArm.addShape(upperArmShapeRight);
+            world.addBody(upperLeftArm);
+            world.addBody(upperRightArm);
+
+            // lower arms
+            lowerLeftArm = new p2.Body({
+                mass: 1,
+                position: [ upperLeftArm.position[0] - lowerArmLength/2 - upperArmLength/2,
+                            upperLeftArm.position[1]],
+            });
+            lowerRightArm = new p2.Body({
+                mass: 1,
+                position: [ upperRightArm.position[0] + lowerArmLength/2 + upperArmLength/2,
+                            upperRightArm.position[1]],
+            });
+            lowerLeftArm.addShape(lowerArmShapeLeft);
+            lowerRightArm.addShape(lowerArmShapeRight);
+            world.addBody(lowerLeftArm);
+            world.addBody(lowerRightArm);
+
+
+            // Neck joint
+            var neckJoint = new p2.RevoluteConstraint(head, upperBody, {
+                localPivotA: [0,-headRadius-neckLength/2],
+                localPivotB: [0,upperBodyLength/2],
+            });
+            neckJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            world.addConstraint(neckJoint);
+
+            // Knee joints
+            var leftKneeJoint = new p2.RevoluteConstraint(lowerLeftLeg, upperLeftLeg, {
+                localPivotA: [0, lowerLegLength/2],
+                localPivotB: [0,-upperLegLength/2],
+            });
+            var rightKneeJoint= new p2.RevoluteConstraint(lowerRightLeg, upperRightLeg, {
+                localPivotA: [0, lowerLegLength/2],
+                localPivotB:[0,-upperLegLength/2],
+            });
+            leftKneeJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            rightKneeJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            world.addConstraint(leftKneeJoint);
+            world.addConstraint(rightKneeJoint);
+
+            // Hip joints
+            var leftHipJoint = new p2.RevoluteConstraint(upperLeftLeg, pelvis, {
+                localPivotA: [0, upperLegLength/2],
+                localPivotB: [-shouldersDistance/2,-pelvisLength/2],
+            });
+            var rightHipJoint = new p2.RevoluteConstraint(upperRightLeg, pelvis, {
+                localPivotA: [0, upperLegLength/2],
+                localPivotB: [shouldersDistance/2,-pelvisLength/2],
+            });
+            leftHipJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            rightHipJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            world.addConstraint(leftHipJoint);
+            world.addConstraint(rightHipJoint);
+
+            // Spine
+            var spineJoint = new p2.RevoluteConstraint(pelvis, upperBody, {
+                localPivotA: [0,pelvisLength/2],
+                localPivotB: [0,-upperBodyLength/2],
+            });
+            spineJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            world.addConstraint(spineJoint);
+
+            // Shoulders
+            var leftShoulder = new p2.RevoluteConstraint(upperBody, upperLeftArm, {
+                localPivotA:[-shouldersDistance/2, upperBodyLength/2],
+                localPivotB:[upperArmLength/2,0],
+            });
+            var rightShoulder= new p2.RevoluteConstraint(upperBody, upperRightArm, {
+                localPivotA:[shouldersDistance/2,  upperBodyLength/2],
+                localPivotB:[-upperArmLength/2,0],
+            });
+            leftShoulder.setLimits(-Math.PI / 3, Math.PI / 3);
+            rightShoulder.setLimits(-Math.PI / 3, Math.PI / 3);
+            world.addConstraint(leftShoulder);
+            world.addConstraint(rightShoulder);
+
+            // Elbow joint
+            var leftElbowJoint = new p2.RevoluteConstraint(lowerLeftArm, upperLeftArm, {
+                localPivotA: [lowerArmLength/2, 0],
+                localPivotB: [-upperArmLength/2,0],
+            });
+            var rightElbowJoint= new p2.RevoluteConstraint(lowerRightArm, upperRightArm, {
+                localPivotA:[-lowerArmLength/2,0],
+                localPivotB:[upperArmLength/2,0],
+            });
+            leftElbowJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            rightElbowJoint.setLimits(-Math.PI / 8, Math.PI / 8);
+            world.addConstraint(leftElbowJoint);
+            world.addConstraint(rightElbowJoint);
+
+            // Create ground
+            var groundShape = new p2.Plane();
+            var ground = new p2.Body({
+                position:[0,-1],
+            });
+            ground.addShape(groundShape);
+            groundShape.collisionGroup = WALLS;
+            groundShape.collisionMask =  BODYPARTS|OTHER;
+            world.addBody(ground);
+
+            //create walls
+            var leftWallShape = new p2.Plane();
+            var leftWall = new p2.Body({
+                position:[-8,0],
+                angle:[3*Math.PI/2]
+            });
+
+            leftWall.addShape(leftWallShape);
+            leftWallShape.collisionGroup = WALLS;
+            leftWallShape.collisionMask =  BODYPARTS|OTHER;
+            world.addBody(leftWall);            
+
+            var rightWallShape = new p2.Plane();
+            var rightWall = new p2.Body({
+                position:[8,0],
+                angle:[Math.PI/2]
+            });
+
+            rightWall.addShape(rightWallShape);
+            rightWallShape.collisionGroup = WALLS;
+            rightWallShape.collisionMask =  BODYPARTS|OTHER;    
+            world.addBody(rightWall);               
+
+            var topWallShape = new p2.Plane();
+            var topWall = new p2.Body({
+                position:[0,10],
+                angle:[Math.PI]
+            });
+
+            topWall.addShape(topWallShape);
+            topWallShape.collisionGroup = WALLS;
+            topWallShape.collisionMask =  BODYPARTS|OTHER;                  
+            world.addBody(topWall);            
+
+
+
+            //initialize Ihtai
+            var uprightDrive={
+                init:function(){
+                    this.uprightVal=0;
+                    this.prevUprightVal=0;
+                },
+                cycle:function(stm,dt){
+                    this.prevUprightVal=this.uprightVal;
+
+                    //stm[0]  is the upright angle, normalized
+                    //check if torso is reasonably upright
+                    if(stm[0][0] >= 0 && stm[0][0] <= Math.PI/8 || stm[0][0] >= (15*Math.PI)/8 && stm[0][0] <= 2*Math.PI ){
+                        this.uprightVal<=0?this.uprightVal=0:this.uprightVal-=1;
+                        console.log('UPRIGHT');
+                    }
+                    else{    
+                        this.uprightVal>=5?this.uprightVal=5:this.uprightVal+=1;                    
+                    }
+
+                    return this.uprightVal;
+                },
+                undo:function(){         
+                    this.uprightVal=this.prevUprightVal;
+                    return this.uprightVal;
+                },
+                targetval:0 //the goal value
+            };
+            var drives=[uprightDrive];
+            var reflexes=[];
+            var numClusters=/*30*/17;
+            var ihtai = new Ihtai({
+                clusterCount:numClusters,
+                inputClusterDim:9,
+                outputClusterDim:4,
+                driveClusterDim:1,
+                memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+                drivesList:drives,
+                reflexList:reflexes,
+                acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
+                /*backStimCt:0,*/
+                distanceAlgo:"avg" /*avg or endState*/
+
+            });
+
+            function roundToTenth(num){
+                num*=10;
+                num=num >> 0;
+                num/=10;
+                return num;
+            }
+
+            /*
+            add touch [0 or 1] sensing for btm left arm, btm right arm, btm left leg, btm right leg.
+            */
+            var lowerLeftLegTouch=0, lowerRightLegTouch=0,lowerLeftArmTouch=0,lowerRightArmTouch=0;
+            function onBeginContact(payload){
+                switch(payload.bodyA.id){
+                    case lowerLeftLeg.id:
+                        lowerLeftLegTouch=1;
+                    break;
+                    case lowerRightLeg.id:
+                        lowerRightLegTouch=1;
+                    break;
+                    case lowerLeftArm.id:
+                        lowerLeftArmTouch=1;
+                    break;
+                    case lowerRightArm.id:
+                        lowerRightArmTouch=1;
+                    break;
+                }
+                switch(payload.bodyB.id){
+                    case lowerLeftLeg.id:
+                        lowerLeftLegTouch=1;
+                    break;
+                    case lowerRightLeg.id:
+                        lowerRightLegTouch=1;
+                    break;
+                    case lowerLeftArm.id:
+                        lowerLeftArmTouch=1;
+                    break;
+                    case lowerRightArm.id:
+                        lowerRightArmTouch=1;
+                    break;               
+                }
+            }        
+            function onEndContact(payload){
+                switch(payload.bodyA.id){
+                    case lowerLeftLeg.id:
+                        lowerLeftLegTouch=0;
+                    break;
+                    case lowerRightLeg.id:
+                        lowerRightLegTouch=0;
+                    break;
+                    case lowerLeftArm.id:
+                        lowerLeftArmTouch=0;
+                    break;
+                    case lowerRightArm.id:
+                        lowerRightArmTouch=0;
+                    break;
+                }
+                switch(payload.bodyB.id){
+                    case lowerLeftLeg.id:
+                        lowerLeftLegTouch=0;
+                    break;
+                    case lowerRightLeg.id:
+                        lowerRightLegTouch=0;
+                    break;
+                    case lowerLeftArm.id:
+                        lowerLeftArmTouch=0;
+                    break;
+                    case lowerRightArm.id:
+                        lowerRightArmTouch=0;
+                    break;               
+                }
+            }   
+
+            world.on("beginContact", onBeginContact);
+            world.on("endContact", onEndContact);
+
+            var lowerLeftLegForce=0, lowerRightLegForce=0, lowerLeftArmForce=0, lowerRightArmForce=0;
+            var firstCycle=true;
+            var lastTime, dt, t=0;
+            //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
+            var allInput='', ct=0, lastSD;
+
+            function mainLoop(){
+                requestAnimationFrame(mainLoop);
+
+                var dt = typeof t !== 'undefined' && typeof lastTime !== 'undefined' ? t / 1000 - lastTime : 0;
+                if(typeof t == 'undefined') t=0;
+                ct++;
+
+                var normalizedAngle=roundToTenth(normalizeAngle(pelvis.angle));
+                var lllegAngle = roundToTenth(normalizeAngle(lowerLeftLeg.angle));
+                var lrlegAngle = roundToTenth(normalizeAngle(lowerRightLeg.angle));
+                var llarmAngle = roundToTenth(normalizeAngle(lowerLeftArm.angle));
+                var lrarmAngle = roundToTenth(normalizeAngle(lowerRightArm.angle));
+
+                ///////////
+                //allInput+=(lowerLeftLegForce+ '+' + lowerRightLegForce + '+' + lowerLeftArmForce + '+' + lowerRightArmForce + '\r\n');
+                ///////////
+
+                var inputStm=[
+                    [normalizedAngle, lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch],
+                    [lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce]
+                ];
+                var res;
+
+                if(typeof lastSD == 'undefined' || Math.random() < Math.max(Math.min(lastSD/5, .1), 0) || firstCycle){
+                    res=ihtai.cycle(inputStm, dt*1000);
+                    firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
+                }
+                else{
+                    res=ihtai.daydream(inputStm, dt*1000);
+                }
+
+                //////// apply forces based on ihtai response ////////
+                if(res.memorizerOutput[0] != null && res.memorizerOutput[1] < /*9.9*/4.9){
+                    console.log('act on memory');
+                    //handle movement conditions for each
+                    lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
+                    lowerRightLegForce=res.memorizerOutput[0][1].stm[1];
+                    lowerLeftArmForce=res.memorizerOutput[0][1].stm[2];
+                    lowerRightArmForce=res.memorizerOutput[0][1].stm[3];
+                }
+                else{
+                    console.log('act on reflex')
+                    //apply random movement signals to each muscle
+                    lowerLeftLegForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});
+                    lowerRightLegForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});
+                    lowerLeftArmForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});
+                    lowerRightArmForce=IhtaiUtils.weightedRand({'-100':.1, '0':.8, '100':.1});                  
+                }
+
+                lastSD = res.memorizerOutput[1]
+
+                //apply forces on body parts
+                lowerLeftLeg.applyForce([lowerLeftLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+                lowerRightLeg.applyForce([lowerRightLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+                lowerLeftArm.applyForce([lowerLeftArmForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+                lowerRightArm.applyForce([lowerRightArmForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+                
+                lastTime = t / 1000;
+            }
+            //window.setInterval(mainLoop,0);
+
+            //window.setTimeout(afterOneMin, 10*1000);
+            function afterOneMin(){
+                var inputcsv=allInput;
+                var csv=ihtai.exportTemporalDataAsCSV();
+                debugger;
+            }
+
+            mainLoop(); 
+        });
+
+    </script>
+</body>
+</html>
