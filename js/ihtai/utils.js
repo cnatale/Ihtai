@@ -99,23 +99,35 @@ IhtaiUtils.binaryHeapToKdTreeRoot = (function(heap){
 	return root;
 });
 
-/*TODO: create binary heap with following capabilities:
+/*A binary heap with the following capabilities
 -create binary heap stored in array
 -add to heap
 -remove/update from any place in heap
 -return element with lowest value
 */
-IhtaiUtils.MinHeap = (function(_heap){
-	var heap;
+
+/*
+TODO: make into generalized heap that can take a min or max parameter on instantiation. The heap then
+      behaves as either a min or max heap. Takes param of 'min' or 'max'
+*/
+IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param*/){
+	var heap, heapType;
 	function init(){
-		if(typeof _heap != 'undefined') //has this instance been passed an existing heap object to re-inflate?
-			heap=_heap;
-		else
+		if( Array.isArray(_param) ) //has this instance been passed an existing heap object to re-inflate?
+			heap=_param;
+		else{
 			heap=[];
+			if(typeof _param == "undefined" || _param ==="min")
+				heapType="min" 
+			else
+				heapType="max"
+		}
 	}
 	init();
 
 	function insert(node){
+		//TODO:make usable for both min and max vals
+
 		/*
 		-Add element to end of heap
 		-compare element with its parent. if greater than parent, stop
@@ -127,13 +139,25 @@ IhtaiUtils.MinHeap = (function(_heap){
 		//TODO:think about changing this to a non-recursive approach for smaller memory footprint
 		function compare(node){
 			par=par(node); //the parent node index
-			//If current node's sd is less than parent, swap positions with parent. Secondary key is lvl.
-			if( (par >= 0 && heap[node].sd < heap[par].sd) || (par >= 0 && heap[node].sd == heap[par].sd && heap[node].lvl < heap[par].lvl) ){
-				tmp=heap[node];
-				heap[node]=heap[par];
-				heap[par]=tmp;
+			if(heapType==="min"){
+				//If current node's sd is less than parent, swap positions with parent. Secondary key is lvl.
+				if( (par >= 0 && heap[node].sd < heap[par].sd) || (par >= 0 && heap[node].sd == heap[par].sd && heap[node].lvl < heap[par].lvl) ){
+					tmp=heap[node];
+					heap[node]=heap[par];
+					heap[par]=tmp;
 
-				compare(par);
+					compare(par);
+				}
+			}
+			else{
+				//If current node's sd is more than parent, swap positions with parent. Secondary key is lvl.
+				if( (par >= 0 && heap[node].sd > heap[par].sd) || (par >= 0 && heap[node].sd == heap[par].sd && heap[node].lvl < heap[par].lvl) ){
+					tmp=heap[node];
+					heap[node]=heap[par];
+					heap[par]=tmp;
+
+					compare(par);
+				}				
 			}
 
 			function par(i){
@@ -181,6 +205,43 @@ IhtaiUtils.MinHeap = (function(_heap){
 		}
 	}
 
+	function maxHeapifyAll(){
+		/*
+		  Assume that heap[i]'s left and right children are max-heaps, but heap[i] might be smaller than
+		  its children, thus violating the max-heap property. The value of heap[i] floats down so that subtree rooted
+		  at index obeys the max-heap property. 
+		*/
+
+		var l, r, biggest, tmp;
+		function siftDown(i){
+			l=left(i); 
+			r=right(i);
+			if( (heap[l] && heap[l].sd > heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
+				biggest= l;
+			else
+				biggest= i;
+
+			if( (heap[r] && heap[r].sd > heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl)  )
+				biggest= r;
+
+			if(biggest != i){
+				//swap heap[i] with heap[smallest]
+				tmp=heap[i];
+				heap[i]=heap[smallest];
+				heap[smallest]=tmp;
+
+				siftDown(smallest);
+			}
+		}
+
+		var start=Math.floor((heap.length -2)/2);
+
+		while(start >= 0){
+			siftDown(start);
+			start-=1;
+		}		
+	}
+
 
 	function minHeapify(i){
 		/*
@@ -226,14 +287,57 @@ IhtaiUtils.MinHeap = (function(_heap){
 		}
 	}
 
-	var minItm, endItm;
-	function popMin(){
-		minItm=heap[0];
-		endItm=heap[heap.length-1];
+	function maxHeapify(i){
+		/*
+		  This is a version of maxHeapify written to run in log(n) time, for when only one element in a heap may have
+		  had its heap property changed (requires knowledge of which index's value changed). It has to be called every time there is an edit to a heap element's value, otherwise
+		  the heap property won't hold up.
+
+		  Assume that heap[i]'s left and right children are max-heaps, but heap[i] might be smaller than
+		  its children, thus violating the max-heap property. The value of heap[i] floats down so that subtree rooted
+		  at index obeys the max-heap property. 
+		*/
+
+		var l, r, biggest, tmp;
+		function siftDown(i){
+			l=left(i); 
+			r=right(i); 
+
+			if( (heap[l] && heap[l].sd > heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
+				biggest= l;
+			else
+				biggest= i;
+
+			if( (heap[r] && heap[r].sd > heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl) )
+				biggest= r;
+
+			if(biggest != i){
+				//swap heap[i] with heap[smallest]
+				tmp=heap[i];
+				heap[i]=heap[biggest];
+				heap[smallest]=tmp;
+
+				siftDown(biggest);
+			}
+		}
+
+		var start = Math.floor((i-1)/2);
+		if(i==0)
+			siftDown(i);
+
+		while(start >= 0){
+			siftDown(start);
+			start=Math.floor((start-1)/2);
+		}
+	}
+
+	function pop(){
+		var retItm=heap[0];
+		var endItm=heap[heap.length-1];
 		heap[0]=endItm;
 		heap.pop();
 		minHeapify(0);
-		return minItm;
+		return retItm;
 	}
 
 	function left(i){
@@ -246,19 +350,23 @@ IhtaiUtils.MinHeap = (function(_heap){
 		return Math.floor((i-1)/2);
 	}
 
-	function getMin(){
+	function peek(){
 		return heap[0];
 	}
+
+
 
 	return{
 		insert:insert,
 		minHeapify:minHeapify,
+		maxHeapify:maxHeapify,
 		minHeapifyAll:minHeapifyAll,
-		popMin:popMin,
-		getMin:getMin,
+		maxHeapifyAll:maxHeapifyAll,
+		pop:pop,
+		peek:peek,
 		heap:heap
 	}
-});
+};
 
 IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	var comparisonProp=_comparisonProp;

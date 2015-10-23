@@ -196,10 +196,11 @@ var Ihtai = (function(bundle){
 				driveList=bundle.drivesList;
 			else
 				throw "Error: no 'drivesList' property found in initialization Object!"
-			if(bundle.reflexList)
+			/*if(bundle.reflexList)
 				reflexList=bundle.reflexList;
 			else
 				throw "Error: no 'reflexes' property found in initialization Object!"
+			*/	
 			if(bundle.distanceAlgo)
 				distanceAlgo=bundle.distanceAlgo;
 			else
@@ -216,7 +217,7 @@ var Ihtai = (function(bundle){
 			inputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:inputClusterDim, bStmCt:bStmCt});
 			outputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:outputClusterDim, bStmCt:bStmCt});
 			driveClusters = new Clusters({_numClusters:clusterCount, _vectorDim:driveClusterDim, bStmCt:bStmCt});
-			reflexes = new Reflexes(reflexList);
+			//reflexes = new Reflexes(reflexList);
 			drives = new Drives(driveList);
 			driveGoals=drives.getGoals();
 			memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
@@ -279,6 +280,7 @@ var Ihtai = (function(bundle){
 		//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
 		//cycle memorizer	
 		if(_enableMemories){
+			debugger;
 			memorizerOutput=memorizer.query(curClusters);
 			memorizer.memorize(curClusters);
 		}
@@ -570,13 +572,13 @@ var Ihtai = (function(bundle){
 			memorizer:memorizer, 
 			memoryHeight:memoryHeight, 
 			driveList:driveList,
-			reflexList:reflexList,
+			/*reflexList:reflexList,*/
 			
 			clusters:clusters, 
 			drives:drives, 
 			reflexes:reflexes, 
 			acceptableRange:acceptableRange,
-			_enableReflexes:_enableReflexes, 
+			/*_enableReflexes:_enableReflexes, */
 			_enableMemories:_enableMemories
 		};
 	}
@@ -614,7 +616,7 @@ var Memorizer = (function(bundle){
 		}
 
 		var fromId=fromCluster.id, toId=toCluster.id;
-		minHeaps[toId]= new IhtaiUtils.MinHeap();
+		minHeaps[toId]= new IhtaiUtils.Heap("min");
 		//copy each level's series[id] from fromCluster to toCluster
 		for(var i=0; i<height; i++){
 			//deep copy the cluster temporal node
@@ -662,7 +664,7 @@ var Memorizer = (function(bundle){
 			This is necessary because json stringifying the minheaps instances strips out their methods. 
 			*/
 			for(var elm in minHeaps){
-				minHeaps[elm]=new IhtaiUtils.MinHeap(minHeaps[elm].heap);
+				minHeaps[elm]=new IhtaiUtils.Heap(minHeaps[elm].heap);
 			}
 
 		}
@@ -692,8 +694,8 @@ var Memorizer = (function(bundle){
 		var outputstm=null, stimDist, sd, combinedClustersId = toCombinedStmUID(clusters);
 
 		if(minHeaps.hasOwnProperty(combinedClustersId)){
-			try{ var min=minHeaps[combinedClustersId].getMin(); }
-			catch(e){ throw "Error: Memorizer.query() failed to execute minHeaps.getMin"; };
+			try{ var min=minHeaps[combinedClustersId].peek(); }
+			catch(e){ throw "Error: Memorizer.query() failed to execute minHeaps.peek"; };
 			
 			var sd= min.sd;
 			if(sd/**(1/(1+level[i].series[cluster.id].ct/maxCollisions))*/ <= acceptableRange){
@@ -747,6 +749,7 @@ var Memorizer = (function(bundle){
 				fs=buffer.length-size;
 				ss=buffer.length-size+1;
 				es=buffer.length-1;
+				//debugger;
 				fsid=toCombinedStmUID(buffer[fs]);
 				s=level[i].series[fsid];				
 
@@ -881,7 +884,7 @@ var Memorizer = (function(bundle){
 					//add to fsid's minHeap, or create minHeap if it doesn't exist	
 					//calculate sqdist between es and drive goals. store this value and use it to key minheap
 					if(!minHeaps.hasOwnProperty(fsid))
-						minHeaps[fsid]= new IhtaiUtils.MinHeap();
+						minHeaps[fsid]= new IhtaiUtils.Heap("min");
 	
 					minHeaps[fsid].insert(level[i].series[fsid]);	
 
