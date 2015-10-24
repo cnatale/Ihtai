@@ -1,3 +1,4 @@
+"use strict";
 /**
 Copyright (c) 2015 Chris Natale
 
@@ -602,7 +603,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, minHeaps={};
+	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, minHeaps={}, maxHeaps={};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
@@ -697,7 +698,7 @@ var Memorizer = (function(bundle){
 			catch(e){ throw "Error: Memorizer.query() failed to execute minHeaps.peek"; };
 			
 			var sd= min.sd;
-			if(sd/**(1/(1+level[i].series[cluster.id].ct/maxCollisions))*/ <= acceptableRange){
+			if(sd <= acceptableRange){
 				//console.log('lvl:'+ min.lvl);
 				//console.log('min.ss: '+min.ss);
 				//console.log('min.es:'+min.es);
@@ -717,8 +718,6 @@ var Memorizer = (function(bundle){
 	*/
 	var temporalPlanners=0;
 	function memorize(clusters){
-		/*TODO: change es to be the average value of all time steps, starting at ss, in memory.*/
-
 		/*
 			Loop through each time level. At level i, a memory series is i+2 moments long. 
 			The only moments we need to store in the series are the start and end moments, though.
@@ -731,7 +730,7 @@ var Memorizer = (function(bundle){
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, fsid, s, sd;
+		var sd1,sd2,size, fs, ss, es, fsid, series, sd;
 
 		//update the buffer
 		buffer.push(clusters);
@@ -743,14 +742,13 @@ var Memorizer = (function(bundle){
 		*/
 		for(var i=0; i<height; i++){
 			size=i+2;
-			//Once we have a buffer full enough for this level, add a memory every cycle
+			//Once we have a buffer full enough for this level, attempt to add a memory every cycle
 			if(buffer.length>=size && size<=height){
 				fs=buffer.length-size;
 				ss=buffer.length-size+1;
 				es=buffer.length-1;
-				//debugger;
 				fsid=toCombinedStmUID(buffer[fs]);
-				s=level[i].series[fsid];				
+				series=level[i].series[fsid];	 //was s			
 
 				var avg=[], ctr=0;
 
@@ -810,32 +808,32 @@ var Memorizer = (function(bundle){
 					saying, "we started at the same state. The next step's output was also the same. These are 
 					effectively the same actions taken by the agent, so average their resulting drive scores."
 					*/
-					if(buffer[ss][1].id == s.ss[1].id){
+					if(buffer[ss][1].id == series.ss[1].id){
 						var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
-						var esGoalDist = s.es/*[2]*/.stm.slice();
-						s.ct++;
+						var esGoalDist = series.es/*[2]*/.stm.slice();
+						series.ct++;
 						//clamp upper bound to keep memory from getting too 'stuck'
-						if(s.ct>maxCollisions)
-							s.ct=maxCollisions;
+						if(series.ct>maxCollisions)
+							series.ct=maxCollisions;
 
 						for(var j=0;j<bufferGoalDist.stm.length;j++){
-							var ct=s.ct;
+							var ct=series.ct;
 							esGoalDist[j]= ((esGoalDist[j]*ct)+bufferGoalDist.stm[j])/(ct+1);
 						}
 						var args = [0, homeostasisGoal.length].concat(esGoalDist);
-						Array.prototype.splice.apply(s.es/*[2]*/.stm, args);	
+						Array.prototype.splice.apply(series.es/*[2]*/.stm, args);	
 						//console.log('existing memory updated');
 
 						
 						//update sqdist of endstate from drive goals and store in s
-						s.sd= sqDist(s.es/*[2]*/.stm, homeostasisGoal);
+						series.sd= sqDist(series.es.stm, homeostasisGoal);
 					}
 					else{ 
 
 						//second states are different. Figure out which one leads to better outcome.
 						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][2].stm.slice(), homeostasisGoal);
 						try{
-						sd2 = sqDist(s.es/*[2]*/.stm.slice(), homeostasisGoal);
+						sd2 = sqDist(series.es.stm.slice(), homeostasisGoal);
 						}catch(e){debugger;}
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
@@ -852,11 +850,11 @@ var Memorizer = (function(bundle){
 							/*TODO:doesn't look like s.fs is being used by anything. get rid of it?
 							WARNING: s.fs is used for fsid property. you'd need to directly store to make this work*/
 
-							s.fs=buffer[fs];
-							s.ss=buffer[ss];
-							s.es=distanceAlgo=="avg" ?  avg : buffer[es]; /*.stm.slice();*/
-							s.ct=0;
-							s.sd=sd1;
+							series.fs=buffer[fs];
+							series.ss=buffer[ss];
+							series.es=distanceAlgo=="avg" ?  avg : buffer[es]; /*.stm.slice();*/
+							series.ct=0;
+							series.sd=sd1;
 						}	
 						//If sd1>=sd2, ignore the stm b/c acting on it isn't as effective as acting on currently stored stm.
 					}		
@@ -968,7 +966,7 @@ var Memorizer = (function(bundle){
 var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 	var clusterTree, cache={}, idCtr=0, memorizerRef;
 	var numClusters = bundle._numClusters;	
-	bStmCt=bundle.bStmCt;
+	var bStmCt=bundle.bStmCt;
 
 	var combinedSignal = function(){
 		var output=[];
@@ -1141,7 +1139,7 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 	@params drives: Array. An array of drive methods. Each drive takes form {init:function, cycle:function}
 */
 var Drives = (function(_drives){
-	var drives = _drives; avgDriveval=[];avgDriveCtr=0;
+	var drives = _drives, avgDriveval=[], avgDriveCtr=0;
 	function init(){
 		for(var i=0;i<drives.length;i++){
 			drives[i].init();
