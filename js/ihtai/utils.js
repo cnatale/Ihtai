@@ -41,6 +41,11 @@ String.prototype.escapeSpecialChars = function() {
                .replace(new RegExp("\f", "g"), "\\f");
 };
 
+IhtaiUtils.toCombinedStmUID=function(clusters){
+	var combinedClustersId = clusters[0].id + "+" + clusters[1].id + "+" + clusters[2].id;
+	return combinedClustersId;		
+}
+
 // code from http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
 IhtaiUtils.weightedRand = (function(spec) {
   	var i, j, table=[];
@@ -341,6 +346,13 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 		else
 			maxHeapify(0);
 		return retItm;
+	}
+
+	//removes an item by uid string. n*log(n) operation
+	function remove(uid){
+		for(var i=0;i<heap.length;i++){
+			//if(heap[i].ss.)
+		}
 	}
 
 	function left(i){

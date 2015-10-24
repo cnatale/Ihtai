@@ -679,11 +679,6 @@ var Memorizer = (function(bundle){
 	}
 	init();
 
-	function toCombinedStmUID(clusters){
-		var combinedClustersId = clusters[0].id + "+" + clusters[1].id + "+" + clusters[2].id;
-		return combinedClustersId;		
-	}
-
 	/**
 		Takes a cluster containing vector representing current i/o stm state combined with current 
 		drive state.
@@ -691,11 +686,11 @@ var Memorizer = (function(bundle){
 		If no vector is within acceptable range, return null. 2) The square distance of the returned action stimuli from ideal drive state.
 	*/
 	function query(clusters){
-		var outputstm=null, stimDist, sd, combinedClustersId = toCombinedStmUID(clusters);
+		var outputstm=null, stimDist, sd, combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 
 		if(minHeaps.hasOwnProperty(combinedClustersId)){
-			try{ var min=minHeaps[combinedClustersId].peek(); }
-			catch(e){ throw "Error: Memorizer.query() failed to execute minHeaps.peek"; };
+			try{ var min = minHeaps[combinedClustersId].peek();}
+			catch(e){ throw "Error: Memorizer.query() failed to execute minHeaps peek"; };
 			
 			var sd= min.sd;
 			if(sd <= acceptableRange){
@@ -730,7 +725,7 @@ var Memorizer = (function(bundle){
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, fsid, series, sd;
+		var sd1,sd2,size, fs, ss, es, fsid, seriesArray, sd, ssMatch, maxHeapVal;
 
 		//update the buffer
 		buffer.push(clusters);
@@ -747,8 +742,8 @@ var Memorizer = (function(bundle){
 				fs=buffer.length-size;
 				ss=buffer.length-size+1;
 				es=buffer.length-1;
-				fsid=toCombinedStmUID(buffer[fs]);
-				series=level[i].series[fsid];	 //was s			
+				fsid=IhtaiUtils.toCombinedStmUID(buffer[fs]);
+				seriesArray=level[i].series[fsid];			
 
 				var avg=[], ctr=0;
 
@@ -780,60 +775,66 @@ var Memorizer = (function(bundle){
 				current series stored at this start state, overwrite. If no current series is stored
 				at this start state, store it regardless.
 				*/				
+				ssMatch=false;
 				if(level[i].series.hasOwnProperty(fsid)){
-					/*
-					If first and second states are the same, store the memory
-					as weighted average of the two memories(same firstState and ss, es drive vals become
-					weighted average)
+					for(var k=0;k<seriesArray.length; k++){ //loop over series[fsid] array
+						/*
+						If first and second states are the same, store the memory
+						as weighted average of the two memories(same firstState and ss, es drive vals become
+						weighted average)
 
-					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
-					should raise its cost for future queries. Also if stored outcome becomes more optimal,
-					increase fitness. 
+						This handles the case where a previously optimal memory leads to a less optimal outcome, which 
+						should raise its cost for future queries. Also if stored outcome becomes more optimal,
+						increase fitness. 
 
-					It also simulates how behavior "hardens" as it is carried out more and more often
-					by using a weighted average that increases with number of ct (collisions count).
-					The averaging step is weighted in favor of the existing drive es,
-					based on how many ss ct have occurred. The more ct, the more the
-					averaging step is weighted towards the existing drive es. This requires storing an 
-					extra number holding the ss collision count, reset every time new ss and es
-					is selected (as opposed to non-weighted average).
+						It also simulates how behavior "hardens" as it is carried out more and more often
+						by using a weighted average that increases with number of ct (collisions count).
+						The averaging step is weighted in favor of the existing drive es,
+						based on how many ss ct have occurred. The more ct, the more the
+						averaging step is weighted towards the existing drive es. This requires storing an 
+						extra number holding the ss collision count, reset every time new ss and es
+						is selected (as opposed to non-weighted average).
 
-					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
-					by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
-					*/		
+						Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
+						by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
+						*/		
 
-					/*
-					Note that we are comparing second state output stimuli here. If the buffer and stored memory
-					have the same output values at their second state, average their drive values. This is a way of
-					saying, "we started at the same state. The next step's output was also the same. These are 
-					effectively the same actions taken by the agent, so average their resulting drive scores."
-					*/
-					if(buffer[ss][1].id == series.ss[1].id){
-						var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
-						var esGoalDist = series.es/*[2]*/.stm.slice();
-						series.ct++;
-						//clamp upper bound to keep memory from getting too 'stuck'
-						if(series.ct>maxCollisions)
-							series.ct=maxCollisions;
+						/*
+						Note that we are comparing second state output stimuli here. If the buffer and stored memory
+						have the same output values at their second state, average their drive values. This is a way of
+						saying, "we started at the same state. The next step's output was also the same. These are 
+						effectively the same actions taken by the agent, so average their resulting drive scores."
+						*/
+						if(buffer[ss][1].id == seriesArray[k].ss[1].id){
+							var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
+							var esGoalDist = seriesArray[k].es.stm.slice();
+							seriesArray[k].ct++;
+							//clamp upper bound to keep memory from getting too 'stuck'
+							if(seriesArray[k].ct>maxCollisions)
+								seriesArray[k].ct=maxCollisions;
 
-						for(var j=0;j<bufferGoalDist.stm.length;j++){
-							var ct=series.ct;
-							esGoalDist[j]= ((esGoalDist[j]*ct)+bufferGoalDist.stm[j])/(ct+1);
+							for(var j=0;j<bufferGoalDist.stm.length;j++){
+								var ct=seriesArray[k].ct;
+								esGoalDist[j]= ((esGoalDist[j]*ct)+bufferGoalDist.stm[j])/(ct+1);
+							}
+							var args = [0, homeostasisGoal.length].concat(esGoalDist);
+							Array.prototype.splice.apply(seriesArray[k].es.stm, args);	
+							//console.log('existing memory updated');
+
+							
+							//update sqdist of endstate from drive goals and store in s
+							seriesArray[k].sd= sqDist(seriesArray[k].es.stm, homeostasisGoal);
+							ssMatch=true;
+							break;
 						}
-						var args = [0, homeostasisGoal.length].concat(esGoalDist);
-						Array.prototype.splice.apply(series.es/*[2]*/.stm, args);	
-						//console.log('existing memory updated');
+					}	
 
-						
-						//update sqdist of endstate from drive goals and store in s
-						series.sd= sqDist(series.es.stm, homeostasisGoal);
-					}
-					else{ 
-
+					if(!ssMatch){ 
 						//second states are different. Figure out which one leads to better outcome.
 						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][2].stm.slice(), homeostasisGoal);
 						try{
-						sd2 = sqDist(series.es.stm.slice(), homeostasisGoal);
+							maxHeapVal=maxHeaps[fsid].peek();
+							sd2 = maxHeapVal.sd;
 						}catch(e){debugger;}
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
@@ -846,18 +847,19 @@ var Memorizer = (function(bundle){
 							//add memory series to level. Hash based on starting state cluster id.
 							//console.log('replacement memory learned');
 
-
-							/*TODO:doesn't look like s.fs is being used by anything. get rid of it?
-							WARNING: s.fs is used for fsid property. you'd need to directly store to make this work*/
-
-							series.fs=buffer[fs];
-							series.ss=buffer[ss];
-							series.es=distanceAlgo=="avg" ?  avg : buffer[es]; /*.stm.slice();*/
-							series.ct=0;
-							series.sd=sd1;
+							seriesArray.push({
+								fs:buffer[fs],
+								ss:buffer[ss],
+								es:distanceAlgo=="avg" ?  avg : buffer[es],
+								ct:0,
+								sd:sd1,
+								lvl:i
+							});
 						}	
 						//If sd1>=sd2, ignore the stm b/c acting on it isn't as effective as acting on currently stored stm.
-					}		
+					}	
+
+
 				}
 				else/* if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange)*/{
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
@@ -867,25 +869,55 @@ var Memorizer = (function(bundle){
 					level[i].series[fsid] Objects after too many have been made. prevents 
 					engine from grinding to a halt due to lack of available memory.
 					*/
-					if(temporalPlanners>3274926)
-						return;
+					//if(temporalPlanners>3274926)
+					//	return;
 
-					level[i].series[fsid]={
+					level[i].series[fsid]=[];
+					level[i].series[fsid].push({
 						fs: buffer[fs], 
 						ss: buffer[ss],
 						es: distanceAlgo=="avg" ?  avg: buffer[es] /*.stm.slice()*/,
 						ct: 0,
 						sd:sqDist(distanceAlgo=="avg" ? avg : buffer[es][2].stm.slice(), homeostasisGoal),
 						lvl: i /*logging purposes only*/
-					};		
+					});		
 					//add to fsid's minHeap, or create minHeap if it doesn't exist	
 					//calculate sqdist between es and drive goals. store this value and use it to key minheap
 					if(!minHeaps.hasOwnProperty(fsid))
 						minHeaps[fsid]= new IhtaiUtils.Heap("min");
-	
-					minHeaps[fsid].insert(level[i].series[fsid]);	
 
-					/*Keep track of total # of level[i].series[fsid] Objects created.
+					if(!maxHeaps.hasOwnProperty(fsid))
+						maxHeaps[fsid]= new IhtaiUtils.Heap("max");
+	
+					minHeaps[fsid].insert(level[i].series[fsid][0]);	
+					maxHeaps[fsid].insert(level[i].series[fsid][0]);
+
+					//if heap.length > height, remove maxHeap val from minHeaps, maxHeaps, and the level array
+					if(maxHeaps[fsid].heap.length > 1/*height*/){
+						maxHeapVal=maxHeaps[fsid].peek();
+
+						var uid=IhtaiUtils.toCombinedStmUID(maxHeapVal.ss);
+						//If we don't get rid of it in all three places, it's going to leak memory badly.
+						//This probably needs to be a nested loop						
+						for(var j=0; j<height; j++){
+							if(level[j].series.hasOwnProperty(fsid)){
+								for(var k=0; k< level[i].series[fsid].length; k++){
+									//if uid matches maxHeap val, remove it
+									if(IhtaiUtils.toCombinedStmUID(level[i].series[fsid][k].ss) === uid ){
+										level[i].series[fsid].splice(k,1);
+									}
+
+								}
+							}
+						}
+						//todo:remove from minheap
+
+
+						//remove from maxheap (the easy one)
+						maxHeaps[fsid].pop();
+					}
+
+					/*Keep track of total # of level[i].seriesArray[fsid] Objects created.
 					Multiply with IHTAI's clustercount property to get rough estimate of memory
 					used by IHTAI. Check that against cutoff value.
 					*/
@@ -896,7 +928,8 @@ var Memorizer = (function(bundle){
 
 		if(typeof fsid !== "undefined"){
 			//re-heapify in case a heap member's value has changed
-			minHeaps[fsid].minHeapifyAll();			
+			minHeaps[fsid].minHeapifyAll();		
+			maxHeaps[fsid].maxHeapifyAll();	
 		}
 	}
 
