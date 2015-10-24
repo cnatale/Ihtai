@@ -221,16 +221,16 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 			else
 				biggest= i;
 
-			if( (heap[r] && heap[r].sd > heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl)  )
+			if( (heap[r] && heap[r].sd > heap[biggest].sd) || (heap[r] && heap[r].sd == heap[biggest].sd && heap[r].lvl < heap[biggest].lvl)  )
 				biggest= r;
 
 			if(biggest != i){
 				//swap heap[i] with heap[smallest]
 				tmp=heap[i];
-				heap[i]=heap[smallest];
-				heap[smallest]=tmp;
+				heap[i]=heap[biggest];
+				heap[biggest]=tmp;
 
-				siftDown(smallest);
+				siftDown(biggest);
 			}
 		}
 
@@ -308,14 +308,14 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 			else
 				biggest= i;
 
-			if( (heap[r] && heap[r].sd > heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl) )
+			if( (heap[r] && heap[r].sd > heap[biggest].sd) || (heap[r] && heap[r].sd == heap[biggest].sd && heap[r].lvl < heap[biggest].lvl) )
 				biggest= r;
 
 			if(biggest != i){
 				//swap heap[i] with heap[smallest]
 				tmp=heap[i];
 				heap[i]=heap[biggest];
-				heap[smallest]=tmp;
+				heap[biggest]=tmp;
 
 				siftDown(biggest);
 			}
@@ -336,7 +336,10 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 		var endItm=heap[heap.length-1];
 		heap[0]=endItm;
 		heap.pop();
-		minHeapify(0);
+		if(heapType==="min")
+			minHeapify(0);
+		else
+			maxHeapify(0);
 		return retItm;
 	}
 

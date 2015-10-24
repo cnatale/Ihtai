@@ -416,15 +416,23 @@ describe('ihtai utils', function(){
 	});
 
 	describe('binary heap', function(){
-		var minHeap;
+		var minHeap, maxHeap;
 		beforeEach(function(){
-			minHeap=IhtaiUtils.Heap();
+			minHeap=IhtaiUtils.Heap("min");
 			minHeap.insert({sd:9, lvl:10});
 			minHeap.insert({sd:3, lvl:20});
 			minHeap.insert({sd:7, lvl:30});
 			minHeap.insert({sd:5, lvl:40});
 			minHeap.insert({sd:2, lvl:50});
-			minHeap.insert({sd:8, lvl:60});			
+			minHeap.insert({sd:8, lvl:60});		
+
+			maxHeap=IhtaiUtils.Heap("max");
+			maxHeap.insert({sd:9, lvl:10});
+			maxHeap.insert({sd:3, lvl:20});
+			maxHeap.insert({sd:7, lvl:30});
+			maxHeap.insert({sd:5, lvl:40});
+			maxHeap.insert({sd:2, lvl:50});
+			maxHeap.insert({sd:8, lvl:60});					
 
 		});
 
@@ -434,6 +442,7 @@ describe('ihtai utils', function(){
 		});
 
 		it('should add elements to heap and maintain heap property', function(){
+			//minheap
 			var sortedList=[];
 			var l=minHeap.heap.length;
 			for(var i=0;i<l; i++){
@@ -443,9 +452,22 @@ describe('ihtai utils', function(){
 			for(var i=0;i<sortedList.length;i++){
 				expect(sortedList[i].sd).toEqual(tstArr[i]);
 			}
+
+			//maxheap
+			sortedList=[];
+			var l=maxHeap.heap.length;
+			for(var i=0;i<l; i++){
+				sortedList.push(maxHeap.pop());
+			}
+
+			tstArr=[9,8,7,5,3,2];
+			for(var i=0;i<sortedList.length;i++){
+				expect(sortedList[i].sd).toEqual(tstArr[i]);
+			}			
 		});
 
 		it('should maintain secondary sorting based on lvl property', function(){
+			//minheap
 			var minHeap=IhtaiUtils.Heap();
 			minHeap.insert({sd:8, lvl:60});
 			minHeap.insert({sd:8, lvl:20});
@@ -455,12 +477,24 @@ describe('ihtai utils', function(){
 			minHeap.insert({sd:8, lvl:60});	
 
 			var minElm=minHeap.pop();
-			expect(minElm.lvl).toEqual(10);		
+			expect(minElm.lvl).toEqual(10);	
+
+			//maxheap
+			var maxHeap=IhtaiUtils.Heap();
+			maxHeap.insert({sd:8, lvl:60});
+			maxHeap.insert({sd:8, lvl:20});
+			maxHeap.insert({sd:8, lvl:30});
+			maxHeap.insert({sd:8, lvl:40});
+			maxHeap.insert({sd:8, lvl:10});
+			maxHeap.insert({sd:8, lvl:60});	
+
+			var maxElm=maxHeap.pop();
+			expect(maxElm.lvl).toEqual(10);					
 		})
 
-		it('should generate a lot of points, add to heap, while always keeping minimum value in position 0', function(){
+		it('minheap should generate a lot of points, add to heap, while always keeping minimum value in position 0', function(){
 			var minVal=Infinity, minHeap, curVal, numElms=10000;
-			minHeap=IhtaiUtils.Heap();
+			minHeap=IhtaiUtils.Heap("min");
 			for(var i=0;i<numElms;i++){
 				curVal=Math.round(Math.random()*100);
 				minHeap.insert({sd:curVal, lvl:i});
@@ -470,6 +504,19 @@ describe('ihtai utils', function(){
 
 			expect(minHeap.peek().sd).toBe(minVal);
 		});
+
+		it('maxheap should generate a lot of points, add to heap, while always keeping maximum value in position 0', function(){
+			var maxVal=0, maxHeap, curVal, numElms=10000;
+			maxHeap=IhtaiUtils.Heap("max");
+			for(var i=0;i<numElms;i++){
+				curVal=Math.round(Math.random()*1000);
+				maxHeap.insert({sd:curVal, lvl:i});
+				if(curVal>maxVal)
+					maxVal=curVal;
+			}
+
+			expect(maxHeap.peek().sd).toBe(maxVal);
+		});		
 
 		it('should edit the value of a heap element, and maintain heap property after calling minHeapify on it', function(){
 			var indx=minHeap.heap.length-1;
@@ -486,7 +533,26 @@ describe('ihtai utils', function(){
 				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
 			}
 		});
-		it('should remove the smallest element from heap', function(){
+		it('should edit the value of a heap element, and maintain heap property after calling maxHeapify on it', function(){
+			var indx=maxHeap.heap.length-1;
+			maxHeap.heap[indx]={sd:999999999};
+			maxHeap.maxHeapify(indx);
+			expect(maxHeap.peek().sd).toBe(999999999);
+
+			//change the large number in maxheap position to 0
+			maxHeap.heap[0]={sd:0};
+			maxHeap.maxHeapify(0);
+			//9 should be the larges number left in the heap
+			expect(maxHeap.peek().sd).toBe(9);
+
+			var tstArr=[9, 5, 8, 3, 2, 0];
+		
+			for(var i=0;i<maxHeap.heap.length;i++){
+				expect(maxHeap.heap[i].sd).toEqual(tstArr[i]);
+			}
+		});
+
+		it('pop() should remove the smallest element from minheap', function(){
 			var min=minHeap.pop();
 			expect(min.sd).toBe(2);
 			var tstArr=[3, 5, 7, 9, 8];
@@ -494,13 +560,31 @@ describe('ihtai utils', function(){
 				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
 			}
 		});
-		it('should remove elements from heap when popMin() is called', function(){
+		it('pop() should remove the largest element from maxheap', function(){
+			var max=maxHeap.pop();
+			expect(max.sd).toBe(9);
+			var tstArr=[3, 5, 7, 9, 8];
+
+			expect(maxHeap.heap[0].sd).toEqual(8);
+			/*for(var i=0;i<maxHeap.heap.length;i++){
+				expect(maxHeap.heap[i].sd).toEqual(tstArr[i]);
+			}*/
+		});		
+		it('should remove elements from heap when pop() is called', function(){
+			//minheap
 			for(var i=0;i<6;i++){
 				minHeap.pop();
 			}
 			expect(minHeap.heap.length).toBe(0);
+
+			//maxheap
+			for(var i=0;i<6;i++){
+				maxHeap.pop();
+			}
+			expect(maxHeap.heap.length).toBe(0);
 		})
 		it('should perform heapify on all elements', function(){
+			//minheap
 			minHeap.heap[0]={sd:77};
 			minHeap.heap[3]={sd:5000};
 			minHeap.heap[2]={sd:1};
@@ -509,9 +593,20 @@ describe('ihtai utils', function(){
 			for(var i=0;i<minHeap.heap.length;i++){
 				expect(minHeap.heap[i].sd).toEqual(tstArr[i]);
 			}
+
+			//maxheap
+			maxHeap.heap[0]={sd:77};
+			maxHeap.heap[3]={sd:5000};
+			maxHeap.heap[2]={sd:1};
+			maxHeap.maxHeapifyAll();
+			tstArr=[5000, 77, 7, 5, 2, 1];
+			for(var i=0;i<maxHeap.heap.length;i++){
+				expect(maxHeap.heap[i].sd).toEqual(tstArr[i]);
+			}			
 		});
 		it('should dequeue the values 1 to 50 in order when randomly inserted', function(){
-			var minHeap=IhtaiUtils.Heap();
+			//minheap
+			var minHeap=IhtaiUtils.Heap("min");
 			var inputArr=[], rnd;
 			for(var i=0;i<50;i++){
 				inputArr[i]=i+1;
@@ -530,6 +625,27 @@ describe('ihtai utils', function(){
 			for(i=1;i<=50;i++){
 				expect(minHeap.pop().sd).toEqual(i);
 			}
+
+			//maxheap
+			var maxHeap=IhtaiUtils.Heap("max");
+			inputArr=[];
+			for(var i=0;i<50;i++){ //insert values 1-50 into array
+				inputArr[i]=i+1;
+			}
+
+			//insert elements randomly into maxheap
+			var ctr=49;
+			for(i=0;i<50;i++){
+				rnd=Math.round(Math.random()*ctr);
+				maxHeap.insert({sd:inputArr[rnd]});
+				inputArr.splice(rnd, 1);
+				ctr--;
+			}
+
+			//make sure elements output in order
+			for(i=50;i>0;i--){
+				expect(maxHeap.pop().sd).toEqual(i);
+			}			
 		});
 	});
 

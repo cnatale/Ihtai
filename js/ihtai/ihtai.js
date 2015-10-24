@@ -280,7 +280,6 @@ var Ihtai = (function(bundle){
 		//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
 		//cycle memorizer	
 		if(_enableMemories){
-			debugger;
 			memorizerOutput=memorizer.query(curClusters);
 			memorizer.memorize(curClusters);
 		}
