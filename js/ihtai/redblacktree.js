@@ -55,6 +55,12 @@ function RedBlackTree(){
 
 		return node;
 	}
+
+	/**
+	@function insert
+	Inserts a node into tree
+	@param z {node} A tree node that contains a key property
+	*/
 	function insert(z){
 		var y = nilNode;
 		var x = root;

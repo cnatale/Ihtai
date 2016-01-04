@@ -965,7 +965,7 @@ var Memorizer = (function(bundle){
 		var csv="";
 
 		/*
-		TODO: loop through. Outer loop is Cluster id, inner loop is level
+		TODO: this isn't going to work anymore because the series properties are string indices
 		*/
 		for(var i=0;i<clusterCount;i++){
 
