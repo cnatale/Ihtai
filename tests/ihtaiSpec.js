@@ -114,10 +114,10 @@ describe('ihtai', function(){
 		//TODO: these aren't currently working. add tests back in when red-black tree is implemented
 		it('should memorize vectors', function(){
 			var levels = memorizer.getLevels();
-			for(var i in levels[0].series["3+3+3"]){
+			/*for(var i in levels[0].series["3+3+3"]){
 				if(levels[0].series["3+3+3"].hasOwnProperty(i))
 					console.log('prop: '+ levels[0].series["3+3+3"][i]);
-			}
+			}*/
 			//expect(levels[0].series["3+3+3"].fs).toEqual(jasmine.objectContaining(memory4));
 			//expect(levels[0].series["3+3+3"].ss).toEqual(jasmine.objectContaining(memory5));
 			//expect(levels[0].series["3+3+3"].es).toEqual(jasmine.objectContaining({stm:[35]}));

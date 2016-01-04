@@ -55,6 +55,9 @@ function RedBlackTree(){
 
 		return node;
 	}
+	function getRoot(){
+		return root;
+	}
 
 	/**
 	@function insert
@@ -83,6 +86,7 @@ function RedBlackTree(){
 		z.left = nilNode;
 		z.right = nilNode;
 		z.color = RED;
+		//console.log(root)
 		insertFixup(z);
 	}
 	function insertFixup(z){
@@ -137,6 +141,6 @@ function RedBlackTree(){
 		min:min,
 		insert:insert,
 		remove:remove,
-		root:root
+		getRoot:getRoot
 	}
 };
