@@ -47,13 +47,22 @@ function RedBlackTree(){
 	}
 
 	function max(){
-		
+		var node = root;
 
-		return node;
+		while(node.right.key !== null){
+			node = node.right;
+		}
+
+		return node.key;
 	}
 	function min(){
+		var node = root;
 
-		return node;
+		while(node.left.key !== null){
+			node = node.left;
+		}
+
+		return node.key;
 	}
 	function getRoot(){
 		return root;
