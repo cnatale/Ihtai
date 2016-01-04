@@ -95,7 +95,6 @@ function RedBlackTree(){
 		z.left = nilNode;
 		z.right = nilNode;
 		z.color = RED;
-		//console.log(root)
 		insertFixup(z);
 	}
 	function insertFixup(z){

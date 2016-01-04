@@ -29,11 +29,46 @@ describe('ihtai utils', function(){
 		it('Should delete nodes from the tree', function(){
 			expect(false).toBe(true);
 		});
-
+		*/
 		it('Should keep the path from the root to the farthest leaf no more than twice the length of the path from the root to the nearest leaf', function(){
-			expect(false).toBe(true);
+			function countRtChildDepth(node, ht){
+				if(typeof ht === 'undefined')
+					ht=0;
+
+				if(node.key === null)
+					return ht;
+
+				
+				return countRtChildDepth(node.right,++ht);
+			}
+
+			function countLtChildDepth(node, ht){
+				if(typeof ht === 'undefined')
+					ht=0;
+
+				if(node.key === null)
+					return ht;
+
+				
+				return countLtChildDepth(node.left,++ht);
+			}
+
+			var tree = new RedBlackTree();
+			tree.insert({key:1});
+			tree.insert({key:2});
+			tree.insert({key:3});
+			tree.insert({key:4});
+			tree.insert({key:5});
+			tree.insert({key:6});
+			tree.insert({key:7});
+			tree.insert({key:8});
+			
+			//rt path would be height of 8 without balancing, left would be 1
+			expect(countRtChildDepth(tree.getRoot())).toBe(4);
+
+			expect(countLtChildDepth(tree.getRoot())).toBe(3);		
 		});
-	*/
+
 		it('Should return the smallest value stored in the tree', function(){
 			var tree = new RedBlackTree();
 			tree.insert({key:10});
