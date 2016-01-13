@@ -38,6 +38,20 @@ describe('ihtai utils', function(){
 		
 		
 		it('Should delete nodes from the tree', function(){
+			function getInOrderKeys(node, res){
+				if(typeof res === 'undefined')
+					res=[];
+
+				if(node.key===null)
+					return;
+
+				getInOrderKeys(node.left, res);
+				res.push(node.key);
+				getInOrderKeys(node.right, res);
+
+				return res;
+			}	
+
 			var T = $R.createTree();
 			$R.insert(T, {key:10});
 			$R.insert(T, {key:5});
@@ -49,6 +63,10 @@ describe('ihtai utils', function(){
 			var newRootKey = T.root.key;
 
 			expect(oldRootKey).not.toEqual(newRootKey);
+			var keys = getInOrderKeys(T.root);
+			for(var i=0; i<keys.length; i++){
+				expect(keys[i].key).not.toEqual(oldRootKey);
+			}
 		});
 		
 		it('Should keep the path from the root to the farthest leaf no more than twice the length of the path from the root to the nearest leaf', function(){
