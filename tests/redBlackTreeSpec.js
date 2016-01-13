@@ -67,6 +67,8 @@ describe('ihtai utils', function(){
 			for(var i=0; i<keys.length; i++){
 				expect(keys[i].key).not.toEqual(oldRootKey);
 			}
+		
+			expect(keys).toEqual([3,10,20]);
 		});
 		
 		it('Should keep the path from the root to the farthest leaf no more than twice the length of the path from the root to the nearest leaf', function(){
