@@ -51,23 +51,21 @@ var RedBlackTree  = (function RedBlackTree(){
 		y.p = x;
 	}
 
-	function max(T){
-		var node = T.root;
-
+	function max(node){
 		while(node.right.key !== null){
 			node = node.right;
 		}
 
-		return node.key;
+		return node;
 	}
-	function min(T){
-		var node = T.root;
+	function min(node){
+		if(node.key)
 
 		while(node.left.key !== null){
 			node = node.left;
 		}
 
-		return node.key;
+		return node;
 	}
 	function getRoot(){
 		return root;
@@ -147,8 +145,9 @@ var RedBlackTree  = (function RedBlackTree(){
 
 	/*** Delete methods ***/
 	function rbTransplant(T, u, v) {
-		if(u.p === nil)
+		if(u.p === nilNode){
 			T.root = v;
+		}
 		else if (u === u.p.left)
 			u.p.left = v;
 		else 
@@ -156,30 +155,30 @@ var RedBlackTree  = (function RedBlackTree(){
 		v.p = u.p;
 	}
 
-	function rbDelete (T, z){
+	function del (T, z){
 		var y = z;
 		var yOriginalColor = y.color;
-		if(z.left === T.nil){
+		if(z.left === nilNode){
 			x = z.right;
-			rbTransplant(T.z, z.right);
+			rbTransplant(T, z, z.right);
 		}
-		else if(z.right = T.nil) {
+		else if(z.right === nilNode) {
 			x = z.left;
-			rbTransplant(T.z, z.left);
+			rbTransplant(T, z, z.left);
 		}
 		else{
-			y = treeMinimum(z.right);
+			y = min(z.right);
 			yOriginalColor = y.color;
 			x = y.right;
 			if(y.p === z)
 				x.p = y;
 			else {
-				rbTransplant (T.y, y.right);
+				rbTransplant (T, y, y.right);
 				y.right = z.right;
 				y.right.p = y;
 			}
 
-			rbTransplant(T.x, y);
+			rbTransplant(T, z, y);
 			y.left = z.left;
 			y.left.p = y;
 			y.color = z.color;
@@ -223,17 +222,13 @@ var RedBlackTree  = (function RedBlackTree(){
 		x.color = BLACK;
 	}
 
-	function remove(id){
-		return node;
-	}
-
 	return{
 		createTree:createTree,
 		getNilNode:function(){return nilNode},
 		max:max,
 		min:min,
 		insert:insert,
-		remove:remove,
+		del:del,
 		getRoot:getRoot
 	}
 })();

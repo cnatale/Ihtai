@@ -36,11 +36,20 @@ describe('ihtai utils', function(){
 			expect(inOrderKeys).toEqual([3,5,10,20]);
 		});
 		
-		/*
+		
 		it('Should delete nodes from the tree', function(){
-			expect(false).toBe(true);
+			var T = $R.createTree();
+			$R.insert(T, {key:10});
+			$R.insert(T, {key:5});
+			$R.insert(T, {key:3});
+			$R.insert(T, {key:20});	
+
+			var oldRootKey = T.root.key; 
+			$R.del(T, T.root);	
+			var newRootKey = T.root.key;
+
+			expect(oldRootKey).not.toEqual(newRootKey);
 		});
-		*/
 		
 		it('Should keep the path from the root to the farthest leaf no more than twice the length of the path from the root to the nearest leaf', function(){
 			function countRtChildDepth(node, ht){
@@ -89,7 +98,7 @@ describe('ihtai utils', function(){
 			$R.insert(tree, {key:20});
 
 
-			expect($R.min(tree)).toBe(3);
+			expect($R.min(tree.root).key).toBe(3);
 		});
 		
 		it('Should return the largest node value stored in the tree', function(){
@@ -100,7 +109,7 @@ describe('ihtai utils', function(){
 			$R.insert(tree, {key:20});
 			$R.insert(tree, {key:7});
 
-			expect($R.max(tree)).toBe(20);
+			expect($R.max(tree.root).key).toBe(20);
 		});
 		
 	})
