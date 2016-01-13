@@ -1,6 +1,16 @@
 describe('ihtai utils', function(){
 	
 	describe('red-black self-balancing binary search tree', function(){
+		var $R;
+		beforeEach(function(){
+			$R = RedBlackTree;
+		})
+
+		it('Should create an empty red-black tree', function(){
+			var rbTree = $R.createTree();
+			expect(rbTree.root).toBe($R.getNilNode());
+		});
+  
 		it('Should insert nodes to the tree', function(){
 			function getInOrderKeys(node, res){
 				if(typeof res === 'undefined')
@@ -16,20 +26,22 @@ describe('ihtai utils', function(){
 				return res;
 			}			
 
-			var tree = new RedBlackTree();
-			tree.insert({key:10});
-			tree.insert({key:5});
-			tree.insert({key:3});
-			tree.insert({key:20});
+			var tree = $R.createTree();
+			$R.insert(tree, {key:10});
+			$R.insert(tree, {key:5});
+			$R.insert(tree, {key:3});
+			$R.insert(tree, {key:20});
 
-			var inOrderKeys = getInOrderKeys(tree.getRoot());
+			var inOrderKeys = getInOrderKeys(tree.root);
 			expect(inOrderKeys).toEqual([3,5,10,20]);
 		});
+		
 		/*
 		it('Should delete nodes from the tree', function(){
 			expect(false).toBe(true);
 		});
 		*/
+		
 		it('Should keep the path from the root to the farthest leaf no more than twice the length of the path from the root to the nearest leaf', function(){
 			function countRtChildDepth(node, ht){
 				if(typeof ht === 'undefined')
@@ -53,41 +65,43 @@ describe('ihtai utils', function(){
 				return countLtChildDepth(node.left,++ht);
 			}
 
-			var tree = new RedBlackTree();
-			tree.insert({key:1});
-			tree.insert({key:2});
-			tree.insert({key:3});
-			tree.insert({key:4});
-			tree.insert({key:5});
-			tree.insert({key:6});
-			tree.insert({key:7});
-			tree.insert({key:8});
+			var tree = $R.createTree();
+			$R.insert(tree, {key:1});
+			$R.insert(tree, {key:2});
+			$R.insert(tree, {key:3});
+			$R.insert(tree, {key:4});
+			$R.insert(tree, {key:5});
+			$R.insert(tree, {key:6});
+			$R.insert(tree, {key:7});
+			$R.insert(tree, {key:8});
 			
 			//rt path would be height of 8 without balancing, left would be 1
-			expect(countRtChildDepth(tree.getRoot())).toBe(4);
+			expect(countRtChildDepth(tree.root)).toBe(4);
 
-			expect(countLtChildDepth(tree.getRoot())).toBe(3);		
+			expect(countLtChildDepth(tree.root)).toBe(3);		
 		});
-
+		
 		it('Should return the smallest value stored in the tree', function(){
-			var tree = new RedBlackTree();
-			tree.insert({key:10});
-			tree.insert({key:5});
-			tree.insert({key:3});
-			tree.insert({key:20});
+			var tree = $R.createTree();
+			$R.insert(tree, {key:10});
+			$R.insert(tree, {key:5});
+			$R.insert(tree, {key:3});
+			$R.insert(tree, {key:20});
 
 
-			expect(tree.min()).toBe(3);
+			expect($R.min(tree)).toBe(3);
 		});
+		
 		it('Should return the largest node value stored in the tree', function(){
-			var tree = new RedBlackTree();
-			tree.insert({key:10});
-			tree.insert({key:5});
-			tree.insert({key:3});
-			tree.insert({key:20});
-			tree.insert({key:7});
+			var tree = $R.createTree();
+			$R.insert(tree, {key:10});
+			$R.insert(tree, {key:5});
+			$R.insert(tree, {key:3});
+			$R.insert(tree, {key:20});
+			$R.insert(tree, {key:7});
 
-			expect(tree.max()).toBe(20);
+			expect($R.max(tree)).toBe(20);
 		});
+		
 	})
 })
