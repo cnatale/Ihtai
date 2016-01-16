@@ -106,8 +106,12 @@ describe('ihtai utils', function(){
 			
 			//rt path would be height of 8 without balancing, left would be 1
 			expect(countRtChildDepth(tree.root)).toBe(4);
+			expect(countLtChildDepth(tree.root)).toBe(3);	
 
-			expect(countLtChildDepth(tree.root)).toBe(3);		
+			// test delete to make sure it rebalances correctly;
+			$R.del(tree, tree.root.left.left);
+			$R.del(tree, tree.root.left);
+			expect(countLtChildDepth(tree.root)).toBeGreaterThan(1);	
 		});
 		
 		it('Should return the smallest value stored in the tree', function(){

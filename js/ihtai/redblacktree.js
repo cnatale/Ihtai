@@ -110,11 +110,11 @@ var RedBlackTree  = (function RedBlackTree(){
 					z.p.p.color = RED;
 					z= z.p.p;
 				}
-				else{ 
-					if(z == z.p.right){
-						z = z.p;
-						rotateLeft(T, z);
-					}
+				else if(z == z.p.right){
+					z = z.p;
+					rotateLeft(T, z);
+				}
+				else {
 					z.p.color = BLACK;
 					z.p.p.color = RED;
 					rotateRight(T, z.p.p);
@@ -129,11 +129,11 @@ var RedBlackTree  = (function RedBlackTree(){
 					z.p.p.color = RED;
 					z= z.p.p;
 				}
-				else{
-					if(z == z.p.left){
-						z = z.p;
-						rotateRight(T, z);
-					}
+				else if(z == z.p.left){
+					z = z.p;
+					rotateRight(T, z);
+				}
+				else {
 					z.p.color = BLACK;
 					z.p.p.color = RED;
 					rotateLeft(T, z.p.p);
@@ -152,7 +152,11 @@ var RedBlackTree  = (function RedBlackTree(){
 			u.p.left = v;
 		else 
 			u.p.right = v;
-		v.p = u.p;
+
+		/*this if check is necessary to prevent reference loops by assigning p property to nilNodes,
+		though it diverges from CLRS code */
+		if(v !== nilNode)
+			v.p = u.p;
 	}
 
 	function del (T, z){
@@ -170,8 +174,9 @@ var RedBlackTree  = (function RedBlackTree(){
 			y = min(z.right);
 			yOriginalColor = y.color;
 			x = y.right;
-			if(y.p === z)
+			if(y.p === z) {
 				x.p = y;
+			}
 			else {
 				rbTransplant (T, y, y.right);
 				y.right = z.right;
@@ -189,7 +194,10 @@ var RedBlackTree  = (function RedBlackTree(){
 	}
 
 	function rbDeleteFixup(T,x){
-		while(x !== T.root && x.color === BLACK){
+		/*
+		nilNode check is necessary to not cause a crash, though it diverges from CLRS code
+		*/
+		while(x !== T.root && x.color === BLACK && x !== nilNode){
 			if(x===x.p.left){
 				w = x.p.right;
 				if(w.color === RED) {
@@ -208,15 +216,39 @@ var RedBlackTree  = (function RedBlackTree(){
 					rotateRight(T, w);
 					w = x.p.right;
 				}
-
-				w.color = x.p.color;
-				x.p.color = BLACK;
-				w.right.color = BLACK;
-				rotateLeft(T, x.p);
-				x = T.root;
+				else {
+					w.color = x.p.color;
+					x.p.color = BLACK;
+					w.right.color = BLACK;
+					rotateLeft(T, x.p);
+					x = T.root;
+				}
 			}
 			else{ //same as sibling if clause but with right and left exchanged
-
+				w = x.p.left;
+				if(w.color === RED) {
+					w.color = BLACK;
+					x.p.color = RED;
+					rotateRight(T, x.p);
+					w = x.p.left;
+				}
+				if(w.right.color === BLACK && w.left.color === BLACK){
+					w.color = RED;
+					x = x.p;
+				}
+				else if (w.left.color === BLACK){
+					w.right.color = BLACK;
+					w.color = RED;
+					rotateLeft(T, w);
+					w = x.p.left;
+				}
+				else {
+					w.color = x.p.color;
+					x.p.color = BLACK;
+					w.left.color = BLACK;
+					rotateRight(T, x.p);
+					x = T.root;
+				}
 			}
 		}
 		x.color = BLACK;
