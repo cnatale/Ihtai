@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for ihtai/redblacktree.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">all files</a> / <a href="index.html">ihtai/</a> redblacktree.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">63.8% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>104/163</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">53.85% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>35/65</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">92.31% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>12/13</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">63.8% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>104/163</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line medium'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">6×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-yes">41×</span>
+<span class="cline-any cline-yes">13×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">28×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">5×</span>
+<span class="cline-any cline-yes">20×</span>
+<span class="cline-any cline-yes">9×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-yes">15×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">11×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-yes">7×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-yes">4×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">25×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3×</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1×</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/*	Red-black self balancing binary search tree implementatin in JavaScript
+	2015 Chris Natale. Implementation based on CLRS */
+/*
+	Red-black properties:
+	1) every nde is either red or black
+	2) the root is black
+	3) every leaf (nilNode) is black
+	4) if a node is red, then both its children are black
+	5) for each node, all simple paths from the node to descendant leaves conain the same number of black nodes.
+*/
+&nbsp;
+var RedBlackTree  = (function RedBlackTree(){
+	var BLACK=0, RED=1;
+	var nilNode={key:null, left:null, right:null, color:BLACK};
+&nbsp;
+	function createTree(){
+		return {
+			root:nilNode
+		}
+	}
+&nbsp;
+	function rotateLeft(T, x){
+		var y = x.right;
+		x.right = y.left;
+		if(y.left !== nilNode)
+			y.left.p = x;
+&nbsp;
+		y.p = x.p;
+		if(x.p === nilNode)
+			T.root = y;
+		else <span class="missing-if-branch" title="if path not taken" >I</span>if(x===x.p.left) //if x is the parent's left node, make y the new left node of parent
+<span class="cstat-no" title="statement not covered" >			x.p.left = y;</span>
+		else x.p.right = y;	//if x is the parent's right node, make y the new right node of the parent
+		y.left = x;
+		x.p = y;
+	}
+&nbsp;
+	function rotateRight(T, y){
+		var x = y.left;
+		y.left=x.right;
+		<span class="missing-if-branch" title="if path not taken" >I</span>if(x.right !== nilNode)
+<span class="cstat-no" title="statement not covered" >			x.right.p = y;</span>
+		
+		x.p=y.p;
+		<span class="missing-if-branch" title="else path not taken" >E</span>if(y.p === nilNode)
+			T.root = x;
+		else <span class="cstat-no" title="statement not covered" >if(y === y.p.left) //if y is the parent's left node, make x the new left node of parent</span>
+<span class="cstat-no" title="statement not covered" >			y.p.left = x;</span>
+		else <span class="cstat-no" title="statement not covered" >y.p.right = x; </span>//if y is the parent's right node, make x the new right node of the parent
+		x.right = y;
+		y.p = x;
+	}
+&nbsp;
+	function max(node){
+		while(node.right.key !== null){
+			node = node.right;
+		}
+&nbsp;
+		return node;
+	}
+	function min(node){
+		<span class="missing-if-branch" title="else path not taken" >E</span>if(node.key)
+&nbsp;
+		while(node.left.key !== null){
+			node = node.left;
+		}
+&nbsp;
+		return node;
+	}
+<span class="fstat-no" title="function not covered" >	function getRoot(){</span>
+<span class="cstat-no" title="statement not covered" >		return root;</span>
+	}
+&nbsp;
+	/**
+	@function insert
+	Inserts a node into tree
+	@param z {node} A tree node that contains a key property
+	*/
+	function insert(T, z){
+		var y = nilNode;
+		var x = T.root;
+		while (x !== nilNode){
+			y=x;
+			if(z.key &lt; x.key)
+				x = x.left;
+			else
+				x = x.right;
+		}
+&nbsp;
+		z.p = y;
+		if (y === nilNode)
+			T.root = z;
+		else if (z.key &lt; y.key)
+			y.left = z;
+		else
+			y.right = z;
+&nbsp;
+		z.left = nilNode;
+		z.right = nilNode;
+		z.color = RED;
+		insertFixup(T, z);
+	}
+	function insertFixup(T,z){
+		while(z.p.color == RED){
+			if(z.p == z.p.p.left){ //z.p is grandparrent's left child
+				y = z.p.p.right;
+				<span class="missing-if-branch" title="if path not taken" >I</span>if(y.color == RED){
+<span class="cstat-no" title="statement not covered" >					z.p.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					y.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					z.p.p.color = RED;</span>
+<span class="cstat-no" title="statement not covered" >					z= z.p.p;</span>
+				}
+				else <span class="missing-if-branch" title="if path not taken" >I</span>if(z == z.p.right){
+<span class="cstat-no" title="statement not covered" >					z = z.p;</span>
+<span class="cstat-no" title="statement not covered" >					rotateLeft(T, z);</span>
+				}
+				else {
+					z.p.color = BLACK;
+					z.p.p.color = RED;
+					rotateRight(T, z.p.p);
+				}
+			}
+			else{ //z.p is grandparent's right child 
+				//same as previous block but with 'right' and 'left' exchanged
+				y = z.p.p.left;
+				if(y.color == RED){
+					z.p.color = BLACK;
+					y.color = BLACK;
+					z.p.p.color = RED;
+					z= z.p.p;
+				}
+				else <span class="missing-if-branch" title="if path not taken" >I</span>if(z == z.p.left){
+<span class="cstat-no" title="statement not covered" >					z = z.p;</span>
+<span class="cstat-no" title="statement not covered" >					rotateRight(T, z);</span>
+				}
+				else {
+					z.p.color = BLACK;
+					z.p.p.color = RED;
+					rotateLeft(T, z.p.p);
+				}
+			}
+		}
+		T.root.color = BLACK;
+	}
+&nbsp;
+	/*** Delete methods ***/
+	function rbTransplant(T, u, v) {
+		if(u.p === nilNode){
+			T.root = v;
+		}
+		else <span class="missing-if-branch" title="else path not taken" >E</span>if (u === u.p.left)
+			u.p.left = v;
+		else 
+<span class="cstat-no" title="statement not covered" >			u.p.right = v;</span>
+&nbsp;
+		/*this if check is necessary to prevent reference loops by assigning p property to nilNodes,
+		though it diverges from CLRS code */
+		if(v !== nilNode)
+			v.p = u.p;
+	}
+&nbsp;
+	function del (T, z){
+		var y = z;
+		var yOriginalColor = y.color;
+		if(z.left === nilNode){
+			x = z.right;
+			rbTransplant(T, z, z.right);
+		}
+		else <span class="missing-if-branch" title="if path not taken" >I</span>if(z.right === nilNode) {
+<span class="cstat-no" title="statement not covered" >			x = z.left;</span>
+<span class="cstat-no" title="statement not covered" >			rbTransplant(T, z, z.left);</span>
+		}
+		else{
+			y = min(z.right);
+			yOriginalColor = y.color;
+			x = y.right;
+			<span class="missing-if-branch" title="else path not taken" >E</span>if(y.p === z) {
+				x.p = y;
+			}
+			else {
+<span class="cstat-no" title="statement not covered" >				rbTransplant (T, y, y.right);</span>
+<span class="cstat-no" title="statement not covered" >				y.right = z.right;</span>
+<span class="cstat-no" title="statement not covered" >				y.right.p = y;</span>
+			}
+&nbsp;
+			rbTransplant(T, z, y);
+			y.left = z.left;
+			y.left.p = y;
+			y.color = z.color;
+		}
+&nbsp;
+		if(yOriginalColor === BLACK)
+			rbDeleteFixup(T,x);
+	}
+&nbsp;
+	function rbDeleteFixup(T,x){
+		/*
+		nilNode check is necessary to not cause a crash, though it diverges from CLRS code
+		*/
+		while(x !== T.root &amp;&amp; x.color === BLACK &amp;&amp; x !== nilNode){
+<span class="cstat-no" title="statement not covered" >			if(x===x.p.left){</span>
+<span class="cstat-no" title="statement not covered" >				w = x.p.right;</span>
+<span class="cstat-no" title="statement not covered" >				if(w.color === RED) {</span>
+<span class="cstat-no" title="statement not covered" >					w.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					x.p.color = RED;</span>
+<span class="cstat-no" title="statement not covered" >					rotateLeft(T, x.p);</span>
+<span class="cstat-no" title="statement not covered" >					w = x.p.right;</span>
+				}
+<span class="cstat-no" title="statement not covered" >				if(w.left.color === BLACK &amp;&amp; w.right.color === BLACK){</span>
+<span class="cstat-no" title="statement not covered" >					w.color = RED;</span>
+<span class="cstat-no" title="statement not covered" >					x = x.p;</span>
+				}
+				else <span class="cstat-no" title="statement not covered" >if (w.right.color === BLACK){</span>
+<span class="cstat-no" title="statement not covered" >					w.left.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					w.color = RED;</span>
+<span class="cstat-no" title="statement not covered" >					rotateRight(T, w);</span>
+<span class="cstat-no" title="statement not covered" >					w = x.p.right;</span>
+				}
+				else {
+<span class="cstat-no" title="statement not covered" >					w.color = x.p.color;</span>
+<span class="cstat-no" title="statement not covered" >					x.p.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					w.right.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					rotateLeft(T, x.p);</span>
+<span class="cstat-no" title="statement not covered" >					x = T.root;</span>
+				}
+			}
+			else{ //same as sibling if clause but with right and left exchanged
+<span class="cstat-no" title="statement not covered" >				w = x.p.left;</span>
+<span class="cstat-no" title="statement not covered" >				if(w.color === RED) {</span>
+<span class="cstat-no" title="statement not covered" >					w.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					x.p.color = RED;</span>
+<span class="cstat-no" title="statement not covered" >					rotateRight(T, x.p);</span>
+<span class="cstat-no" title="statement not covered" >					w = x.p.left;</span>
+				}
+<span class="cstat-no" title="statement not covered" >				if(w.right.color === BLACK &amp;&amp; w.left.color === BLACK){</span>
+<span class="cstat-no" title="statement not covered" >					w.color = RED;</span>
+<span class="cstat-no" title="statement not covered" >					x = x.p;</span>
+				}
+				else <span class="cstat-no" title="statement not covered" >if (w.left.color === BLACK){</span>
+<span class="cstat-no" title="statement not covered" >					w.right.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					w.color = RED;</span>
+<span class="cstat-no" title="statement not covered" >					rotateLeft(T, w);</span>
+<span class="cstat-no" title="statement not covered" >					w = x.p.left;</span>
+				}
+				else {
+<span class="cstat-no" title="statement not covered" >					w.color = x.p.color;</span>
+<span class="cstat-no" title="statement not covered" >					x.p.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					w.left.color = BLACK;</span>
+<span class="cstat-no" title="statement not covered" >					rotateRight(T, x.p);</span>
+<span class="cstat-no" title="statement not covered" >					x = T.root;</span>
+				}
+			}
+		}
+		x.color = BLACK;
+	}
+&nbsp;
+	return{
+		createTree:createTree,
+		getNilNode:function(){return nilNode},
+		max:max,
+		min:min,
+		insert:insert,
+		del:del,
+		getRoot:getRoot
+	}
+})();</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Sun Jan 17 2016 20:30:01 GMT-0800 (PST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>

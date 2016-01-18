@@ -108,6 +108,7 @@ describe('ihtai utils', function(){
 			expect(countRtChildDepth(tree.root)).toBe(4);
 			expect(countLtChildDepth(tree.root)).toBe(3);	
 
+			debugger;
 			// test delete to make sure it rebalances correctly;
 			$R.del(tree, tree.root.left.left);
 			$R.del(tree, tree.root.left);
