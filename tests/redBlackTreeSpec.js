@@ -1,5 +1,4 @@
 describe('ihtai utils', function(){
-	
 	describe('red-black self-balancing binary search tree', function(){
 		var $R;
 		beforeEach(function(){
@@ -103,16 +102,18 @@ describe('ihtai utils', function(){
 			$R.insert(tree, {key:6});
 			$R.insert(tree, {key:7});
 			$R.insert(tree, {key:8});
-			
+
 			//rt path would be height of 8 without balancing, left would be 1
 			expect(countRtChildDepth(tree.root)).toBe(4);
 			expect(countLtChildDepth(tree.root)).toBe(3);	
 
-			debugger;
 			// test delete to make sure it rebalances correctly;
 			$R.del(tree, tree.root.left.left);
 			$R.del(tree, tree.root.left);
-			expect(countLtChildDepth(tree.root)).toBeGreaterThan(1);	
+			expect(countLtChildDepth(tree.root)).toBeGreaterThan(1);
+
+			//TODO: map generated tree so you can find a node that'll trigger
+			//the main while loop in the rbDeleteFixup method for code coverage
 		});
 		
 		it('Should return the smallest value stored in the tree', function(){
@@ -136,6 +137,5 @@ describe('ihtai utils', function(){
 
 			expect($R.max(tree.root).key).toBe(20);
 		});
-		
 	})
 })

@@ -144,6 +144,10 @@ var RedBlackTree  = (function RedBlackTree(){
 	}
 
 	/*** Delete methods ***/
+
+	/**
+	Replaces u's parent reference to u (either left or right) with v, and v's parent reference becomes u's parent
+	*/
 	function rbTransplant(T, u, v) {
 		if(u.p === nilNode){
 			T.root = v;
@@ -198,6 +202,7 @@ var RedBlackTree  = (function RedBlackTree(){
 		nilNode check is necessary to not cause a crash, though it diverges from CLRS code
 		*/
 		while(x !== T.root && x.color === BLACK && x !== nilNode){
+			debugger;
 			if(x===x.p.left){
 				w = x.p.right;
 				if(w.color === RED) {
