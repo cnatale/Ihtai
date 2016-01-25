@@ -234,7 +234,6 @@ describe('ihtai', function(){
 			ihtai.cycle([[90, 80, 70, 60, 50, 40, 30, 20], [10]], 33);
 			ihtai.cycle([[0, 100, 0, 100, 0, 100, 0, 100], [0]], 33);
 			var res=ihtai.cycle([[50, 50, 50, 50, 50, 50, 50, 50], [50]], 33);
-		
 		});	
 
 		it('should save an instance as JSON and then re-inflate into working ihtai', function(){
@@ -356,6 +355,7 @@ describe('ihtai utils', function(){
 		});		
 
 		it('should create a tree', function(){
+			//this is where tests with sinon fail
 			expect(root.val).toEqual([29,2,32,20,10]);
 			expect(root.l.val).toEqual([8,20,25,30,1]);
 			expect(root.r.val).toEqual([60,61,58,57,77]);
@@ -494,7 +494,7 @@ describe('ihtai utils', function(){
 			maxHeap.insert({sd:8, lvl:60});	
 
 			var maxElm=maxHeap.pop();
-			expect(maxElm.lvl).toEqual(10);					
+			expect(maxElm.lvl).toEqual(10);
 		})
 
 		it('minheap should generate a lot of points, add to heap, while always keeping minimum value in position 0', function(){

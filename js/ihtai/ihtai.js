@@ -162,8 +162,8 @@ var Ihtai = (function(bundle){
 		//inflate memorizer	
 		var buffer=parsedFile.memorizer.buffer;
 		var levels=parsedFile.memorizer.levels;
-		var memorizerHeaps=parsedFile.memorizer.heaps;
-		memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo, _heaps:memorizerHeaps});
+		var memorizerTrees=parsedFile.memorizer.trees;
+		memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo, _trees:memorizerTrees});
 		clusters.setMemorizerRef(memorizer);
 	}
 	else{ //default logic for new instantiation
@@ -541,7 +541,7 @@ var Ihtai = (function(bundle){
 		deflated.memorizer={
 			buffer:memorizer.getBuffer(),
 			levels:memorizer.getLevels(),
-			heaps:memorizer.getHeaps() //TODO: figure out a way to store Memorizer's memory chain minheaps
+			trees:memorizer.getTrees() //TODO: figure out a way to store Memorizer's memory chain trees
 		};
 
 		var stringifiedAndDeflated=JSON.stringify(deflated);
@@ -603,7 +603,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, minHeaps={}, maxHeaps={};
+	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, trees={};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
@@ -616,7 +616,7 @@ var Memorizer = (function(bundle){
 		}
 
 		var fromId=fromCluster.id, toId=toCluster.id;
-		minHeaps[toId]= new IhtaiUtils.Heap("min");
+		trees[toId]= $R.createTree();
 		//copy each level's series[id] from fromCluster to toCluster
 		for(var i=0; i<height; i++){
 			//deep copy the cluster temporal node
@@ -630,8 +630,8 @@ var Memorizer = (function(bundle){
 					sd: level[i].series[fromId].sd
 				};
 				
-				//...and the cluster's minheap
-				minHeaps[toId].insert(level[i].series[toId]);
+				//...and the cluster's tree
+				trees[toId].insert(level[i].series[toId]);
 			}
 		}
 
@@ -657,14 +657,15 @@ var Memorizer = (function(bundle){
 		else
 			distanceAlgo="avg";
 
-		if(typeof bundle._heaps != "undefined"){
-			minHeaps=bundle._heaps;
+		if(typeof bundle._trees != "undefined"){
+			trees=bundle._trees;
 			/*
-			Iterate through heaps, and for each index intantiate a new minheap, passing the index's heap as a param.
-			This is necessary because json stringifying the minheaps instances strips out their methods. 
+			Iterate through trees, and for each index intantiate a new tree, passing the index's tree as a param.
+			This is necessary because json stringifying the tree instances strips out their methods. 
 			*/
-			for(var elm in minHeaps){
-				minHeaps[elm]=new IhtaiUtils.Heap(minHeaps[elm].heap);
+			for(var elm in trees){
+				//TODO: add method to redblack tree library that allows it to create a tree from array
+				//trees[elm]=new IhtaiUtils.Heap(minHeaps[elm].heap);
 			}
 
 		}
@@ -688,9 +689,9 @@ var Memorizer = (function(bundle){
 	function query(clusters){
 		var outputstm=null, stimDist, sd, combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 
-		if(minHeaps.hasOwnProperty(combinedClustersId)){
-			try{ var min = minHeaps[combinedClustersId].peek();}
-			catch(e){ throw "Error: Memorizer.query() failed to execute minHeaps peek"; };
+		if(trees.hasOwnProperty(combinedClustersId)){
+			try{ var min = $R.min(trees[combinedClustersId]);}
+			catch(e){ throw "Error: Memorizer.query() failed to execute redblack tree min search"; };
 			
 			var sd= min.sd;
 			if(sd <= acceptableRange){
@@ -701,7 +702,7 @@ var Memorizer = (function(bundle){
 				//console.log('acceptablerange:'+acceptableRange);
 
 				//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
-				outputstm = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in minheap
+				outputstm = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
 			}
 		}
 
@@ -725,13 +726,12 @@ var Memorizer = (function(bundle){
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, fsid, seriesArray, sd, ssMatch, maxHeapVal;
+		var sd1,sd2,size, fs, ss, es, fsid, seriesArray, sd, ssMatch, maxTreeVal;
 
 		//update the buffer
 		buffer.push(clusters);
 		if(buffer.length>height)
 			buffer.shift(); //this may be an O(n) implementation. Think about changing.
-
 		/*
 		Iterate through each level, and select the level with least sq distance if it is below threshold. 
 		*/
@@ -777,6 +777,8 @@ var Memorizer = (function(bundle){
 				*/				
 				ssMatch=false;
 				if(level[i].series.hasOwnProperty(fsid)){
+					//TODO:if a tree value changes, delete and re-insert that node to maintain balance
+
 					for(var k=0;k<seriesArray.length; k++){ //loop over series[fsid] array
 						/*
 						If first and second states are the same, store the memory
@@ -824,6 +826,7 @@ var Memorizer = (function(bundle){
 							
 							//update sqdist of endstate from drive goals and store in s
 							seriesArray[k].sd= sqDist(seriesArray[k].es.stm, homeostasisGoal);
+							//TODO: delete from tree and insert in again
 							ssMatch=true;
 							break;
 						}
@@ -833,8 +836,8 @@ var Memorizer = (function(bundle){
 						//second states are different. Figure out which one leads to better outcome.
 						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][2].stm.slice(), homeostasisGoal);
 						try{
-							maxHeapVal=maxHeaps[fsid].peek();
-							sd2 = maxHeapVal.sd;
+							maxTreeVal=$R.max(trees[fsid]);
+							sd2 = maxTreeVal.sd;
 						}catch(e){debugger;}
 						//sd2 is the current memory, the following line makes it harder to 'unstick'
 						//the current memory the more it has been averaged
@@ -880,41 +883,34 @@ var Memorizer = (function(bundle){
 						ct: 0,
 						sd:sqDist(distanceAlgo=="avg" ? avg : buffer[es][2].stm.slice(), homeostasisGoal),
 						lvl: i /*logging purposes only*/
-					});		
-					//add to fsid's minHeap, or create minHeap if it doesn't exist	
-					//calculate sqdist between es and drive goals. store this value and use it to key minheap
-					if(!minHeaps.hasOwnProperty(fsid))
-						minHeaps[fsid]= new IhtaiUtils.Heap("min");
-
-					if(!maxHeaps.hasOwnProperty(fsid))
-						maxHeaps[fsid]= new IhtaiUtils.Heap("max");
+					});
+					//add to fsid's tree, or create tree if it doesn't exist	
+					//calculate sqdist between es and drive goals. store this value and use it as ordered key for tree
+					if(!trees.hasOwnProperty(fsid))
+						trees[fsid]= $R.createTree();
 	
-					minHeaps[fsid].insert(level[i].series[fsid][0]);	
-					maxHeaps[fsid].insert(level[i].series[fsid][0]);
+					$R.insert(trees[fsid], level[i].series[fsid][0]);
 
+					//remove highest score item from tree if we're over the storage limit (using height as that limit for time being)
 					//if heap.length > height, remove maxHeap val from minHeaps, maxHeaps, and the level array
-					if(maxHeaps[fsid].heap.length > 1/*height*/){
-						maxHeapVal=maxHeaps[fsid].peek();
+					if(trees[fsid].size > height){
+						maxTreeVal= $R.max(trees[fsid]);
 
-						var uid=IhtaiUtils.toCombinedStmUID(maxHeapVal.ss);
-						//If we don't get rid of it in all three places, it's going to leak memory badly.
-						//This probably needs to be a nested loop						
+						var uid=IhtaiUtils.toCombinedStmUID(maxTreeVal.ss);
+								
 						for(var j=0; j<height; j++){
 							if(level[j].series.hasOwnProperty(fsid)){
 								for(var k=0; k< level[i].series[fsid].length; k++){
-									//if uid matches maxHeap val, remove it
+									//if uid matches maxTree val, remove it
 									if(IhtaiUtils.toCombinedStmUID(level[i].series[fsid][k].ss) === uid ){
 										level[i].series[fsid].splice(k,1);
 									}
-
 								}
 							}
 						}
-						//todo:remove from minheap
 
-
-						//remove from maxheap (the easy one)
-						maxHeaps[fsid].pop();
+						//remove largest value item from tree
+						$R.del(trees[fsid], maxTreeVal);
 					}
 
 					/*Keep track of total # of level[i].seriesArray[fsid] Objects created.
@@ -924,12 +920,6 @@ var Memorizer = (function(bundle){
 					temporalPlanners++;
 				}
 			}
-		}
-
-		if(typeof fsid !== "undefined"){
-			//re-heapify in case a heap member's value has changed
-			minHeaps[fsid].minHeapifyAll();		
-			maxHeaps[fsid].maxHeapifyAll();	
 		}
 	}
 

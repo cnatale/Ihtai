@@ -15,7 +15,8 @@ var RedBlackTree  = (function RedBlackTree(){
 
 	function createTree(){
 		return {
-			root:nilNode
+			root:nilNode,
+			size:0
 		}
 	}
 
@@ -99,6 +100,9 @@ var RedBlackTree  = (function RedBlackTree(){
 		z.right = nilNode;
 		z.color = RED;
 		insertFixup(T, z);
+
+		//increment size counter
+		T.size++;
 	}
 	function insertFixup(T,z){
 		while(z.p.color == RED){
@@ -195,6 +199,9 @@ var RedBlackTree  = (function RedBlackTree(){
 
 		if(yOriginalColor === BLACK)
 			rbDeleteFixup(T,x);
+
+		//decrement counter
+		T.size--;
 	}
 
 	function rbDeleteFixup(T,x){
@@ -202,7 +209,6 @@ var RedBlackTree  = (function RedBlackTree(){
 		nilNode check is necessary to not cause a crash, though it diverges from CLRS code
 		*/
 		while(x !== T.root && x.color === BLACK && x !== nilNode){
-			debugger;
 			if(x===x.p.left){
 				w = x.p.right;
 				if(w.color === RED) {
@@ -269,3 +275,5 @@ var RedBlackTree  = (function RedBlackTree(){
 		getRoot:getRoot
 	}
 })();
+
+$R = RedBlackTree;
