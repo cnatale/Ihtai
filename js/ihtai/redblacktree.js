@@ -272,6 +272,22 @@ var RedBlackTree  = (function RedBlackTree(){
 		x.color = BLACK;
 	}
 
+	funtion hasItem (T, z) {
+		var y = T.nilNode;
+		var x = T.root;
+		while (x !== T.nilNode){
+			if (z[T.keyName] === x[T.keyName])
+				return true;
+
+			y=x;
+			if(z[T.keyName] < x[T.keyName])
+				x = x.left;
+			else
+				x = x.right;
+		}
+		return false;
+	}
+
 	return{
 		createTree:createTree,
 		getNilNode:function(T){return T.nilNode},
@@ -279,7 +295,8 @@ var RedBlackTree  = (function RedBlackTree(){
 		min:min,
 		insert:insert,
 		del:del,
-		getRoot:getRoot
+		getRoot:getRoot,
+		hasItem:hasItem
 	}
 })();
 

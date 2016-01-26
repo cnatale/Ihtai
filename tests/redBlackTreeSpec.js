@@ -138,4 +138,6 @@ describe('ihtai utils', function(){
 			expect($R.max(tree, tree.root).key).toBe(20);
 		});
 	})
+
+	//TODO:write unit tests for hasItem, new property keying system
 })
