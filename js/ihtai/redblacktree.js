@@ -272,15 +272,15 @@ var RedBlackTree  = (function RedBlackTree(){
 		x.color = BLACK;
 	}
 
-	funtion hasItem (T, z) {
+	function hasKey (T, z) {
 		var y = T.nilNode;
 		var x = T.root;
 		while (x !== T.nilNode){
-			if (z[T.keyName] === x[T.keyName])
-				return true;
+			if (z === x[T.keyName])
+				return x;
 
 			y=x;
-			if(z[T.keyName] < x[T.keyName])
+			if(z < x[T.keyName])
 				x = x.left;
 			else
 				x = x.right;
@@ -296,7 +296,7 @@ var RedBlackTree  = (function RedBlackTree(){
 		insert:insert,
 		del:del,
 		getRoot:getRoot,
-		hasItem:hasItem
+		hasKey:hasKey
 	}
 })();
 

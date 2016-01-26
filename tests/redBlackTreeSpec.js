@@ -1,8 +1,6 @@
 describe('ihtai utils', function(){
 	describe('red-black self-balancing binary search tree', function(){
-		var $R;
 		beforeEach(function(){
-			$R = RedBlackTree;
 		})
 
 		it('Should create an empty red-black tree', function(){
@@ -137,7 +135,26 @@ describe('ihtai utils', function(){
 
 			expect($R.max(tree, tree.root).key).toBe(20);
 		});
-	})
 
-	//TODO:write unit tests for hasItem, new property keying system
-})
+		it('Should return a node if given a matching key value', function(){
+			var T = $R.createTree();
+			$R.insert(T, {key:'Plato'});
+			var node = $R.hasKey(T, 'Plato');
+			expect(node.key).toEqual('Plato');
+
+			var T2 = $R.createTree();
+			$R.insert(T2, {key: 5});
+			$R.insert(T2, {key: 1});
+			node = $R.hasKey(T2, 1);
+			expect(node.key).toEqual(1);
+		})
+
+		it('Should allow custom property names to be used as sorting key', function(){
+			var T = $R.createTree('tro');
+			$R.insert(T, {tro:'Plato'});
+			var node = $R.hasKey(T, 'Plato');
+			expect(node.tro).toEqual('Plato');
+			expect(typeof node.key).toEqual('undefined');
+		});
+	});
+});
