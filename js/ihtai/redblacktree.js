@@ -11,10 +11,18 @@
 
 var RedBlackTree  = (function RedBlackTree(){
 	var BLACK=0, RED=1;
-	var nilNode={key:null, left:null, right:null, color:BLACK};
 
-	function createTree(){
+	function createTree(keyName){
+		var nilNode;
+		if(typeof keyName == 'undefined')
+			keyName = 'key';
+
+		nilNode={left:null, right:null, color:BLACK};
+		nilNode[keyName]=null;
+
 		return {
+			nilNode:nilNode,
+			keyName:keyName,
 			root:nilNode,
 			size:0
 		}
@@ -23,11 +31,11 @@ var RedBlackTree  = (function RedBlackTree(){
 	function rotateLeft(T, x){
 		var y = x.right;
 		x.right = y.left;
-		if(y.left !== nilNode)
+		if(y.left !== T.nilNode)
 			y.left.p = x;
 
 		y.p = x.p;
-		if(x.p === nilNode)
+		if(x.p === T.nilNode)
 			T.root = y;
 		else if(x===x.p.left) //if x is the parent's left node, make y the new left node of parent
 			x.p.left = y;
@@ -39,11 +47,11 @@ var RedBlackTree  = (function RedBlackTree(){
 	function rotateRight(T, y){
 		var x = y.left;
 		y.left=x.right;
-		if(x.right !== nilNode)
+		if(x.right !== T.nilNode)
 			x.right.p = y;
 		
 		x.p=y.p;
-		if(y.p === nilNode)
+		if(y.p === T.nilNode)
 			T.root = x;
 		else if(y === y.p.left) //if y is the parent's left node, make x the new left node of parent
 			y.p.left = x;
@@ -52,17 +60,15 @@ var RedBlackTree  = (function RedBlackTree(){
 		y.p = x;
 	}
 
-	function max(node){
-		while(node.right.key !== null){
+	function max(T, node){
+		while(node.right[T.keyName] !== null){
 			node = node.right;
 		}
 
 		return node;
 	}
-	function min(node){
-		if(node.key)
-
-		while(node.left.key !== null){
+	function min(T, node){
+		while(node.left[T.keyName] !== null){
 			node = node.left;
 		}
 
@@ -77,27 +83,28 @@ var RedBlackTree  = (function RedBlackTree(){
 	Inserts a node into tree
 	@param z {node} A tree node that contains a key property
 	*/
+
 	function insert(T, z){
-		var y = nilNode;
+		var y = T.nilNode;
 		var x = T.root;
-		while (x !== nilNode){
+		while (x !== T.nilNode){
 			y=x;
-			if(z.key < x.key)
+			if(z[T.keyName] < x[T.keyName])
 				x = x.left;
 			else
 				x = x.right;
 		}
 
 		z.p = y;
-		if (y === nilNode)
+		if (y === T.nilNode)
 			T.root = z;
-		else if (z.key < y.key)
+		else if (z[T.keyName] < y[T.keyName])
 			y.left = z;
 		else
 			y.right = z;
 
-		z.left = nilNode;
-		z.right = nilNode;
+		z.left = T.nilNode;
+		z.right = T.nilNode;
 		z.color = RED;
 		insertFixup(T, z);
 
@@ -153,7 +160,7 @@ var RedBlackTree  = (function RedBlackTree(){
 	Replaces u's parent reference to u (either left or right) with v, and v's parent reference becomes u's parent
 	*/
 	function rbTransplant(T, u, v) {
-		if(u.p === nilNode){
+		if(u.p === T.nilNode){
 			T.root = v;
 		}
 		else if (u === u.p.left)
@@ -161,25 +168,25 @@ var RedBlackTree  = (function RedBlackTree(){
 		else 
 			u.p.right = v;
 
-		/*this if check is necessary to prevent reference loops by assigning p property to nilNodes,
+		/*this if check is necessary to prevent reference loops by assigning p property to T.nilNodes,
 		though it diverges from CLRS code */
-		if(v !== nilNode)
+		if(v !== T.nilNode)
 			v.p = u.p;
 	}
 
 	function del (T, z){
 		var y = z;
 		var yOriginalColor = y.color;
-		if(z.left === nilNode){
+		if(z.left === T.nilNode){
 			x = z.right;
 			rbTransplant(T, z, z.right);
 		}
-		else if(z.right === nilNode) {
+		else if(z.right === T.nilNode) {
 			x = z.left;
 			rbTransplant(T, z, z.left);
 		}
 		else{
-			y = min(z.right);
+			y = min(T, z.right);
 			yOriginalColor = y.color;
 			x = y.right;
 			if(y.p === z) {
@@ -208,7 +215,7 @@ var RedBlackTree  = (function RedBlackTree(){
 		/*
 		nilNode check is necessary to not cause a crash, though it diverges from CLRS code
 		*/
-		while(x !== T.root && x.color === BLACK && x !== nilNode){
+		while(x !== T.root && x.color === BLACK && x !== T.nilNode){
 			if(x===x.p.left){
 				w = x.p.right;
 				if(w.color === RED) {
@@ -267,7 +274,7 @@ var RedBlackTree  = (function RedBlackTree(){
 
 	return{
 		createTree:createTree,
-		getNilNode:function(){return nilNode},
+		getNilNode:function(T){return T.nilNode},
 		max:max,
 		min:min,
 		insert:insert,

@@ -7,7 +7,7 @@ describe('ihtai utils', function(){
 
 		it('Should create an empty red-black tree', function(){
 			var rbTree = $R.createTree();
-			expect(rbTree.root).toBe($R.getNilNode());
+			expect(rbTree.root).toBe($R.getNilNode(rbTree));
 		});
   
 		it('Should insert nodes to the tree', function(){
@@ -124,7 +124,7 @@ describe('ihtai utils', function(){
 			$R.insert(tree, {key:20});
 
 
-			expect($R.min(tree.root).key).toBe(3);
+			expect($R.min(tree, tree.root).key).toBe(3);
 		});
 		
 		it('Should return the largest node value stored in the tree', function(){
@@ -132,10 +132,10 @@ describe('ihtai utils', function(){
 			$R.insert(tree, {key:10});
 			$R.insert(tree, {key:5});
 			$R.insert(tree, {key:3});
-			$R.insert(tree, {key:20});
+			$R.insert(tree, {key:20}); 
 			$R.insert(tree, {key:7});
 
-			expect($R.max(tree.root).key).toBe(20);
+			expect($R.max(tree, tree.root).key).toBe(20);
 		});
 	})
 })
