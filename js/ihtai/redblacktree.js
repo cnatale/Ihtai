@@ -290,13 +290,14 @@ var RedBlackTree  = (function RedBlackTree(){
 
 	return{
 		createTree:createTree,
-		getNilNode:function(T){return T.nilNode},
+		getNilNode:function( T ){ return T.nilNode },
 		max:max,
 		min:min,
 		insert:insert,
 		del:del,
 		getRoot:getRoot,
-		hasKey:hasKey
+		hasKey:hasKey,
+		getSize: function ( T ) { return T.size; }
 	}
 })();
 
