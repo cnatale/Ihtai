@@ -175,6 +175,9 @@ var RedBlackTree  = (function RedBlackTree(){
 	}
 
 	function del (T, z){
+		if (typeof z === 'undefined') {
+			debugger;
+		}
 		var y = z;
 		var yOriginalColor = y.color;
 		if(z.left === T.nilNode){

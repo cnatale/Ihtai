@@ -705,8 +705,11 @@ var Memorizer = (function(bundle){
 		var outputMemory=null, stimDist, sd, combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 
 		if(uidTrees.hasOwnProperty(combinedClustersId)){
-			try{ var min = $R.min(uidTrees[combinedClustersId]);}
-			catch(e){ throw "Error: Memorizer.query() failed to execute redblack tree min search"; };
+			try{ var min = $R.min( uidTrees[combinedClustersId], uidTrees[combinedClustersId].root ); 
+			}
+			catch(e){ 
+				debugger;
+				throw "Error: Memorizer.query() failed to execute redblack tree min search"; };
 			
 			var sd= min.sd;
 			if(sd <= acceptableRange){
@@ -716,7 +719,7 @@ var Memorizer = (function(bundle){
 				// console.log('min.sd:'+min.sd);
 				// console.log('acceptablerange:'+acceptableRange);
 				//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
-				
+
 				outputMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
 			}
 		}
@@ -823,6 +826,9 @@ var Memorizer = (function(bundle){
 					saying, "we started at the same state. The next step's output was also the same. These are 
 					effectively the same actions taken by the agent, so average their resulting drive scores."
 					*/
+					if( typeof outputStmIdTables[fsUid] === 'undefined') {
+						debugger;
+					}
 
 					if( outputStmIdTables[fsUid].hasOwnProperty( buffer[ss][1].id ) ){
 						var storedStm = outputStmIdTables[fsUid][ buffer[ss][1].id ];
@@ -846,7 +852,7 @@ var Memorizer = (function(bundle){
 						storedStm.sd= sqDist(storedStm.es.stm, homeostasisGoal);
 						//delete from tree and insert in again to re-order;
 						//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
-						$R.del( storedStm );
+						$R.del( uidTrees[fsUid], storedStm );
 						$R.insert( uidTrees[fsUid], storedStm );
 
 						ssMatch=true;
@@ -860,11 +866,11 @@ var Memorizer = (function(bundle){
 						*/
 						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][2].stm.slice(), homeostasisGoal);
 						try{
-							maxTreeNode=$R.max(uidTrees[fsUid]);
+							maxTreeNode=$R.max( uidTrees[fsUid], uidTrees[fsUid].root);
 							sd2 = maxTreeNode.sd;
 						}catch(e){debugger;}
 						//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
-						if(sd1 < sd2 || tree.size < height){
+						if(sd1 < sd2 || uidTrees[fsUid] < height){
 							//replace the currently stored memory with the better-scoring buffer counterpart
 							var insertedNode = {
 								fs:buffer[fs],
@@ -907,6 +913,11 @@ var Memorizer = (function(bundle){
 					}
 					uidTrees[fsUid] = $R.createTree('sd');
 					$R.insert( uidTrees[fsUid], insertedNode );
+
+					if (typeof outputStmIdTables[fsUid] === 'undefined' ) {
+						outputStmIdTables[fsUid] = {};
+					}
+
 					outputStmIdTables[fsUid][ buffer[ss][1].id ] = insertedNode;
 
 					/*Keep track of total # of level[i].seriesArray[fsUid] Objects created.
