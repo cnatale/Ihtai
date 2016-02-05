@@ -167,66 +167,58 @@ var Ihtai = (function(bundle){
 		clusters.setMemorizerRef(memorizer);
 	}
 	else{ //default logic for new instantiation
-		function init(bundle){
-			if(typeof bundle == "undefined")
-				throw "Error: no initialization object!"
-			if(typeof bundle != "object")
-				throw "Error: initialization parameter should be an Object or String!"
+		if(typeof bundle == "undefined")
+			throw "Error: no initialization object!"
+		if(typeof bundle != "object")
+			throw "Error: initialization parameter should be an Object or String!"
 
-			if(!isNaN(bundle.clusterCount))
-				clusterCount= bundle.clusterCount;
-			else
-				throw "Error: no 'clusterCount' property found in initialization Object!"
-			if(bundle.inputClusterDim)
-				inputClusterDim=bundle.inputClusterDim;
-			else
-				throw "Error: no 'inputClusterDim' property found in initialization Object!"		
-			if(bundle.outputClusterDim)
-				outputClusterDim=bundle.outputClusterDim;
-			else
-				throw "Error: no 'outputClusterDim' property found in initialization Object!"	
-			if(bundle.driveClusterDim)
-				driveClusterDim=bundle.driveClusterDim;
-			else
-				throw "Error: no 'vectorDim' property found in initialization Object!"								
-			if(!isNaN(bundle.memoryHeight))
-				memoryHeight=bundle.memoryHeight;
-			else
-				throw "Error: no 'memoryHeight' property found in initialization Object!"
-			if(bundle.drivesList)
-				driveList=bundle.drivesList;
-			else
-				throw "Error: no 'drivesList' property found in initialization Object!"
-			/*if(bundle.reflexList)
-				reflexList=bundle.reflexList;
-			else
-				throw "Error: no 'reflexes' property found in initialization Object!"
-			*/	
-			if(bundle.distanceAlgo)
-				distanceAlgo=bundle.distanceAlgo;
-			else
-				distanceAlgo="avg";
+		if(!isNaN(bundle.clusterCount))
+			clusterCount= bundle.clusterCount;
+		else
+			throw "Error: no 'clusterCount' property found in initialization Object!"
+		if(bundle.inputClusterDim)
+			inputClusterDim=bundle.inputClusterDim;
+		else
+			throw "Error: no 'inputClusterDim' property found in initialization Object!"		
+		if(bundle.outputClusterDim)
+			outputClusterDim=bundle.outputClusterDim;
+		else
+			throw "Error: no 'outputClusterDim' property found in initialization Object!"	
+		if(bundle.driveClusterDim)
+			driveClusterDim=bundle.driveClusterDim;
+		else
+			throw "Error: no 'vectorDim' property found in initialization Object!"								
+		if(!isNaN(bundle.memoryHeight))
+			memoryHeight=bundle.memoryHeight;
+		else
+			throw "Error: no 'memoryHeight' property found in initialization Object!"
+		if(bundle.drivesList)
+			driveList=bundle.drivesList;
+		else
+			throw "Error: no 'drivesList' property found in initialization Object!"
+		if(bundle.distanceAlgo)
+			distanceAlgo=bundle.distanceAlgo;
+		else
+			distanceAlgo="avg";
 
-			if(!isNaN(bundle.acceptableRange))
-				acceptableRange=bundle.acceptableRange;
-			else
-				acceptableRange=null;
+		if(!isNaN(bundle.acceptableRange))
+			acceptableRange=bundle.acceptableRange;
+		else
+			acceptableRange=null;
 
-			if(bundle.bStmCt)
-				bStmCt=bundle.bStmCt;
+		if(bundle.bStmCt)
+			bStmCt=bundle.bStmCt;
 
-			inputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:inputClusterDim, bStmCt:bStmCt});
-			outputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:outputClusterDim, bStmCt:bStmCt});
-			driveClusters = new Clusters({_numClusters:clusterCount, _vectorDim:driveClusterDim, bStmCt:bStmCt});
-			//reflexes = new Reflexes(reflexList);
-			drives = new Drives(driveList);
-			driveGoals=drives.getGoals();
-			memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
-			inputClusters.setMemorizerRef(memorizer);
-			outputClusters.setMemorizerRef(memorizer);
-			driveClusters.setMemorizerRef(memorizer);
-		}
-	init(bundle);
+		inputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:inputClusterDim, bStmCt:bStmCt});
+		outputClusters = new Clusters({_numClusters:clusterCount, _vectorDim:outputClusterDim, bStmCt:bStmCt});
+		driveClusters = new Clusters({_numClusters:clusterCount, _vectorDim:driveClusterDim, bStmCt:bStmCt});
+		//reflexes = new Reflexes(reflexList);
+		drives = new Drives(driveList);
+		driveGoals=drives.getGoals();
+		memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
+		inputClusters.setMemorizerRef(memorizer);
+		outputClusters.setMemorizerRef(memorizer);
+		driveClusters.setMemorizerRef(memorizer);
 	}
 
 	/**
@@ -603,7 +595,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/;
+	var level, buffer, homeostasisGoal, maxCollisions=100/*was 10*/;
 
 	/* 
 		uidTrees and outputStmIdTables allow for efficient storage and retrieval of memory sequence data
@@ -852,6 +844,7 @@ var Memorizer = (function(bundle){
 						storedStm.sd= sqDist(storedStm.es.stm, homeostasisGoal);
 						//delete from tree and insert in again to re-order;
 						//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
+
 						$R.del( uidTrees[fsUid], storedStm );
 						$R.insert( uidTrees[fsUid], storedStm );
 
@@ -870,7 +863,8 @@ var Memorizer = (function(bundle){
 							sd2 = maxTreeNode.sd;
 						}catch(e){debugger;}
 						//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
-						if(sd1 < sd2 || uidTrees[fsUid] < height){
+
+						if(sd1 < sd2){
 							//replace the currently stored memory with the better-scoring buffer counterpart
 							var insertedNode = {
 								fs:buffer[fs],
@@ -880,10 +874,14 @@ var Memorizer = (function(bundle){
 								sd:sd1,
 								lvl:i
 							};
-
-							$R.del( uidTrees[fsUid], maxTreeNode );
-							// delete maxTreeNode from lookup table
-							delete outputStmIdTables[fsUid][ maxTreeNode[ss][1].id ];
+							
+							if( uidTrees[fsUid].size >= height ) {
+								$R.del( uidTrees[fsUid], maxTreeNode );
+								// delete maxTreeNode from lookup table
+								try {
+									delete outputStmIdTables[fsUid][ maxTreeNode[ss][1].id ];
+								} catch(e) { debugger; }
+							}
 							$R.insert( uidTrees[fsUid], insertedNode );
 							outputStmIdTables[fsUid][ buffer[ss][1].id ] = insertedNode;
 						}	
@@ -1020,7 +1018,21 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 		-randomly assign k clusters over n-dimensional vector space
 		@param {number} k
 	*/
-	function init(_kdTree){	
+	function init(_kdTree){
+		function inorder(node){
+			if (node==null)
+				return;
+			inorder(node.l);
+
+			/*
+			TODO: re-inflate cluster cache (the 'cache') property. This could be done without additional json storage by traversing 
+			the kd-tree, running Array.join() on the node's stimuli, and using that joined value as the key.
+			*/
+			vStr=node.val.stm.join();
+			cache[vStr]=node.val; //rebuild clusters array to use as lookup table for bStm
+
+			inorder(node.r);
+		}
 		var clusters=[], vStr;
 
 		//note that this function will be appended to indiv. clusters, meaning the bStms and
@@ -1044,22 +1056,6 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 			//rebuild clusters array b/c that's the only way to efficiently search for
 			//bStm ids by key			
 			node=clusterTree.getRoot();
-
-			function inorder(node){
-				if (node==null)
-					return;
-				inorder(node.l);
-
-				/*
-				TODO: re-inflate cluster cache (the 'cache') property. This could be done without additional json storage by traversing 
-				the kd-tree, running Array.join() on the node's stimuli, and using that joined value as the key.
-				*/
-				vStr=node.val.stm.join();
-				cache[vStr]=node.val; //rebuild clusters array to use as lookup table for bStm
-
-				inorder(node.r);
-			}
-
 			inorder(node);
 		}
 	}
