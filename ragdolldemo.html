@@ -542,7 +542,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             ];
             var res;
 
-            if(typeof lastSD == 'undefined' || Math.random() < Math.max(Math.min(lastSD/5, .1), 0) || firstCycle){
+            if(typeof lastSD == 'undefined' || Math.random() > lastSD/5 || firstCycle){
                 res=ihtai.cycle(inputStm, dt*1000);
                 firstCycle=false; //necessary b/c there are no clusters to daydream about before first cycle
             }
