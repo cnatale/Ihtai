@@ -389,7 +389,7 @@ var Ihtai = (function(bundle){
 			return {
 				memorizerOutput:imaginedMemorizerOutput,
 				drivesOutput:imaginedDrivesOutput
-			};				
+			};
 		}
 		else{
 			/*
