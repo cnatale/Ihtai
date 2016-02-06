@@ -136,6 +136,24 @@ describe('ihtai utils', function(){
 			expect($R.max(tree, tree.root).key).toBe(20);
 		});
 
+		it('Should find min in tree with large number of values', function(){
+			var tree = $R.createTree();
+			for(var i=0;i<10000;i++){
+				$R.insert(tree, {key:i});
+			}
+
+			expect($R.min(tree, tree.root).key).toBe(0);
+		});
+
+		it('Should find min in tree with large number of values', function(){
+			var tree = $R.createTree();
+			for(var i=0;i<10000;i++){
+				$R.insert(tree, {key:i});
+			}
+
+			expect($R.max(tree, tree.root).key).toBe(9999);
+		});
+
 		it('Should return a node if given a matching key value', function(){
 			var T = $R.createTree();
 			$R.insert(T, {key:'Plato'});
