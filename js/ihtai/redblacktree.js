@@ -121,11 +121,11 @@ var RedBlackTree  = (function RedBlackTree(){
 					z.p.p.color = RED;
 					z= z.p.p;
 				}
-				else if(z == z.p.right){
-					z = z.p;
-					rotateLeft(T, z);
-				}
 				else {
+					if(z == z.p.right){
+						z = z.p;
+						rotateLeft(T, z);
+					}
 					z.p.color = BLACK;
 					z.p.p.color = RED;
 					rotateRight(T, z.p.p);
@@ -140,11 +140,11 @@ var RedBlackTree  = (function RedBlackTree(){
 					z.p.p.color = RED;
 					z= z.p.p;
 				}
-				else if(z == z.p.left){
-					z = z.p;
-					rotateRight(T, z);
-				}
-				else {
+				else { 
+					if(z == z.p.left){
+						z = z.p;
+						rotateRight(T, z);
+					}
 					z.p.color = BLACK;
 					z.p.p.color = RED;
 					rotateLeft(T, z.p.p);
@@ -219,7 +219,7 @@ var RedBlackTree  = (function RedBlackTree(){
 		nilNode check is necessary to not cause a crash, though it diverges from CLRS code
 		*/
 		while(x !== T.root && x.color === BLACK && x !== T.nilNode){
-			if(x===x.p.left){
+			if(x===x.p.left){ // x is left child of parent
 				w = x.p.right;
 				if(w.color === RED) {
 					w.color = BLACK;
@@ -227,25 +227,29 @@ var RedBlackTree  = (function RedBlackTree(){
 					rotateLeft(T, x.p);
 					w = x.p.right;
 				}
+				if(w.right === null || w.left === null) {
+					debugger;
+					//this crashes app
+				}
 				if(w.left.color === BLACK && w.right.color === BLACK){
 					w.color = RED;
 					x = x.p;
 				}
-				else if (w.right.color === BLACK){
-					w.left.color = BLACK;
-					w.color = RED;
-					rotateRight(T, w);
-					w = x.p.right;
-				}
 				else {
+					if (w.right.color === BLACK){
+						w.left.color = BLACK;
+						w.color = RED;
+						rotateRight(T, w);
+						w = x.p.right;
+					}
 					w.color = x.p.color;
 					x.p.color = BLACK;
 					w.right.color = BLACK;
 					rotateLeft(T, x.p);
-					x = T.root;
+					x = T.root; /* this exits while loop */
 				}
 			}
-			else{ //same as sibling if clause but with right and left exchanged
+			else{ //same as sibling if clause but with right and left exchanged; x is rt child of parent
 				w = x.p.left;
 				if(w.color === RED) {
 					w.color = BLACK;
@@ -253,22 +257,26 @@ var RedBlackTree  = (function RedBlackTree(){
 					rotateRight(T, x.p);
 					w = x.p.left;
 				}
+				if(w.right === null || w.left === null) {
+					debugger;
+					//this crashes app
+				}
 				if(w.right.color === BLACK && w.left.color === BLACK){
 					w.color = RED;
 					x = x.p;
 				}
-				else if (w.left.color === BLACK){
-					w.right.color = BLACK;
-					w.color = RED;
-					rotateLeft(T, w);
-					w = x.p.left;
-				}
 				else {
+					if (w.left.color === BLACK){
+						w.right.color = BLACK;
+						w.color = RED;
+						rotateLeft(T, w);
+						w = x.p.left;
+					}
 					w.color = x.p.color;
 					x.p.color = BLACK;
 					w.left.color = BLACK;
 					rotateRight(T, x.p);
-					x = T.root;
+					x = T.root; /* exit point for loop */
 				}
 			}
 		}

@@ -20,11 +20,6 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 </head>
 <body>
-    <!-- the slider to control amount of daydreaming (between 0 and 1) -->
-    <label style="z-index:9999;position:absolute;">Daydreaming</label>
-    <input id="daydreamRange" type=range id=weight min=0 value=1 max=1 step=.05
-    style="z-index:9999;position:absolute;left:100px">
-
     <!-- The canvas, where we draw stuff -->
     <canvas width="1000" height="400" id="myCanvas"></canvas>    
 
@@ -85,11 +80,6 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         var daydreamRange=document.getElementById('daydreamRange');
         var daydreamPct=1, world;
         var pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
-
-        //update the pct of time agent daydreams (1=100pct of time)
-        daydreamRange.addEventListener('change', function(e){
-            daydreamPct=Number(e.currentTarget.value);
-        });
 
         function normalizeAngle(angle){
             angle = angle % (2*Math.PI);

@@ -7,6 +7,8 @@ describe('ihtai utils', function(){
 			var rbTree = $R.createTree();
 			expect(rbTree.root).toBe($R.getNilNode(rbTree));
 		});
+
+		// TODO: add tests for left and right rotation
   
 		it('Should insert nodes to the tree', function(){
 			function getInOrderKeys(node, res){
