@@ -168,10 +168,7 @@ var RedBlackTree  = (function RedBlackTree(){
 		else 
 			u.p.right = v;
 
-		/*this if check is necessary to prevent reference loops by assigning p property to T.nilNodes,
-		though it diverges from CLRS code */
-		if(v !== T.nilNode)
-			v.p = u.p;
+		v.p = u.p;
 	}
 
 	function del (T, z){
@@ -215,10 +212,7 @@ var RedBlackTree  = (function RedBlackTree(){
 	}
 
 	function rbDeleteFixup(T,x){
-		/*
-		nilNode check is necessary to not cause a crash, though it diverges from CLRS code
-		*/
-		while(x !== T.root && x.color === BLACK && x !== T.nilNode){
+		while(x !== T.root && x.color === BLACK){
 			if(x===x.p.left){ // x is left child of parent
 				w = x.p.right;
 				if(w.color === RED) {
@@ -308,6 +302,8 @@ var RedBlackTree  = (function RedBlackTree(){
 		del:del,
 		getRoot:getRoot,
 		hasKey:hasKey,
+		rotateLeft:rotateLeft,
+		rotateRight:rotateRight,
 		getSize: function ( T ) { return T.size; }
 	}
 })();
