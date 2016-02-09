@@ -540,7 +540,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             }
 
             //////// apply forces based on ihtai response ////////
-            if(res.memorizerOutput[0] != null && res.memorizerOutput[1] < 3/*4.9*/){
+            if(res.memorizerOutput[0] != null && res.memorizerOutput[1] < 4.9){
                 console.log('act on memory');
                 //handle movement conditions for each
                 lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
