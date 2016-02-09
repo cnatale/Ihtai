@@ -9,6 +9,43 @@ describe('ihtai utils', function(){
 		});
 
 		// TODO: add tests for left and right rotation
+		it('Should perform a left rotation', function(){
+			var tree = $R.createTree();
+			$R.insert(tree, {key:1});
+			$R.insert(tree, {key:2});
+			$R.insert(tree, {key:3});
+			$R.insert(tree, {key:4});
+			$R.insert(tree, {key:5});
+			$R.insert(tree, {key:6});
+			$R.insert(tree, {key:7});
+			$R.insert(tree, {key:8});
+
+			$R.rotateLeft(tree, tree.root);
+			expect(tree.root.key).toEqual(6);
+			expect(tree.root.left.key).toEqual(4);
+			expect(tree.root.left.left.key).toEqual(2);
+			expect(tree.root.left.right.key).toEqual(5);
+			expect(tree.root.right.key).toEqual(7);
+		});
+
+		it('Should perform a right rotation', function(){
+			var tree = $R.createTree();
+			$R.insert(tree, {key:1});
+			$R.insert(tree, {key:2});
+			$R.insert(tree, {key:3});
+			$R.insert(tree, {key:4});
+			$R.insert(tree, {key:5});
+			$R.insert(tree, {key:6});
+			$R.insert(tree, {key:7});
+			$R.insert(tree, {key:8});
+
+			$R.rotateRight(tree, tree.root);
+			expect(tree.root.key).toEqual(2);
+			expect(tree.root.right.key).toEqual(4);
+			expect(tree.root.left.key).toEqual(1);
+			expect(tree.root.right.left.key).toEqual(3);
+			expect(tree.root.right.right.key).toEqual(6);
+		});
   
 		it('Should insert nodes to the tree', function(){
 			function getInOrderKeys(node, res){
