@@ -175,6 +175,7 @@ var RedBlackTree  = (function RedBlackTree(){
 		if (typeof z === 'undefined') {
 			debugger;
 		}
+		var x;
 		var y = z;
 		var yOriginalColor = y.color;
 		if(z.left === T.nilNode){
@@ -212,6 +213,7 @@ var RedBlackTree  = (function RedBlackTree(){
 	}
 
 	function rbDeleteFixup(T,x){
+		var w;
 		while(x !== T.root && x.color === BLACK){
 			if(x===x.p.left){ // x is left child of parent
 				w = x.p.right;
