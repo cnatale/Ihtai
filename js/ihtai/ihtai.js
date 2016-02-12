@@ -704,7 +704,6 @@ var Memorizer = (function(bundle){
 			
 			var sd= min.sd;
 			if(sd <= acceptableRange){
-				// console.log('lvl:'+ min.lvl);
 				// console.log('min.ss: '+min.ss);
 				// console.log('min.es:'+min.es);
 				// console.log('min.sd:'+min.sd);
@@ -739,7 +738,7 @@ var Memorizer = (function(bundle){
 		*/
 		//fs=firstState, ss=secondState, es=endState
 		var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, fsidTree;
-
+		var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 		//update the buffer
 		buffer.push(clusters);
 		if(buffer.length>height)
@@ -757,25 +756,25 @@ var Memorizer = (function(bundle){
 				fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]);
 				fsidTree = uidTrees[fsUid];
 
-				var avg=[], ctr=0;
+				var avg=[], temporalDist=0;
 
 				if(distanceAlgo == "avg"){
 					for( var j=ss; j<=es; j++ ){
-						ctr++;
+						temporalDist++;
 						if(j==ss){ //first iteration; set array to second state's drive values
-							avg={stm:buffer[ss][2].stm.slice()};
+							avg={stm:buffer[ss][DRIVES].stm.slice()};
 						}
 						else{
 							//add drive stimuli for each moment in time between second state and end state.
 							for(var k=0;k<avg.stm.length;k++){
-								avg.stm[k]+=buffer[j][2].stm[k];
+								avg.stm[k]+=buffer[j][DRIVES].stm[k];
 							}
 						}
 					}
 
 					//loop over each index, dividing by total number of values. gives average drive values over time series.
 					for(k=0;k<avg.stm.length;k++){
-						avg.stm[k] = avg.stm[k]/ctr;
+						avg.stm[k] = avg.stm[k]/temporalDist;
 					}
 				}
 				
@@ -815,13 +814,14 @@ var Memorizer = (function(bundle){
 					saying, "we started at the same state. The next step's output was also the same. These are 
 					effectively the same actions taken by the agent, so average their resulting drive scores."
 					*/
-					if( typeof outputStmIdTables[fsUid] === 'undefined') {
-						debugger;
-					}
+					if( typeof outputStmIdTables[fsUid] === 'undefined') { debugger;}
 
-					if( outputStmIdTables[fsUid].hasOwnProperty( buffer[ss][1].id ) ){
-						var storedStm = outputStmIdTables[fsUid][ buffer[ss][1].id ];
-						var bufferGoalDist = distanceAlgo == "avg" ? avg : {stm: buffer[es][2].stm.slice()};
+					var ssOutputId = buffer[ss][OUTPUT].id;
+					ssMatch = outputStmIdTables[fsUid].hasOwnProperty( ssOutputId );
+
+					if( ssMatch ){
+						var storedStm = outputStmIdTables[fsUid][ ssOutputId ];
+						var bufferGoalDist = distanceAlgo == "avg" ? avg : {stm: buffer[es][DRIVES].stm.slice()};
 						var esGoalDist = storedStm.es.stm.slice();
 						storedStm.ct++;
 						//clamp upper bound to keep memory from getting too 'stuck'
@@ -837,24 +837,18 @@ var Memorizer = (function(bundle){
 						Array.prototype.splice.apply(storedStm.es.stm, args);	
 						//console.log('existing memory updated');
 						
-						//update sqdist of endstate from drive goals and store in s
+						//update sqdist of endstate from drive goals
 						storedStm.sd= sqDist(storedStm.es.stm, homeostasisGoal);
+
 						//delete from tree and insert in again to re-order;
 						//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
-
 						$R.del( uidTrees[fsUid], storedStm );
 						$R.insert( uidTrees[fsUid], storedStm );
-
-						ssMatch=true;
-						break;
-					}
-						
-
-					if(!ssMatch){ 
+					} else {
 						/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
 							than the highest score in this fsUid's tree, get rid of the high score and replace with this.
 						*/
-						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][2].stm.slice(), homeostasisGoal);
+						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][DRIVES].stm.slice(), homeostasisGoal);
 						try{
 							maxTreeNode=$R.max( uidTrees[fsUid], uidTrees[fsUid].root);
 							sd2 = maxTreeNode.sd;
@@ -866,7 +860,7 @@ var Memorizer = (function(bundle){
 							var insertedNode = {
 								fs:buffer[fs],
 								ss:buffer[ss],
-								es:distanceAlgo=="avg" ?  avg : buffer[es][2],
+								es:distanceAlgo=="avg" ?  avg : buffer[es][DRIVES],
 								ct:maxCollisions,
 								sd:sd1,
 								lvl:i
@@ -876,15 +870,15 @@ var Memorizer = (function(bundle){
 								$R.del( uidTrees[fsUid], maxTreeNode );
 								// delete maxTreeNode from lookup table
 								try {
-									delete outputStmIdTables[fsUid][ maxTreeNode[ss][1].id ];
+									delete outputStmIdTables[fsUid][ maxTreeNode[ss][OUTPUT].id ];
 								} catch(e) { debugger; }
 							}
 							$R.insert( uidTrees[fsUid], insertedNode );
-							outputStmIdTables[fsUid][ buffer[ss][1].id ] = insertedNode;
+							outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id ] = insertedNode;
 						}	
 					}	
 				}
-				else/* if(sqDist(buffer[es].stm.slice(-homeostasisGoal.length), homeostasisGoal) < acceptableRange)*/{
+				else {
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					//console.log('new memory created')
 
@@ -898,13 +892,12 @@ var Memorizer = (function(bundle){
 					/*
 					no tree currently exists for this fsUid. Create one, add memory to tree, add reference to outputStmIdTables
 					*/
-
 					var insertedNode = {
 						fs: buffer[fs], 
 						ss: buffer[ss],
-						es: distanceAlgo=="avg" ?  avg: buffer[es][2],
+						es: distanceAlgo=="avg" ?  avg: buffer[es][DRIVES],
 						ct: maxCollisions,
-						sd:sqDist(distanceAlgo=="avg" ? avg.stm : buffer[es][2].stm.slice(), homeostasisGoal),
+						sd:sqDist(distanceAlgo=="avg" ? avg.stm : buffer[es][DRIVES].stm.slice(), homeostasisGoal),
 						lvl: i /*logging purposes only*/						
 					}
 					uidTrees[fsUid] = $R.createTree('sd');
@@ -914,7 +907,7 @@ var Memorizer = (function(bundle){
 						outputStmIdTables[fsUid] = {};
 					}
 
-					outputStmIdTables[fsUid][ buffer[ss][1].id ] = insertedNode;
+					outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id ] = insertedNode;
 
 					/*Keep track of total # of level[i].seriesArray[fsUid] Objects created.
 					Multiply with IHTAI's clustercount property to get rough estimate of memory
@@ -1176,6 +1169,7 @@ var Drives = (function(_drives){
 	function cycle(ioStim, dt){
 		var response=[];
 		avgDriveCtr++;
+
 		for(var i=0;i<drives.length;i++){
 			//execute each method in drives once per cycle
 			var r=drives[i].cycle(ioStim, dt);
