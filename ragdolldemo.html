@@ -413,7 +413,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=/*30*/17;
+        var numClusters=2/*17*/;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
@@ -424,7 +424,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             reflexList:reflexes,
             acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
             /*backStimCt:0,*/
-            distanceAlgo:"avg" /*avg or endState*/
+            distanceAlgo:'avg' /*'endState'*/ /*avg or endState*/
 
         });
 
@@ -504,7 +504,6 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         world.on("endContact", onEndContact);
 
         var lowerLeftLegForce=0, lowerRightLegForce=0, lowerLeftArmForce=0, lowerRightArmForce=0;
-        var firstCycle=true;
         var lastTime, dt, t=0;
         //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
         var allInput='', ct=0, lastSD;
@@ -532,15 +531,12 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             ];
             var res;
 
-            if(typeof lastSD == 'undefined' || Math.random() > lastSD/5){
-                res=ihtai.cycle(inputStm, dt*1000);
-            }
-            else{
-                res=ihtai.daydream(inputStm, dt*1000);
-            }
+            console.log('lastSD: ' + lastSD);
+            res=ihtai.cycle(inputStm, dt*1000);
+            //res=ihtai.daydream(inputStm, dt*1000);
 
             //////// apply forces based on ihtai response ////////
-            if(res.memorizerOutput[0] != null && res.memorizerOutput[1] < 4.9){
+            if(res.memorizerOutput[0] != null &&  Math.random() > (res.memorizerOutput[1])/5){
                 console.log('act on memory');
                 //handle movement conditions for each
                 lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
@@ -560,8 +556,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             //if(typeof res.memorizerOutput[1]=='undefined')debugger;
 
             //memorizeroutput[1] is the predicted score of selected action for the next cycle
-            //drivesOutput[0] is the actual drive value from the previous iteration
-            //console.log('current drive value: ' + res.memorizerOutput[1]/*res.drivesOutput[0]*/);            
+            //drivesOutput[0] is the actual drive value from the previous iteration   
             lastSD = res.memorizerOutput[1]/*res.drivesOutput[0]*/;
 
             //apply forces on body parts

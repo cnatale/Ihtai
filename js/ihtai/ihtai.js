@@ -258,7 +258,6 @@ var Ihtai = (function(bundle){
 		var drivesOutput=drives.cycle(iostm, dt);
 
 		//merge iostm and drives output
-		//TODO: no longer merge, send drivesOutput as its own stm
 		iostm[2]=drivesOutput;
 		combinedstm = iostm;
 	
@@ -595,7 +594,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=100/*was 10*/;
+	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/;
 
 	/* 
 		uidTrees and outputStmIdTables allow for efficient storage and retrieval of memory sequence data
@@ -756,7 +755,6 @@ var Memorizer = (function(bundle){
 				ss=buffer.length-size+1;
 				es=buffer.length-1;
 				fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]);
-				// seriesArray=level[i].series[fsUid]; //TODO: replace with fsidTree
 				fsidTree = uidTrees[fsUid];
 
 				var avg=[], ctr=0;
@@ -780,7 +778,6 @@ var Memorizer = (function(bundle){
 						avg.stm[k] = avg.stm[k]/ctr;
 					}
 				}
-				
 				
 				////////////////////////////////////////////////				
 				
@@ -824,7 +821,7 @@ var Memorizer = (function(bundle){
 
 					if( outputStmIdTables[fsUid].hasOwnProperty( buffer[ss][1].id ) ){
 						var storedStm = outputStmIdTables[fsUid][ buffer[ss][1].id ];
-						var bufferGoalDist = distanceAlgo == "avg" ? avg : buffer[es][2].stm.slice();
+						var bufferGoalDist = distanceAlgo == "avg" ? avg : {stm: buffer[es][2].stm.slice()};
 						var esGoalDist = storedStm.es.stm.slice();
 						storedStm.ct++;
 						//clamp upper bound to keep memory from getting too 'stuck'
@@ -869,8 +866,8 @@ var Memorizer = (function(bundle){
 							var insertedNode = {
 								fs:buffer[fs],
 								ss:buffer[ss],
-								es:distanceAlgo=="avg" ?  avg : buffer[es],
-								ct:0,
+								es:distanceAlgo=="avg" ?  avg : buffer[es][2],
+								ct:maxCollisions,
 								sd:sd1,
 								lvl:i
 							};
@@ -901,12 +898,13 @@ var Memorizer = (function(bundle){
 					/*
 					no tree currently exists for this fsUid. Create one, add memory to tree, add reference to outputStmIdTables
 					*/
+
 					var insertedNode = {
 						fs: buffer[fs], 
 						ss: buffer[ss],
-						es: distanceAlgo=="avg" ?  avg: buffer[es] /*.stm.slice()*/,
-						ct: 0,
-						sd:sqDist(distanceAlgo=="avg" ? avg : buffer[es][2].stm.slice(), homeostasisGoal),
+						es: distanceAlgo=="avg" ?  avg: buffer[es][2],
+						ct: maxCollisions,
+						sd:sqDist(distanceAlgo=="avg" ? avg.stm : buffer[es][2].stm.slice(), homeostasisGoal),
 						lvl: i /*logging purposes only*/						
 					}
 					uidTrees[fsUid] = $R.createTree('sd');
@@ -934,6 +932,7 @@ var Memorizer = (function(bundle){
 		for(var i=0;i<a.length;i++){
 			d+= /*Math.pow(a[i]-b[i], 2);*/ Math.abs(a[i]-b[i]);
 		}
+		d = d/a.length;
 		return d;		
 	}
 
