@@ -818,7 +818,7 @@ var Memorizer = (function(bundle){
 					*/
 					if( typeof outputStmIdTables[fsUid] === 'undefined') { debugger;}
 
-					var ssOutputId = buffer[ss][OUTPUT].id;
+					var ssOutputId = buffer[ss][OUTPUT].id + size;
 					ssMatch = outputStmIdTables[fsUid].hasOwnProperty( ssOutputId );
 
 					if( ssMatch ){
@@ -872,11 +872,11 @@ var Memorizer = (function(bundle){
 								$R.del( uidTrees[fsUid], maxTreeNode );
 								// delete maxTreeNode from lookup table
 								try {
-									delete outputStmIdTables[fsUid][ maxTreeNode[ss][OUTPUT].id ];
+									delete outputStmIdTables[fsUid][ maxTreeNode[ss][OUTPUT].id + size ];
 								} catch(e) { debugger; }
 							}
 							$R.insert( uidTrees[fsUid], insertedNode );
-							outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id ] = insertedNode;
+							outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id + size ] = insertedNode;
 						}	
 					}	
 				}
@@ -909,7 +909,7 @@ var Memorizer = (function(bundle){
 						outputStmIdTables[fsUid] = {};
 					}
 
-					outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id ] = insertedNode;
+					outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id + size] = insertedNode;
 
 					/*Keep track of total # of level[i].seriesArray[fsUid] Objects created.
 					Multiply with IHTAI's clustercount property to get rough estimate of memory
@@ -1095,7 +1095,7 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 		var vStr=v.join();
 
 		if(!cache[vStr]){ //create new cluster or get nearest cluster from kd tree.
-			
+
 			//once idCtr gets too high, stop caching and build the kd-tree.
 			//if not, memory gets so scarce that the gc is called constantly.
 			if(idCtr<numClusters){
