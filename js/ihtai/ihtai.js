@@ -694,7 +694,7 @@ var Memorizer = (function(bundle){
 	*/
 	function query(clusters){
 		var outputMemory=null, stimDist, sd, combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
-
+		var tdist;
 		if(uidTrees.hasOwnProperty(combinedClustersId)){
 			try{ var min = $R.min( uidTrees[combinedClustersId], uidTrees[combinedClustersId].root ); 
 			}
@@ -702,6 +702,7 @@ var Memorizer = (function(bundle){
 				debugger;
 				throw "Error: Memorizer.query() failed to execute redblack tree min search"; };
 			
+			tdist = min.tdist;
 			var sd= min.sd;
 			if(sd <= acceptableRange){
 				// console.log('min.ss: '+min.ss);
@@ -714,7 +715,7 @@ var Memorizer = (function(bundle){
 			}
 		}
 
-		return [outputMemory, sd];
+		return [outputMemory, sd, tdist];
 	}
 
 	/**
@@ -818,7 +819,7 @@ var Memorizer = (function(bundle){
 					*/
 					if( typeof outputStmIdTables[fsUid] === 'undefined') { debugger;}
 
-					var ssOutputId = buffer[ss][OUTPUT].id + size;
+					var ssOutputId = buffer[ss][OUTPUT].id + '+' + size;
 					ssMatch = outputStmIdTables[fsUid].hasOwnProperty( ssOutputId );
 
 					if( ssMatch ){
@@ -865,18 +866,19 @@ var Memorizer = (function(bundle){
 								es:avg,
 								ct:maxCollisions,
 								sd:sd1,
-								lvl:i
+								tdist:size
 							};
 							
+							ssOutputId = maxTreeNode[ss][OUTPUT].id + "+" + size;
 							if( uidTrees[fsUid].size >= height ) {
 								$R.del( uidTrees[fsUid], maxTreeNode );
 								// delete maxTreeNode from lookup table
 								try {
-									delete outputStmIdTables[fsUid][ maxTreeNode[ss][OUTPUT].id + size ];
+									delete outputStmIdTables[fsUid][ ssOutputId ];
 								} catch(e) { debugger; }
 							}
 							$R.insert( uidTrees[fsUid], insertedNode );
-							outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id + size ] = insertedNode;
+							outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
 						}	
 					}	
 				}
@@ -894,13 +896,14 @@ var Memorizer = (function(bundle){
 					/*
 					no tree currently exists for this fsUid. Create one, add memory to tree, add reference to outputStmIdTables
 					*/
+
 					var insertedNode = {
 						fs: buffer[fs], 
 						ss: buffer[ss],
 						es: avg,
 						ct: maxCollisions,
-						sd:sqDist(avg.stm, homeostasisGoal),
-						lvl: i /*logging purposes only*/						
+						sd: sqDist(avg.stm, homeostasisGoal),
+						tdist: size
 					}
 					uidTrees[fsUid] = $R.createTree('sd');
 					$R.insert( uidTrees[fsUid], insertedNode );
@@ -909,7 +912,8 @@ var Memorizer = (function(bundle){
 						outputStmIdTables[fsUid] = {};
 					}
 
-					outputStmIdTables[fsUid][ buffer[ss][OUTPUT].id + size] = insertedNode;
+					ssOutputId = buffer[ss][OUTPUT].id + '+' + size
+					outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
 
 					/*Keep track of total # of level[i].seriesArray[fsUid] Objects created.
 					Multiply with IHTAI's clustercount property to get rough estimate of memory
