@@ -851,7 +851,7 @@ var Memorizer = (function(bundle){
 						/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
 							than the highest score in this fsUid's tree, get rid of the high score and replace with this.
 						*/
-						sd1= sqDist(distanceAlgo == avg.stm.slice(), homeostasisGoal);
+						sd1= sqDist(avg.stm.slice(), homeostasisGoal);
 						try{
 							maxTreeNode=$R.max( uidTrees[fsUid], uidTrees[fsUid].root);
 							sd2 = maxTreeNode.sd;
@@ -868,8 +868,8 @@ var Memorizer = (function(bundle){
 								sd:sd1,
 								tdist:size
 							};
-							
-							ssOutputId = maxTreeNode[ss][OUTPUT].id + "+" + size;
+							ssOutputId = maxTreeNode.ss[OUTPUT].id + "+" + size;
+
 							if( uidTrees[fsUid].size >= height ) {
 								$R.del( uidTrees[fsUid], maxTreeNode );
 								// delete maxTreeNode from lookup table
