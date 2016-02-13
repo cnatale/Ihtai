@@ -776,6 +776,8 @@ var Memorizer = (function(bundle){
 					for(k=0;k<avg.stm.length;k++){
 						avg.stm[k] = avg.stm[k]/temporalDist;
 					}
+				} else {
+					avg={stm:buffer[es][DRIVES].stm.slice()};
 				}
 				
 				////////////////////////////////////////////////				
@@ -821,7 +823,7 @@ var Memorizer = (function(bundle){
 
 					if( ssMatch ){
 						var storedStm = outputStmIdTables[fsUid][ ssOutputId ];
-						var bufferGoalDist = distanceAlgo == "avg" ? avg : {stm: buffer[es][DRIVES].stm.slice()};
+						var bufferGoalDist = avg;
 						var esGoalDist = storedStm.es.stm.slice();
 						storedStm.ct++;
 						//clamp upper bound to keep memory from getting too 'stuck'
@@ -848,7 +850,7 @@ var Memorizer = (function(bundle){
 						/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
 							than the highest score in this fsUid's tree, get rid of the high score and replace with this.
 						*/
-						sd1= sqDist(distanceAlgo == "avg" ? avg.stm.slice() : buffer[es][DRIVES].stm.slice(), homeostasisGoal);
+						sd1= sqDist(distanceAlgo == avg.stm.slice(), homeostasisGoal);
 						try{
 							maxTreeNode=$R.max( uidTrees[fsUid], uidTrees[fsUid].root);
 							sd2 = maxTreeNode.sd;
@@ -860,7 +862,7 @@ var Memorizer = (function(bundle){
 							var insertedNode = {
 								fs:buffer[fs],
 								ss:buffer[ss],
-								es:distanceAlgo=="avg" ?  avg : buffer[es][DRIVES],
+								es:avg,
 								ct:maxCollisions,
 								sd:sd1,
 								lvl:i
@@ -895,9 +897,9 @@ var Memorizer = (function(bundle){
 					var insertedNode = {
 						fs: buffer[fs], 
 						ss: buffer[ss],
-						es: distanceAlgo=="avg" ?  avg: buffer[es][DRIVES],
+						es: avg,
 						ct: maxCollisions,
-						sd:sqDist(distanceAlgo=="avg" ? avg.stm : buffer[es][DRIVES].stm.slice(), homeostasisGoal),
+						sd:sqDist(avg.stm, homeostasisGoal),
 						lvl: i /*logging purposes only*/						
 					}
 					uidTrees[fsUid] = $R.createTree('sd');
@@ -1093,7 +1095,7 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 		var vStr=v.join();
 
 		if(!cache[vStr]){ //create new cluster or get nearest cluster from kd tree.
-
+			
 			//once idCtr gets too high, stop caching and build the kd-tree.
 			//if not, memory gets so scarce that the gc is called constantly.
 			if(idCtr<numClusters){
