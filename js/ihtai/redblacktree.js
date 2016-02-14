@@ -28,36 +28,55 @@ var RedBlackTree  = (function RedBlackTree(){
 		}
 	}
 
+	function inOrder(T, x){
+		if(x !== T.nilNode) {
+			inOrder(T, x.left);
+			console.log(x[T.keyName]);
+			inOrder(T, x.right);
+		}
+	}
+
 	function rotateLeft(T, x){
 		var y = x.right;
 		x.right = y.left;
-		if(y.left !== T.nilNode)
+		if(y.left !== T.nilNode) {
 			y.left.p = x;
+		}
 
 		y.p = x.p;
-		if(x.p === T.nilNode)
+		if(x.p === T.nilNode) {
 			T.root = y;
-		else if(x===x.p.left) //if x is the parent's left node, make y the new left node of parent
+		}
+		else if(x===x.p.left) { //if x is the parent's left node, make y the new left node of parent
 			x.p.left = y;
-		else x.p.right = y;	//if x is the parent's right node, make y the new right node of the parent
+		}
+		else {
+			x.p.right = y;	//if x is the parent's right node, make y the new right node of the parent
+		}
+
 		y.left = x;
 		x.p = y;
 	}
 
-	function rotateRight(T, y){
-		var x = y.left;
-		y.left=x.right;
-		if(x.right !== T.nilNode)
-			x.right.p = y;
+	function rotateRight(T, x){
+		var y = x.left;
+		x.left=y.right;
+		if(y.right !== T.nilNode) {
+			y.right.p = x;
+		}
 		
-		x.p=y.p;
-		if(y.p === T.nilNode)
-			T.root = x;
-		else if(y === y.p.left) //if y is the parent's left node, make x the new left node of parent
-			y.p.left = x;
-		else y.p.right = x; //if y is the parent's right node, make x the new right node of the parent
-		x.right = y;
-		y.p = x;
+		y.p=x.p;
+		if(x.p === T.nilNode) {
+			T.root = y;
+		}
+		else if(x === x.p.left) { //if x is the parent's left node, make y the new left node of parent
+			x.p.left = y;
+		}
+		else {
+			x.p.right = y; //if x is the parent's right node, make y the new right node of the parent
+		}
+		y.right = x;
+		x.p = y;
 	}
 
 	function max(T, node){
@@ -74,6 +93,33 @@ var RedBlackTree  = (function RedBlackTree(){
 
 		return node;
 	}
+
+	function successor(T, x) {
+		if(x.right !== T.nilNode) {
+			return min(T, x.right);
+		}
+		var y = x.p;
+
+		while (y !== T.nilNode && x === y.right) {
+			x = y;
+			y = y.p;
+		}
+		return y;
+	}
+
+	function predecessor(T, x) {
+		if(x.left !== T.nilNode) {
+			return max(T, x.left);
+		}
+		var y = x.p;
+
+		while(y !== T.nilNode && x === y.left) {
+			x = y;
+			y = y.p;
+		}
+		return y;
+	}
+
 	function getRoot(){
 		return root;
 	}
@@ -89,19 +135,24 @@ var RedBlackTree  = (function RedBlackTree(){
 		var x = T.root;
 		while (x !== T.nilNode){
 			y=x;
-			if(z[T.keyName] < x[T.keyName])
+			if(z[T.keyName] < x[T.keyName]) {
 				x = x.left;
-			else
+			}
+			else {
 				x = x.right;
+			}
 		}
 
 		z.p = y;
-		if (y === T.nilNode)
+		if (y === T.nilNode) {
 			T.root = z;
-		else if (z[T.keyName] < y[T.keyName])
+		}
+		else if (z[T.keyName] < y[T.keyName]) {
 			y.left = z;
-		else
+		}
+		else {
 			y.right = z;
+		}
 
 		z.left = T.nilNode;
 		z.right = T.nilNode;
@@ -180,14 +231,17 @@ var RedBlackTree  = (function RedBlackTree(){
 		var yOriginalColor = y.color;
 		if(z.left === T.nilNode){
 			x = z.right;
+			//x = successor(T, z);
 			rbTransplant(T, z, z.right);
 		}
 		else if(z.right === T.nilNode) {
 			x = z.left;
+			//x = predecessor(T, z);
 			rbTransplant(T, z, z.left);
 		}
 		else{
 			y = min(T, z.right);
+			//y = successor(T, z);
 			yOriginalColor = y.color;
 			x = y.right;
 			if(y.p === z) {
