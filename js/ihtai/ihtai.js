@@ -852,10 +852,8 @@ var Memorizer = (function(bundle){
 							than the highest score in this fsUid's tree, get rid of the high score and replace with this.
 						*/
 						sd1= sqDist(avg.stm.slice(), homeostasisGoal);
-						try{
-							maxTreeNode=$R.max( uidTrees[fsUid], uidTrees[fsUid].root);
-							sd2 = maxTreeNode.sd;
-						}catch(e){debugger;}
+						maxTreeNode=$R.max( uidTrees[fsUid], uidTrees[fsUid].root);
+						sd2 = maxTreeNode.sd;
 						//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
 
 						if(sd1 < sd2){
@@ -868,16 +866,17 @@ var Memorizer = (function(bundle){
 								sd:sd1,
 								tdist:size
 							};
-							ssOutputId = maxTreeNode.ss[OUTPUT].id + "+" + size;
+							ssOutputId = maxTreeNode.ss[OUTPUT].id + "+" + maxTreeNode.tdist;
 
 							if( uidTrees[fsUid].size >= height ) {
-								$R.del( uidTrees[fsUid], maxTreeNode );
-								// delete maxTreeNode from lookup table
 								try {
+									$R.del( uidTrees[fsUid], maxTreeNode );
+									// delete maxTreeNode from lookup table
 									delete outputStmIdTables[fsUid][ ssOutputId ];
 								} catch(e) { debugger; }
 							}
 							$R.insert( uidTrees[fsUid], insertedNode );
+							ssOutputId = insertedNode.ss[OUTPUT].id + "+" + size;
 							outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
 						}	
 					}	

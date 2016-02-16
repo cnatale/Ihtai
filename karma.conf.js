@@ -17,7 +17,8 @@ module.exports = function(config) {
     files: [
       'js/ihtai/*.js',
       'js/external/Queue.js',
-      'tests/**/*Spec.js'
+      //'tests/**/*Spec.js'
+      'tests/**/redBlackTreeSpec.js'
     ],
 
 

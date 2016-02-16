@@ -31,7 +31,13 @@ var RedBlackTree  = (function RedBlackTree(){
 	function inOrder(T, x){
 		if(x !== T.nilNode) {
 			inOrder(T, x.left);
-			console.log(x[T.keyName]);
+			console.log('=====NODE=====');
+			console.log('id: ' + x.ss[2].id + T.size)
+			console.log('sd: ' + x[T.keyName]);
+			console.log('tdist: ' + x.tdist);
+			console.log('left node: ' + (x.left !== T.nilNode ? x.left.ss[2].id : 'nil') + T.size);
+			console.log('right node: ' + (x.right !== T.nilNode ? x.right.ss[2].id : 'nil') + T.size);
+			console.log('==============');
 			inOrder(T, x.right);
 		}
 	}
@@ -360,7 +366,8 @@ var RedBlackTree  = (function RedBlackTree(){
 		hasKey:hasKey,
 		rotateLeft:rotateLeft,
 		rotateRight:rotateRight,
-		getSize: function ( T ) { return T.size; }
+		getSize: function ( T ) { return T.size; },
+		inOrder: inOrder
 	}
 })();
 
