@@ -413,7 +413,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=100/*17*/;
+        var numClusters=20/*17*/;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
@@ -424,14 +424,14 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             reflexList:reflexes,
             acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
             /*backStimCt:0,*/
-            distanceAlgo:'avg' /*'endState'*/ /*avg or endState*/
+            distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/
 
         });
 
         function roundToTenth(num){
-            num*=10;
+            num*=5;
             num=num >> 0;
-            num/=10;
+            num/=5;
             return num;
         }
 
@@ -526,7 +526,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             ///////////
 
             var inputStm=[
-                [normalizedAngle, lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch, lowerRightLegTouch, lowerLeftArmTouch, lowerRightArmTouch],
+                [normalizedAngle, lllegAngle, lrlegAngle, llarmAngle, lrarmAngle, lowerLeftLegTouch*2*Math.PI, lowerRightLegTouch*2*Math.PI, lowerLeftArmTouch*2*Math.PI, lowerRightArmTouch*2*Math.PI],
                 [lowerLeftLegForce, lowerRightLegForce, lowerLeftArmForce, lowerRightArmForce]
             ];
             var res;
@@ -562,10 +562,10 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             lastSD = res.memorizerOutput[1]/*res.drivesOutput[0]*/;
 
             //apply forces on body parts
-            lowerLeftLeg.applyForce([lowerLeftLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
-            lowerRightLeg.applyForce([lowerRightLegForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
-            lowerLeftArm.applyForce([lowerLeftArmForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
-            lowerRightArm.applyForce([lowerRightArmForce * (/*dt*1000/2.5*/3.5),0],[0,0]);
+            lowerLeftLeg.applyForce([lowerLeftLegForce * (/*dt*1000/2.5*/5),0],[0,0]);
+            lowerRightLeg.applyForce([lowerRightLegForce * (/*dt*1000/2.5*/5),0],[0,0]);
+            lowerLeftArm.applyForce([lowerLeftArmForce * (/*dt*1000/2.5*/5),0],[0,0]);
+            lowerRightArm.applyForce([lowerRightArmForce * (/*dt*1000/2.5*/5),0],[0,0]);
 
             // Move physics bodies forward in time
             //world.step(timeStep, dt, maxSubSteps);

@@ -712,6 +712,8 @@ var Memorizer = (function(bundle){
 				throw "Error: Memorizer.query() failed to execute redblack tree min search"; };
 			
 			tdist = min.tdist;
+			//debugger;
+			console.log('selected query fs uid: ' + IhtaiUtils.toCombinedStmUID(min.fs));
 			var sd= min.sd;
 			if(sd <= acceptableRange){
 				// console.log('min.ss: '+min.ss);
@@ -789,6 +791,10 @@ var Memorizer = (function(bundle){
 				} else {
 					avg={stm:buffer[es][DRIVES].stm.slice()};
 				}
+
+				function getSSOutputId(mem) {
+					return /*buffer[ss][INPUT].id + '+' +*/ buffer[ss][OUTPUT].id /*+ '+' + size*/;
+				}
 				
 				////////////////////////////////////////////////				
 				
@@ -828,7 +834,8 @@ var Memorizer = (function(bundle){
 					*/
 					if( typeof outputStmIdTables[fsUid] === 'undefined') { debugger;}
 
-					var ssOutputId = buffer[ss][OUTPUT].id + '+' + size;
+					//var ssOutputId = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
+					var ssOutputId = getSSOutputId(buffer[ss]);
 					ssMatch = outputStmIdTables[fsUid].hasOwnProperty( ssOutputId );
 
 					if( ssMatch ){
@@ -875,7 +882,8 @@ var Memorizer = (function(bundle){
 								sd:sd1,
 								tdist:size
 							};
-							ssOutputId = maxTreeNode.ss[OUTPUT].id + "+" + maxTreeNode.tdist;
+							// ssOutputId = maxTreeNode.ss[INPUT].id + '+' + maxTreeNode.ss[OUTPUT].id + "+" + maxTreeNode.tdist;
+							ssOutputId = getSSOutputId(maxTreeNode.ss);
 
 							if( uidTrees[fsUid].size >= candidatePoolSize) {
 								try {
@@ -885,7 +893,8 @@ var Memorizer = (function(bundle){
 								} catch(e) { debugger; }
 							}
 							$R.insert( uidTrees[fsUid], insertedNode );
-							ssOutputId = insertedNode.ss[OUTPUT].id + "+" + size;
+							// ssOutputId = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
+							ssOutputId = getSSOutputId(insertedNode.ss);
 							outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
 						}	
 					}	
@@ -920,7 +929,8 @@ var Memorizer = (function(bundle){
 						outputStmIdTables[fsUid] = {};
 					}
 
-					ssOutputId = buffer[ss][OUTPUT].id + '+' + size
+					// ssOutputId = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
+					ssOutputId = getSSOutputId(buffer[ss]);
 					outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
 					/* Note that we don't need to check the candidatePoolSize here for a 
 					   possible deletion because this isa brand new tree. */

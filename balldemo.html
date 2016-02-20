@@ -138,7 +138,7 @@
     // Feeding Box
     box = new p2.Body({
         mass: 1,
-        position: [0, 2],
+        position: [3, 2],
     });
     box.addShape(boxShape);
     world.addBody(box);
@@ -214,14 +214,15 @@
     var numClusters=1000;
     var ihtai = new Ihtai({
         clusterCount:numClusters,
-        inputClusterDim:1,
+        inputClusterDim:2,
         outputClusterDim:1,
         driveClusterDim:1,
-        memoryHeight:10,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+        memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
         drivesList:drives,
         reflexList:reflexes,
         acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
-        distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/
+        distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
+        candidatePoolSize: 100
 
     });
 
@@ -245,10 +246,11 @@
 
         //vars to record: is moving left or right, is left or right of square, dist from square
         var leftOrRightOfBox = normalize(isLeftOrRight(head, box));
-
+        console.log('left or right of box: ' + leftOrRightOfBox)
+        console.log('ball x velocity: ' + head.velocity[0]);
         //first index is sensory input array, second is sensory output (action) array
         var inputStm=[
-            [leftOrRightOfBox],
+            [leftOrRightOfBox, roundToTenth(head.velocity[0])],
             [moveDir]
         ];
         var res;
@@ -258,7 +260,7 @@
 
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput[STIMULI];
-        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD])/4.12){
+        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD])/60){
             console.log('act on memory');
             //handle movement conditions
             moveDir = stimResult[OUTPUT].stm[0];
@@ -268,13 +270,13 @@
             //apply random movement signals
             moveDir = normalize(getRandomMoveDir());
         }
-        console.log('SD: ' + res.memorizerOutput[SD])
-        console.log('Move Dir: ' + moveDir);
+        //console.log('SD: ' + res.memorizerOutput[SD])
+        //console.log('Move Dir: ' + moveDir);
         lastSD = res.memorizerOutput[SD];
 
         var moveDirOutput = moveDir === 100 ? -1 : 1;
         //apply forces on body parts
-        head.applyForce([moveDirOutput * (/*dt*1000/2.5*/5),0],[0,0]);
+        head.applyForce([moveDirOutput * (/*dt*1000/2.5*/10),0],[0,0]);
 
         // Move physics bodies forward in time
         //world.step(timeStep, dt, maxSubSteps);
