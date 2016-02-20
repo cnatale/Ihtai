@@ -99,7 +99,7 @@ THE SOFTWARE.
 
  */
 var Ihtai = (function(bundle){
-	var clusterCount, inputClusterDim, outputClusterDim, driveClusterDim, memoryHeight, driveList, reflexList;
+	var clusterCount, inputClusterDim, outputClusterDim, driveClusterDim, memoryHeight, driveList, reflexList, candidatePoolSize;
 	var inputClusters, outputClusters, driveClusters, memorizer, drives, reflexes, acceptableRange, distanceAlgo, _enableReflexes=true, _enableMemories=true;
 	var bStmCt=0, prevstm=[], driveGoals;
 	var outputstm =[]; //the output stm buffer;
@@ -200,6 +200,10 @@ var Ihtai = (function(bundle){
 			distanceAlgo=bundle.distanceAlgo;
 		else
 			distanceAlgo="avg";
+		if(bundle.candidatePoolSize)
+			candidatePoolSize = bundle.candidatePoolSize;
+		else
+			candidatePoolSize = 100;
 
 		if(!isNaN(bundle.acceptableRange))
 			acceptableRange=bundle.acceptableRange;
@@ -215,7 +219,7 @@ var Ihtai = (function(bundle){
 		//reflexes = new Reflexes(reflexList);
 		drives = new Drives(driveList);
 		driveGoals=drives.getGoals();
-		memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo});		
+		memorizer = new Memorizer({_memoryHeight:memoryHeight, _goals:drives.getGoals(), _acceptableRange:acceptableRange, _distanceAlgo:distanceAlgo, _candidatePoolSize:candidatePoolSize});		
 		inputClusters.setMemorizerRef(memorizer);
 		outputClusters.setMemorizerRef(memorizer);
 		driveClusters.setMemorizerRef(memorizer);
@@ -594,7 +598,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/;
+	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, candidatePoolSize;
 
 	/* 
 		uidTrees and outputStmIdTables allow for efficient storage and retrieval of memory sequence data
@@ -662,6 +666,11 @@ var Memorizer = (function(bundle){
 			distanceAlgo=bundle._distanceAlgo;
 		else
 			distanceAlgo="avg";
+
+		if(typeof bundle._candidatePoolSize !== "undefined")
+			candidatePoolSize=bundle._candidatePoolSize;
+		else
+			candidatePoolSize=100;		
 
 		if(typeof bundle._uidTrees != "undefined"){
 			uidTrees=bundle._uidTrees;
@@ -868,7 +877,7 @@ var Memorizer = (function(bundle){
 							};
 							ssOutputId = maxTreeNode.ss[OUTPUT].id + "+" + maxTreeNode.tdist;
 
-							if( uidTrees[fsUid].size >= height ) {
+							if( uidTrees[fsUid].size >= candidatePoolSize) {
 								try {
 									$R.del( uidTrees[fsUid], maxTreeNode );
 									// delete maxTreeNode from lookup table
@@ -913,6 +922,8 @@ var Memorizer = (function(bundle){
 
 					ssOutputId = buffer[ss][OUTPUT].id + '+' + size
 					outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
+					/* Note that we don't need to check the candidatePoolSize here for a 
+					   possible deletion because this isa brand new tree. */
 
 					/*Keep track of total # of level[i].seriesArray[fsUid] Objects created.
 					Multiply with IHTAI's clustercount property to get rough estimate of memory
