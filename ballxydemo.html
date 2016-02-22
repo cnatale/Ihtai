@@ -1,0 +1,424 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ragdoll demo - p2.js physics engine</title>
+    <script src="js/external/p2/p2.js"></script>
+    
+    <style>
+    html,body {
+        margin:0;
+        padding:0;
+        width:100%;
+        height:100%;
+        overflow: hidden;
+    }
+    </style>
+
+    <meta name="description" content="A rag doll learning to stand upright using IHTAI.">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<body>
+    <!-- The canvas, where we draw stuff -->
+    <canvas width="1000" height="400" id="myCanvas"></canvas>    
+
+    <script src="js/ihtai/redblacktree.js"></script>
+    <script src="js/ihtai/ihtai.js"></script>
+    <script src="js/ihtai/utils.js"></script>
+    <script>
+
+    p2.Plane.prototype.computeAABB = function(out, position, angle){
+        var a = angle % (2 * Math.PI);
+        var set = p2.vec2.set;
+        var max = 1e7;
+        var lowerBound = out.lowerBound;
+        var upperBound = out.upperBound;
+
+        // Set max bounds
+        set(lowerBound, -max, -max);
+        set(upperBound,  max,  max);
+
+        if(a === 0){
+            // y goes from -inf to 0
+            upperBound[1] = 0;
+
+        } else if(a === Math.PI / 2){
+
+            // x goes from 0 to inf
+            lowerBound[0] = 0;
+
+        } else if(a === Math.PI){
+
+            // y goes from 0 to inf
+            lowerBound[1] = 0;
+
+        } else if(a === 3*Math.PI/2){
+
+            // x goes from -inf to 0
+            upperBound[0] = 0;
+
+        }
+    };
+
+
+    //////// new vars /////////
+    var canvas, ctx, w, h, zoom=50, jumpSpeed=6, walkSpeed=2, timeStep=1/60, maxSubSteps=3,
+        world, characterBody, planeBody;
+    ///////////////////////////
+
+    // Init 
+    canvas = document.getElementById("myCanvas");
+    w = canvas.width;
+    h = canvas.height;
+    ctx = canvas.getContext("2d");
+    ctx.lineWidth = 1/zoom;
+
+    var daydreamRange=document.getElementById('daydreamRange');
+    var world;
+    var head, box;
+
+    function normalizeAngle(angle){
+        angle = angle % (2*Math.PI);
+        if(angle < 0){
+            angle += (2*Math.PI);
+        }
+        return angle;
+    }
+
+    function roundToNearest(roundTo, value) {
+        return Math.round(value/roundTo)*roundTo;
+    }
+
+
+    function roundToTenth(num){
+        num*=10;
+        num=num >> 0;
+        num/=10;
+        return num;
+    }
+
+    function getDist(A, B) {
+        return Math.pow( Math.abs(A.position[0] - B.position[0]) + Math.abs(A.position[1] - B.position[1]), 2);
+    }
+
+    /**
+    Left is represented by 0, right by 1
+    */
+    var LEFT = 0, RIGHT = 1;
+    function isLeftOrRight(A, B) {
+        return (A.position[0] - B.position[0] < 0) ? 0 : 1;
+    }
+
+    function normalize(val) {
+        return val * 100;
+    }
+
+    var headRadius = 0.5, boxSize = 0.5;
+
+    var OTHER =     Math.pow(2,1),
+        BODYPARTS = Math.pow(2,2),
+        WALLS =     Math.pow(2,3);
+
+    var headShape = new p2.Circle({ radius: headRadius }),
+        boxShape = new p2.Box({ width: boxSize, height: boxSize });
+
+    headShape.collisionGroup = BODYPARTS;
+    headShape.collisionMask = OTHER|WALLS;
+
+    boxShape.collisionGroup = BODYPARTS;
+    boxShape.collisionMask = OTHER|WALLS;
+
+    world = new p2.World({
+        gravity : [0,-10]
+    });        
+
+    world.defaultContactMaterial.friction = 0.5;
+    world.setGlobalStiffness(1e5);            
+
+    world.solver.iterations = 20;
+    world.solver.tolerance = 0.001;                
+
+    var worldObjects=[];          
+    // Feeding Box
+    box = new p2.Body({
+        mass: 0,
+        position: [3, 2],
+    });
+    box.addShape(boxShape);
+    world.addBody(box);
+    worldObjects.push(box);
+    var boxType = boxShape.type;
+
+    // Head
+    var head = new p2.Body({
+        mass: 1,
+        position: [0,0],
+    });
+    head.addShape(headShape);
+    world.addBody(head);
+    worldObjects.push(head);
+    var headType=headShape.type;
+
+    // Create ground
+    var groundShape = new p2.Plane();
+    var ground = new p2.Body({
+        position:[0,-1],
+    });
+    ground.addShape(groundShape);
+    groundShape.collisionGroup = WALLS;
+    groundShape.collisionMask =  BODYPARTS|OTHER;
+    world.addBody(ground);
+    worldObjects.push(ground);
+
+    //create walls
+    var leftWallShape = new p2.Plane();
+    var leftWall = new p2.Body({
+        position:[-8,0],
+        angle:[3*Math.PI/2]
+    });
+
+    leftWall.addShape(leftWallShape);
+    leftWallShape.collisionGroup = WALLS;
+    leftWallShape.collisionMask =  BODYPARTS|OTHER;
+    world.addBody(leftWall); 
+    worldObjects.push(leftWall);
+    
+    var rightWallShape = new p2.Plane();
+    var rightWall = new p2.Body({
+        position:[8,0],
+        angle:[Math.PI/2]
+    });
+
+    rightWall.addShape(rightWallShape);
+    rightWallShape.collisionGroup = WALLS;
+    rightWallShape.collisionMask =  BODYPARTS|OTHER;    
+    world.addBody(rightWall);               
+    worldObjects.push(rightWall);
+
+    //initialize Ihtai
+    var nearnessDrive={
+        init:function(){
+            this.dist=0;
+            this.prevDist=0;
+        }.bind(this),
+        cycle: function(stm,dt){
+            this.prevDist = this.dist;
+            this.dist = Math.min( roundToNearest( 1, getDist(head, box) ), 200);
+            console.log('cycle dist: ' + this.dist);
+            return this.dist;
+        }.bind(this),
+        undo:function(){         
+            this.dist=this.prevDist;
+            return this.dist;
+        }.bind(this),
+        targetval:0 //the goal value
+    };
+    var drives=[nearnessDrive];
+    var reflexes=[];
+    var numClusters=1000;
+    var ihtai = new Ihtai({
+        clusterCount:numClusters,
+        inputClusterDim:3,
+        outputClusterDim:2,
+        driveClusterDim:1,
+        memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+        drivesList:drives,
+        reflexList:reflexes,
+        acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
+        distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
+        candidatePoolSize: 100
+
+    });
+
+    var headMoveForce=0;
+    var lastTime, dt, t=0;
+    //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
+    var allInput='', ct=0, lastSD;
+    var SD = 1, STIMULI = 0, OUTPUT = 1;
+    var moveDirX = normalize(getRandomMoveDir());
+    var moveDirY = normalize(getRandomMoveDir());
+
+    function getRandomMoveDir() {
+         return Math.round(Math.random());
+    }
+
+    function mainLoop(t){
+        requestAnimationFrame(mainLoop);
+
+        var dt = typeof t !== 'undefined' && typeof lastTime !== 'undefined' ? t / 1000 - lastTime : 0;
+        if(typeof t == 'undefined') t=0;
+        ct++;
+
+        //vars to record: is moving left or right, is left or right of square, dist from square
+        var leftOrRightOfBox = normalize(isLeftOrRight(head, box));
+        var headVelocityX = Math.round(head.velocity[0]) * 50;
+        var headVelocityY = Math.round(head.velocity[1]) * 50;
+        //console.log('left or right of box: ' + leftOrRightOfBox)
+        //console.log('ball velocity: ' + headVelocityX + ', ' + headVelocityY);
+        //first index is sensory input array, second is sensory output (action) array
+        var inputStm=[
+            [leftOrRightOfBox, headVelocityX, headVelocityY],
+            [moveDirX, moveDirY]
+        ];
+        var res;
+
+        res=ihtai.cycle(inputStm, dt*1000);
+        //res=ihtai.daydream(inputStm, dt*1000);
+
+        //////// apply forces based on ihtai response ////////
+        var stimResult = res.memorizerOutput[STIMULI];
+        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD])/200){
+            console.log('act on memory');
+            //handle movement conditions
+            moveDirX = stimResult[OUTPUT].stm[0];
+            moveDirY = stimResult[OUTPUT].stm[1];
+        }
+        else{
+            console.log('act on reflex')
+            //apply random movement signals
+            moveDirX = normalize(getRandomMoveDir());
+            moveDirY = normalize(getRandomMoveDir());
+        }
+        //console.log('SD: ' + res.memorizerOutput[SD])
+        //console.log('Move Dir: ' + moveDir);
+        lastSD = res.memorizerOutput[SD];
+
+        var moveDirXOutput = moveDirX === 100 ? -1 : 1;
+        var moveDirYOutput = moveDirY === 100 ? -1 : 1;
+        //apply forces on body parts
+        head.applyForce([moveDirXOutput * 10, moveDirYOutput * 30],[0,0]);
+
+        // Move physics bodies forward in time
+        //world.step(timeStep, dt, maxSubSteps);
+        world.step(timeStep, 0, maxSubSteps);
+
+        // Render scene
+        render();
+        lastTime = t / 1000;
+    }
+
+    function drawBox(body){
+        ctx.beginPath();
+        var x = body.position[0],
+            y = body.position[1],
+            s = body.shapes[0];
+        ctx.save();
+        ctx.translate(x, y);     // Translate to the center of the box
+        ctx.rotate(body.angle);  // Rotate to the box body frame
+        ctx.fillRect(-s.width/2, -s.height/2, s.width, s.height);
+        ctx.restore();
+    }
+
+    function drawCircle(body){
+        ctx.beginPath();
+        var x = body.position[0],
+            y = body.position[1];
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(body.angle);
+        ctx.arc(0,0,body.shapes[0].radius,0,2*Math.PI);
+        ctx.stroke();
+        ctx.restore();
+
+    }
+
+    function drawPlanes(){
+        var y1 = planeBody.position[1],
+            y0 = -h/zoom/2,
+            x0 = -w/zoom/2,
+            x1 = w/zoom/2;
+        ctx.fillRect(x0, y0, x1-x0, y1-y0);
+    }
+
+    function render(){
+        // Clear the canvas
+        ctx.clearRect(0,0,w,h);
+
+        // Transform the canvas
+        // Note that we need to flip the y axis since Canvas pixel coordinates
+        // goes from top to bottom, while physics does the opposite.
+        ctx.save();
+        ctx.translate(w/2, h/2);  // Translate to the center
+        ctx.scale(zoom, -zoom);   // Zoom in and flip y axis
+
+        // Draw all bodies
+        ctx.strokeStyle='none';
+
+        ctx.fillStyle='green';
+        //drawPlane();
+        for(var i=0; i<worldObjects.length; i++){
+
+            if(worldObjects[i].shapes[0].type === headType) 
+                drawCircle(worldObjects[i]);
+            else
+                drawBox(worldObjects[i]);
+        }
+
+        // Restore transform
+        ctx.restore();
+    }
+
+    //////// new mouseevent code ////////
+    // Create a body for the cursor
+    var mouseBody = new p2.Body();
+    world.addBody(mouseBody);
+    var scaleX = 50, scaleY = -50, mouseConstraint;
+
+    canvas.addEventListener('mousedown', function(event){
+
+      // Convert the canvas coordinate to physics coordinates
+      var position = getPhysicsCoord(event);
+
+      // Check if the cursor is inside the box
+      var hitBodies = world.hitTest(position, worldObjects);
+
+      if(hitBodies.length){
+
+        // Move the mouse body to the cursor position
+        mouseBody.position[0] = position[0];
+        mouseBody.position[1] = position[1];
+
+        // Create a RevoluteConstraint.
+        // This constraint lets the bodies rotate around a common point
+        mouseConstraint = new p2.RevoluteConstraint(mouseBody, hitBodies[0], {
+          worldPivot: position,
+          collideConnected:false
+        });
+        world.addConstraint(mouseConstraint);
+      }
+    });
+
+    // Sync the mouse body to be at the cursor position
+    canvas.addEventListener('mousemove', function(event){
+      var position = getPhysicsCoord(event);
+      mouseBody.position[0] = position[0];
+      mouseBody.position[1] = position[1];
+    });
+
+    // Remove the mouse constraint on mouse up
+    canvas.addEventListener('mouseup', function(event){
+      world.removeConstraint(mouseConstraint);
+      mouseConstraint = null;
+    });
+
+    // Convert a canvas coordiante to physics coordinate
+    function getPhysicsCoord(mouseEvent){
+        var rect = canvas.getBoundingClientRect();
+        var x = mouseEvent.clientX - rect.left;
+        var y = mouseEvent.clientY - rect.top;
+
+        x = (x - w / 2) / scaleX;
+        y = (y - h / 2) / scaleY;
+
+        return [x, y];
+    }
+
+    /////////////////////////////////////
+
+
+    //window.setInterval(mainLoop,0);
+    mainLoop();            
+    </script>
+</body>
+</html>
