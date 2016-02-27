@@ -748,26 +748,9 @@ var Memorizer = (function(bundle){
 		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 		if(uidTrees.hasOwnProperty(combinedClustersId)) {
 			//TODO: get id of second state output
-
 			var ssUid = outputSignalCluster.id;
-			/* do an O(n) search for output id in ssIdTables[combinedClustersId]
-				Note: this is too computationally expensive. find an alternative
-
-				Add outputId property to every ssIdTables[combinedClustersId] table,
-				since they'll all be the same in said table
-			*/
-			var ssMatch=false;
-			for ( var key in ssIdTables[combinedClustersId] ) {
-				if (ssIdTables[combinedClustersId].hasOwnProperty(key)) {
-					if( key.indexOf('+' + ssUid + '+') > -1 ) {
-						//debugger;
-						ssMatch = true;
-
-					}
-				}
-			}
-
-			//var ssMatch = ssIdTables[combinedClustersId].hasOwnProperty( ssUid );
+			var ssMatch = outputTables[combinedClustersId][ssUid];
+			
 			if( ssMatch ){
 				return true;
 			}
@@ -784,6 +767,14 @@ var Memorizer = (function(bundle){
 	*/
 	function getSSUid(mem, tdist) {
 		return mem[INPUT].id + '+' + mem[OUTPUT].id + '+' + tdist;
+	}
+
+	function getSSOutputId(mem) {
+		try {
+			return mem[OUTPUT].id;
+		} catch(e) {
+			debugger;
+		}
 	}
 
 	/**
@@ -807,7 +798,7 @@ var Memorizer = (function(bundle){
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, fsidTree;
+		var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, fsidTree, ssOutput;
 		//update the buffer
 		buffer.push(clusters);
 		if(buffer.length>height)
@@ -943,12 +934,18 @@ var Memorizer = (function(bundle){
 									$R.del( uidTrees[fsUid], maxTreeNode );
 									// delete maxTreeNode from lookup table
 									delete ssIdTables[fsUid][ ssUid ];
+									outputTables[fsUid][ getSSOutputId(maxTreeNode.ss) ]--;
 								} catch(e) { debugger; }
 							}
 							$R.insert( uidTrees[fsUid], insertedNode );
 							// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
 							ssUid = getSSUid(insertedNode.ss, size);
 							ssIdTables[fsUid][ ssUid ] = insertedNode;
+							if(typeof outputTables[fsUid][ getSSOutputId(insertedNode.ss) ] === 'undefined'){
+								outputTables[fsUid][ getSSOutputId(insertedNode.ss) ] = 1;
+							} else {
+								outputTables[fsUid][ getSSOutputId(insertedNode.ss) ]++;
+							}
 						}	
 					}	
 				}
@@ -980,11 +977,17 @@ var Memorizer = (function(bundle){
 
 					if (typeof ssIdTables[fsUid] === 'undefined' ) {
 						ssIdTables[fsUid] = {};
+						outputTables[fsUid] = {};
 					}
 
 					// ssUid = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
 					ssUid = getSSUid(buffer[ss], size);
 					ssIdTables[fsUid][ ssUid ] = insertedNode;
+					if(typeof outputTables[fsUid][ getSSOutputId(buffer[ss]) ] === 'undefined'){
+						outputTables[fsUid][ getSSOutputId(buffer[ss]) ] = 1;
+					} else {
+						outputTables[fsUid][ getSSOutputId(buffer[ss]) ]++;
+					}
 					/* Note that we don't need to check the candidatePoolSize here for a 
 					   possible deletion because this isa brand new tree. */
 

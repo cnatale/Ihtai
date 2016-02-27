@@ -262,7 +262,10 @@
 
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput[STIMULI];
-        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD])/60){
+        var randDir = normalize(getRandomMoveDir());
+        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD])/60
+            || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDir]))
+        ){
             console.log('act on memory');
             //handle movement conditions
             moveDir = stimResult[OUTPUT].stm[0];
@@ -270,7 +273,7 @@
         else{
             console.log('act on reflex')
             //apply random movement signals
-            moveDir = normalize(getRandomMoveDir());
+            moveDir = randDir;
         }
         //console.log('SD: ' + res.memorizerOutput[SD])
         //console.log('Move Dir: ' + moveDir);
