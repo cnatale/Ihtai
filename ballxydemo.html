@@ -227,7 +227,7 @@
         reflexList:reflexes,
         acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
         distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
-        candidatePoolSize: 100
+        candidatePoolSize: 200
 
     });
 
@@ -269,6 +269,8 @@
 
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput[STIMULI];
+
+        var rand
         var randDirX = normalize(getRandomMoveDir());
         var randDirY = normalize(getRandomMoveDir());
 
@@ -276,7 +278,7 @@
         If a memory chain with current random action already exists, act on best memory no matter what.
         */
         if( ( stimResult != null && Math.random() > (res.memorizerOutput[SD])/200 )
-            || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDirX, randDirY]) ) 
+            || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDirX, randDirY]) )
         ){
 
             console.log('act on memory');
@@ -290,7 +292,7 @@
             moveDirY = randDirY;
 
         }
-        //console.log('SD: ' + res.memorizerOutput[SD])
+        console.log('SD: ' + res.memorizerOutput[SD])
         console.log('Move DirX: ' + moveDirX);
         console.log('Move DirY: ' + moveDirY);
         lastSD = res.memorizerOutput[SD];

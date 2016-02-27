@@ -609,19 +609,19 @@ var Memorizer = (function(bundle){
 	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, candidatePoolSize;
 
 	/* 
-		uidTrees and outputStmIdTables allow for efficient storage and retrieval of memory sequence data
+		uidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
 
 		uidTrees: searcheable collections of memory chains, keyed off first state uid.
 			schema: each tree is keyed off dist from ideal drive state
 
 			
-		outputStmIdTables schema: each key is a memory uid that references:
+		ssIdTables schema: each key is a memory uid that references:
 			-a hash table where each key is a second state output stimuli id for a memory chain, which references
 			 a uidTree node from the tree with the same memory uid as this table's key.
 
 		outputStmId represents second state output stimuli id, so ss[1].id (index 1 is output)
 	*/
-	var uidTrees = {}, outputStmIdTables = {};
+	var uidTrees = {}, ssIdTables = {}, outputTables = {};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
@@ -749,8 +749,25 @@ var Memorizer = (function(bundle){
 		if(uidTrees.hasOwnProperty(combinedClustersId)) {
 			//TODO: get id of second state output
 
-			var ssOutputId = outputSignalCluster.id;
-			var ssMatch = outputStmIdTables[combinedClustersId].hasOwnProperty( ssOutputId );
+			var ssUid = outputSignalCluster.id;
+			/* do an O(n) search for output id in ssIdTables[combinedClustersId]
+				Note: this is too computationally expensive. find an alternative
+
+				Add outputId property to every ssIdTables[combinedClustersId] table,
+				since they'll all be the same in said table
+			*/
+			var ssMatch=false;
+			for ( var key in ssIdTables[combinedClustersId] ) {
+				if (ssIdTables[combinedClustersId].hasOwnProperty(key)) {
+					if( key.indexOf('+' + ssUid + '+') > -1 ) {
+						//debugger;
+						ssMatch = true;
+
+					}
+				}
+			}
+
+			//var ssMatch = ssIdTables[combinedClustersId].hasOwnProperty( ssUid );
 			if( ssMatch ){
 				return true;
 			}
@@ -765,14 +782,15 @@ var Memorizer = (function(bundle){
 	/**
 	Pass in second state memory and temporal distance, and get back a uid.
 	*/
-	function getSSOutputId(mem, tdist) {
-		return /*mem[INPUT].id + '+' +*/ mem[OUTPUT].id /*+ '+' + tdist*/;
+	function getSSUid(mem, tdist) {
+		return mem[INPUT].id + '+' + mem[OUTPUT].id + '+' + tdist;
 	}
 
 	/**
 		Memorizes stm
 	*/
 	var temporalPlanners=0;
+	var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 	function memorize(clusters){
 		/*
 			Think of this as a sliding window of possible new memories to learn.
@@ -790,7 +808,6 @@ var Memorizer = (function(bundle){
 		*/
 		//fs=firstState, ss=secondState, es=endState
 		var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, fsidTree;
-		var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 		//update the buffer
 		buffer.push(clusters);
 		if(buffer.length>height)
@@ -868,14 +885,14 @@ var Memorizer = (function(bundle){
 					saying, "we started at the same state. The next step's output was also the same. These are 
 					effectively the same actions taken by the agent, so average their resulting drive scores."
 					*/
-					if( typeof outputStmIdTables[fsUid] === 'undefined') { debugger;}
+					if( typeof ssIdTables[fsUid] === 'undefined') { debugger;}
 
-					//var ssOutputId = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
-					var ssOutputId = getSSOutputId(buffer[ss], size);
-					ssMatch = outputStmIdTables[fsUid].hasOwnProperty( ssOutputId );
+					//var ssUid = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
+					var ssUid = getSSUid(buffer[ss], size);
+					ssMatch = ssIdTables[fsUid].hasOwnProperty( ssUid );
 
 					if( ssMatch ){
-						var storedStm = outputStmIdTables[fsUid][ ssOutputId ];
+						var storedStm = ssIdTables[fsUid][ ssUid ];
 						var bufferGoalDist = avg;
 						var esGoalDist = storedStm.es.stm.slice();
 						storedStm.ct++;
@@ -918,20 +935,20 @@ var Memorizer = (function(bundle){
 								sd:sd1,
 								tdist:size
 							};
-							// ssOutputId = maxTreeNode.ss[INPUT].id + '+' + maxTreeNode.ss[OUTPUT].id + "+" + maxTreeNode.tdist;
-							ssOutputId = getSSOutputId(maxTreeNode.ss, maxTreeNode.tdist);
+							// ssUid = maxTreeNode.ss[INPUT].id + '+' + maxTreeNode.ss[OUTPUT].id + "+" + maxTreeNode.tdist;
+							ssUid = getSSUid(maxTreeNode.ss, maxTreeNode.tdist);
 
 							if( uidTrees[fsUid].size >= candidatePoolSize) {
 								try {
 									$R.del( uidTrees[fsUid], maxTreeNode );
 									// delete maxTreeNode from lookup table
-									delete outputStmIdTables[fsUid][ ssOutputId ];
+									delete ssIdTables[fsUid][ ssUid ];
 								} catch(e) { debugger; }
 							}
 							$R.insert( uidTrees[fsUid], insertedNode );
-							// ssOutputId = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
-							ssOutputId = getSSOutputId(insertedNode.ss, size);
-							outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
+							// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
+							ssUid = getSSUid(insertedNode.ss, size);
+							ssIdTables[fsUid][ ssUid ] = insertedNode;
 						}	
 					}	
 				}
@@ -947,7 +964,7 @@ var Memorizer = (function(bundle){
 					//	return;
 
 					/*
-					no tree currently exists for this fsUid. Create one, add memory to tree, add reference to outputStmIdTables
+					no tree currently exists for this fsUid. Create one, add memory to tree, add reference to ssIdTables
 					*/
 
 					var insertedNode = {
@@ -961,13 +978,13 @@ var Memorizer = (function(bundle){
 					uidTrees[fsUid] = $R.createTree('sd');
 					$R.insert( uidTrees[fsUid], insertedNode );
 
-					if (typeof outputStmIdTables[fsUid] === 'undefined' ) {
-						outputStmIdTables[fsUid] = {};
+					if (typeof ssIdTables[fsUid] === 'undefined' ) {
+						ssIdTables[fsUid] = {};
 					}
 
-					// ssOutputId = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
-					ssOutputId = getSSOutputId(buffer[ss], size);
-					outputStmIdTables[fsUid][ ssOutputId ] = insertedNode;
+					// ssUid = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
+					ssUid = getSSUid(buffer[ss], size);
+					ssIdTables[fsUid][ ssUid ] = insertedNode;
 					/* Note that we don't need to check the candidatePoolSize here for a 
 					   possible deletion because this isa brand new tree. */
 
