@@ -257,6 +257,7 @@
         //console.log('left or right of box: ' + leftOrRightOfBox)
         //console.log('ball velocity: ' + headVelocityX + ', ' + headVelocityY);
         //first index is sensory input array, second is sensory output (action) array
+
         var inputStm=[
             [leftOrRightOfBox, headVelocityX, headVelocityY],
             [moveDirX, moveDirY]
@@ -268,7 +269,16 @@
 
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput[STIMULI];
-        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD])/200){
+        var randDirX = normalize(getRandomMoveDir());
+        var randDirY = normalize(getRandomMoveDir());
+
+        /*
+        If a memory chain with current random action already exists, act on best memory no matter what.
+        */
+        if( ( stimResult != null && Math.random() > (res.memorizerOutput[SD])/200 )
+            || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDirX, randDirY]) ) 
+        ){
+
             console.log('act on memory');
             //handle movement conditions
             moveDirX = stimResult[OUTPUT].stm[0];
@@ -276,12 +286,13 @@
         }
         else{
             console.log('act on reflex')
-            //apply random movement signals
-            moveDirX = normalize(getRandomMoveDir());
-            moveDirY = normalize(getRandomMoveDir());
+            moveDirX = randDirX;
+            moveDirY = randDirY;
+
         }
         //console.log('SD: ' + res.memorizerOutput[SD])
-        //console.log('Move Dir: ' + moveDir);
+        console.log('Move DirX: ' + moveDirX);
+        console.log('Move DirY: ' + moveDirY);
         lastSD = res.memorizerOutput[SD];
 
         var moveDirXOutput = moveDirX === 100 ? -1 : 1;

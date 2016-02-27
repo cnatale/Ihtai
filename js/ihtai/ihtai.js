@@ -283,8 +283,15 @@ var Ihtai = (function(bundle){
 		//send reflex output and memorizer output back to ai agent
 		return {
 			memorizerOutput:memorizerOutput,
-			drivesOutput:drivesOutput
+			drivesOutput:drivesOutput,
+			curClusters:curClusters
 		};
+	}
+
+	function hasActedInThisWayBefore(curClusters, outputSignal) { 
+		var outputSignalCluster = outputClusters.findNearestCluster( outputSignal );
+
+		return memorizer.hasActedInThisWayBefore(curClusters, outputSignalCluster);
 	}
 
 	function absDist(a, b){
@@ -587,7 +594,8 @@ var Ihtai = (function(bundle){
 		areMemoriesEnabled:areMemoriesEnabled,
 		toJsonString:toJsonString,
 		getProperties:getProperties,
-		exportTemporalDataAsCSV:exportTemporalDataAsCSV
+		exportTemporalDataAsCSV:exportTemporalDataAsCSV,
+		hasActedInThisWayBefore:hasActedInThisWayBefore
 	};
 });
 
@@ -702,7 +710,8 @@ var Memorizer = (function(bundle){
 		If no vector is within acceptable range, return null. 2) The square distance of the returned action stimuli from ideal drive state.
 	*/
 	function query(clusters){
-		var outputMemory=null, stimDist, sd, combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
+		var outputMemory=null, stimDist, sd;
+		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 		var tdist;
 		if(uidTrees.hasOwnProperty(combinedClustersId)){
 			try{ var min = $R.min( uidTrees[combinedClustersId], uidTrees[combinedClustersId].root ); 
@@ -727,6 +736,37 @@ var Memorizer = (function(bundle){
 		}
 
 		return [outputMemory, sd, tdist];
+	}
+
+	/**
+		Determines if Ihtai has acted with a specific set of output stimuli from its current
+		first state UID.
+
+		@returns {Boolean} true or false
+	*/
+	function hasActedInThisWayBefore(clusters, outputSignalCluster){
+		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
+		if(uidTrees.hasOwnProperty(combinedClustersId)) {
+			//TODO: get id of second state output
+
+			var ssOutputId = outputSignalCluster.id;
+			var ssMatch = outputStmIdTables[combinedClustersId].hasOwnProperty( ssOutputId );
+			if( ssMatch ){
+				return true;
+			}
+			else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	Pass in second state memory and temporal distance, and get back a uid.
+	*/
+	function getSSOutputId(mem, tdist) {
+		return /*mem[INPUT].id + '+' +*/ mem[OUTPUT].id /*+ '+' + tdist*/;
 	}
 
 	/**
@@ -790,10 +830,6 @@ var Memorizer = (function(bundle){
 					}
 				} else {
 					avg={stm:buffer[es][DRIVES].stm.slice()};
-				}
-
-				function getSSOutputId(mem, tdist) {
-					return mem[INPUT].id + '+' + mem[OUTPUT].id + '+' + tdist;
 				}
 				
 				////////////////////////////////////////////////				
@@ -1003,7 +1039,8 @@ var Memorizer = (function(bundle){
 		getBuffer: getBuffer,
 		getHeaps: getHeaps,
 		copyTemporalData: copyTemporalData,
-		exportTemporalDataAsCSV: exportTemporalDataAsCSV
+		exportTemporalDataAsCSV: exportTemporalDataAsCSV,
+		hasActedInThisWayBefore: hasActedInThisWayBefore
 	}
 });
 

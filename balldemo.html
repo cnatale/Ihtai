@@ -94,8 +94,9 @@
     }
 
     function getDist(A, B) {
-        return Math.pow(A.position[0] - B.position[0] + A.position[1] - B.position[1], 2);
+        return Math.pow( Math.abs(A.position[0] - B.position[0]) + Math.abs(A.position[1] - B.position[1]), 2);
     }
+
 
     /**
     Left is represented by 0, right by 1
@@ -217,7 +218,7 @@
         inputClusterDim:2,
         outputClusterDim:1,
         driveClusterDim:1,
-        memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+        memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
         drivesList:drives,
         reflexList:reflexes,
         acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
@@ -246,11 +247,12 @@
 
         //vars to record: is moving left or right, is left or right of square, dist from square
         var leftOrRightOfBox = normalize(isLeftOrRight(head, box));
+        var headVelocity = roundToTenth(head.velocity[0]) * 50;
         console.log('left or right of box: ' + leftOrRightOfBox)
-        console.log('ball x velocity: ' + head.velocity[0]);
+        console.log('ball x velocity: ' + headVelocity);
         //first index is sensory input array, second is sensory output (action) array
         var inputStm=[
-            [leftOrRightOfBox, roundToTenth(head.velocity[0])],
+            [leftOrRightOfBox, headVelocity],
             [moveDir]
         ];
         var res;
