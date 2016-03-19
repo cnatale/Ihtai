@@ -12,6 +12,10 @@
         width:100%;
         height:100%;
         overflow: hidden;
+        background-color:#ecc;
+    }
+    canvas {
+        background-color:#cce;
     }
     </style>
 
@@ -142,7 +146,7 @@
     var worldObjects=[];          
     // Feeding Box
     box = new p2.Body({
-        mass: 0,
+        mass: 5,
         position: [3, 2],
     });
     box.addShape(boxShape);
@@ -169,7 +173,7 @@
     groundShape.collisionGroup = WALLS;
     groundShape.collisionMask =  BODYPARTS|OTHER;
     world.addBody(ground);
-    worldObjects.push(ground);
+    //worldObjects.push(ground);
 
     //create walls
     var leftWallShape = new p2.Plane();
@@ -182,7 +186,7 @@
     leftWallShape.collisionGroup = WALLS;
     leftWallShape.collisionMask =  BODYPARTS|OTHER;
     world.addBody(leftWall); 
-    worldObjects.push(leftWall);
+    //worldObjects.push(leftWall);
     
     var rightWallShape = new p2.Plane();
     var rightWall = new p2.Body({
@@ -194,7 +198,7 @@
     rightWallShape.collisionGroup = WALLS;
     rightWallShape.collisionMask =  BODYPARTS|OTHER;    
     world.addBody(rightWall);               
-    worldObjects.push(rightWall);
+    //worldObjects.push(rightWall);
 
     //initialize Ihtai
     var nearnessDrive={
@@ -204,7 +208,8 @@
         }.bind(this),
         cycle: function(stm,dt){
             this.prevDist = this.dist;
-            this.dist = Math.min( roundToNearest( 1, getDist(head, box) ), 200);
+            //this.dist = roundToTenth(getDist(head, box));
+            this.dist = Math.min( roundToNearest( 1, getDist(head, box) ), 160);
             console.log('cycle dist: ' + this.dist);
             return this.dist;
         }.bind(this),
@@ -216,18 +221,18 @@
     };
     var drives=[nearnessDrive];
     var reflexes=[];
-    var numClusters=1000;
+    var numClusters=100;
     var ihtai = new Ihtai({
         clusterCount:numClusters,
         inputClusterDim:3,
         outputClusterDim:2,
         driveClusterDim:1,
-        memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+        memoryHeight:400,/*how many steps ahead can ihtai look for an optimal stm trail?*/
         drivesList:drives,
         reflexList:reflexes,
         acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
         distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
-        candidatePoolSize: 200
+        candidatePoolSize: 100
 
     });
 
@@ -252,8 +257,8 @@
 
         //vars to record: is moving left or right, is left or right of square, dist from square
         var leftOrRightOfBox = normalize(isLeftOrRight(head, box));
-        var headVelocityX = Math.round(head.velocity[0]) * 50;
-        var headVelocityY = Math.round(head.velocity[1]) * 50;
+        var headVelocityX = roundToTenth(head.velocity[0]) * 50;
+        var headVelocityY = roundToTenth(head.velocity[1]) * 50;
         //console.log('left or right of box: ' + leftOrRightOfBox)
         //console.log('ball velocity: ' + headVelocityX + ', ' + headVelocityY);
         //first index is sensory input array, second is sensory output (action) array
@@ -277,7 +282,7 @@
         /*
         If a memory chain with current random action already exists, act on best memory no matter what.
         */
-        if( ( stimResult != null && Math.random() > (res.memorizerOutput[SD])/200 )
+        if( ( stimResult != null && Math.random() > (res.memorizerOutput[SD])/200)/10
             || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDirX, randDirY]) )
         ){
 
@@ -361,7 +366,6 @@
         ctx.fillStyle='green';
         //drawPlane();
         for(var i=0; i<worldObjects.length; i++){
-
             if(worldObjects[i].shapes[0].type === headType) 
                 drawCircle(worldObjects[i]);
             else

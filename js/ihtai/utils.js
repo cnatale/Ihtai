@@ -383,6 +383,11 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 	}
 };
 
+/**
+TODO: verify nearest neighbor is working correctly. If this isnt the problem with
+multi-dimensional Ihtai's, then it's a compression issue which may be irresolvable.
+*/
+
 IhtaiUtils.KdTree = (function(_data, _comparisonProp, useExistingTree){
 	var comparisonProp=_comparisonProp;
 	var data=_data, cache=[];

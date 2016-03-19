@@ -263,7 +263,7 @@
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput[STIMULI];
         var randDir = normalize(getRandomMoveDir());
-        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD])/60
+        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD]/60)/4
             || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDir]))
         ){
             console.log('act on memory');
