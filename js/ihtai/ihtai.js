@@ -606,7 +606,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1/*was 10*/, candidatePoolSize;
+	var level, buffer, homeostasisGoal, maxCollisions=10/*was 10*/, candidatePoolSize;
 
 	/* 
 		uidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
@@ -729,7 +729,7 @@ var Memorizer = (function(bundle){
 				// console.log('min.es:'+min.es);
 				// console.log('min.sd:'+min.sd);
 				// console.log('acceptablerange:'+acceptableRange);
-				//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
+				console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
 
 				outputMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
 			}
@@ -766,7 +766,7 @@ var Memorizer = (function(bundle){
 	Pass in second state memory and temporal distance, and get back a uid.
 	*/
 	function getSSUid(mem, tdist) {
-		return mem[INPUT].id + '+' + mem[OUTPUT].id + '+' + tdist;
+		return mem[INPUT].id + '+' + mem[DRIVES].id + '+' + mem[OUTPUT].id/* + '+' + tdist*/;
 	}
 
 	function getSSOutputId(mem) {
@@ -893,7 +893,10 @@ var Memorizer = (function(bundle){
 
 						for(var j=0;j<bufferGoalDist.stm.length;j++){
 							var ct=storedStm.ct;
-							esGoalDist[j]= ((esGoalDist[j]*ct)+bufferGoalDist.stm[j])/(ct+1);
+							// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
+							//TODO: balance weight with number ct better
+							var temporalWeight = size/height;
+							esGoalDist[j]= ((esGoalDist[j] * ct * temporalWeight) + bufferGoalDist.stm[j] ) / ((ct * temporalWeight ) + 1);
 						}
 						var args = [0, homeostasisGoal.length].concat(esGoalDist);
 						//replace existing endstate stimuli with updated values
@@ -1184,6 +1187,7 @@ var Clusters = (function(/*_numClusters, bStmCt, _kdTree*/bundle){
 			}
 			else{
 				//init clustertree from cache values,
+				debugger;
 				if(!clusterTreeCreated){
 					//convert cache object into an array
 					var cacheArr=[];

@@ -212,10 +212,10 @@
     };
     var drives=[nearnessDrive];
     var reflexes=[];
-    var numClusters=1000;
+    var numClusters=10000;
     var ihtai = new Ihtai({
         clusterCount:numClusters,
-        inputClusterDim:2,
+        inputClusterDim:1,
         outputClusterDim:1,
         driveClusterDim:1,
         memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
@@ -248,11 +248,11 @@
         //vars to record: is moving left or right, is left or right of square, dist from square
         var leftOrRightOfBox = normalize(isLeftOrRight(head, box));
         var headVelocity = roundToTenth(head.velocity[0]) * 50;
-        console.log('left or right of box: ' + leftOrRightOfBox)
-        console.log('ball x velocity: ' + headVelocity);
+        //console.log('left or right of box: ' + leftOrRightOfBox)
+        //console.log('ball x velocity: ' + headVelocity);
         //first index is sensory input array, second is sensory output (action) array
         var inputStm=[
-            [leftOrRightOfBox, headVelocity],
+            [leftOrRightOfBox/*, headVelocity*/],
             [moveDir]
         ];
         var res;
@@ -263,8 +263,8 @@
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput[STIMULI];
         var randDir = normalize(getRandomMoveDir());
-        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD]/60)/4
-            || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDir]))
+        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD]/100)
+            /*|| (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDir]))*/
         ){
             console.log('act on memory');
             //handle movement conditions
@@ -275,7 +275,7 @@
             //apply random movement signals
             moveDir = randDir;
         }
-        //console.log('SD: ' + res.memorizerOutput[SD])
+        console.log('PREDICTED SD: ' + res.memorizerOutput[SD])
         //console.log('Move Dir: ' + moveDir);
         lastSD = res.memorizerOutput[SD];
 
@@ -288,8 +288,7 @@
         world.step(timeStep, 0, maxSubSteps);
 
         // Render scene
-        render();
-        lastTime = t / 1000;
+        render();        lastTime = t / 1000;
     }
 
     function drawBox(body){
