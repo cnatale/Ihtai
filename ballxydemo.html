@@ -264,8 +264,8 @@
         //first index is sensory input array, second is sensory output (action) array
 
         var inputStm=[
-            [leftOrRightOfBox/*, headVelocityX, headVelocityY*/],
-            [moveDirX, moveDirY]
+            [leftOrRightOfBox/*, headVelocityX, headVelocityY*/], //input stm
+            [/*moveDirX, moveDirY*/] //last output stim, try removing
         ];
         var res;
 
@@ -282,8 +282,8 @@
         /*
         If a memory chain with current random action already exists, act on best memory no matter what.
         */
-        if( ( stimResult != null && Math.random() > (res.memorizerOutput[SD])/200)/10
-            || (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDirX, randDirY]) )
+        if( ( stimResult != null && Math.random() > (res.memorizerOutput[SD])/200)
+            /*|| (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDirX, randDirY]) )*/
         ){
 
             console.log('act on memory');

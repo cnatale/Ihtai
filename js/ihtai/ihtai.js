@@ -258,7 +258,7 @@ var Ihtai = (function(bundle){
 
 		var combinedstm, curClusters=[];
 
-		//cycle drives
+		//cycle drives based on current state
 		var drivesOutput=drives.cycle(iostm, dt);
 
 		//merge iostm and drives output
@@ -267,12 +267,12 @@ var Ihtai = (function(bundle){
 	
 		var reflexOutput=[], memorizerOutput=null;
 
-		//get nearest cluster for combined stm
+		//get nearest cluster for input, output (maybe not necessary?) and drive signals
 		curClusters[0]=inputClusters.findNearestCluster(iostm[0]);
 		curClusters[1]=outputClusters.findNearestCluster(iostm[1]);
 		curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
 
-		if(typeof drivesOutput=='undefined')debugger;
+		if(typeof drivesOutput=='undefined') debugger;
 		//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
 		//cycle memorizer	
 		if(_enableMemories){
@@ -606,7 +606,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=10/*was 10*/, candidatePoolSize;
+	var level, buffer, homeostasisGoal, maxCollisions=1000/*was 10*/, candidatePoolSize;
 
 	/* 
 		uidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
@@ -895,8 +895,8 @@ var Memorizer = (function(bundle){
 							var ct=storedStm.ct;
 							// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
 							//TODO: balance weight with number ct better
-							var temporalWeight = size/height;
-							esGoalDist[j]= ((esGoalDist[j] * ct * temporalWeight) + bufferGoalDist.stm[j] ) / ((ct * temporalWeight ) + 1);
+							var temporalWeight = height/size;
+							esGoalDist[j]= ((esGoalDist[j] * (ct + temporalWeight) ) + bufferGoalDist.stm[j] ) / ((ct + temporalWeight ) + 1);
 						}
 						var args = [0, homeostasisGoal.length].concat(esGoalDist);
 						//replace existing endstate stimuli with updated values
