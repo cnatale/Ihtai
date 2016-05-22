@@ -180,7 +180,7 @@ var Ihtai = (function(bundle){
 			inputClusterDim=bundle.inputClusterDim;
 		else
 			throw "Error: no 'inputClusterDim' property found in initialization Object!"		
-		if(bundle.outputClusterDim)
+		if(typeof bundle.outputClusterDim == 'number')
 			outputClusterDim=bundle.outputClusterDim;
 		else
 			throw "Error: no 'outputClusterDim' property found in initialization Object!"	
@@ -272,8 +272,9 @@ var Ihtai = (function(bundle){
 		curClusters[1]=outputClusters.findNearestCluster(iostm[1]);
 		curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
 
-		if(typeof drivesOutput=='undefined') debugger;
+		if(typeof drivesOutput=='undefined') debugger; //sanity test
 		//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
+
 		//cycle memorizer	
 		if(_enableMemories){
 			memorizerOutput=memorizer.query(curClusters);
@@ -678,7 +679,7 @@ var Memorizer = (function(bundle){
 		if(typeof bundle._candidatePoolSize !== "undefined")
 			candidatePoolSize=bundle._candidatePoolSize;
 		else
-			candidatePoolSize=100;		
+			candidatePoolSize=500;		
 
 		if(typeof bundle._uidTrees != "undefined"){
 			uidTrees=bundle._uidTrees;
@@ -710,7 +711,7 @@ var Memorizer = (function(bundle){
 		If no vector is within acceptable range, return null. 2) The square distance of the returned action stimuli from ideal drive state.
 	*/
 	function query(clusters){
-		var outputMemory=null, stimDist, sd;
+		var nextActionMemory=null, stimDist, sd;
 		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 		var tdist;
 		if(uidTrees.hasOwnProperty(combinedClustersId)){
@@ -721,7 +722,6 @@ var Memorizer = (function(bundle){
 				throw "Error: Memorizer.query() failed to execute redblack tree min search"; };
 			
 			tdist = min.tdist;
-
 			// console.log('selected query fs uid: ' + IhtaiUtils.toCombinedStmUID(min.fs));
 			var sd= min.sd;
 			if(sd <= acceptableRange){
@@ -731,11 +731,14 @@ var Memorizer = (function(bundle){
 				// console.log('acceptablerange:'+acceptableRange);
 				console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
 
-				outputMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
+				nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
 			}
 		}
 
-		return [outputMemory, sd, tdist];
+		return {
+			nextActionMemory: nextActionMemory, 
+			sd: sd, 
+			temporalDistance: tdist};
 	}
 
 	/**

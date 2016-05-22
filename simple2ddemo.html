@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ihtai Simple Number Demo</title>
+    
+    <style>
+    html,body {
+        margin:0;
+        padding:0;
+        width:100%;
+        height:100%;
+        overflow: hidden;
+    }
+
+    div {
+        font-size: 20pt;
+    }
+    </style>
+
+    <meta name="description" content="">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+</head>
+<body>
+    <div id="tgtNum"></div>
+    <div id="ihtaiNum"></div>
+
+    <div id="tgtNum2"></div>
+    <div id="ihtaiNum2"></div>
+
+    <script src="js/ihtai/redblacktree.js"></script>
+    <script src="js/ihtai/ihtai.js"></script>
+    <script src="js/ihtai/utils.js"></script>
+    <script>
+
+    function roundToTenth(num){
+        num*=10;
+        num=num >> 0;
+        num/=10;
+        return num;
+    }
+
+    function getDist(A, B) {
+        return Math.pow( Math.abs(A.position[0] - B.position[0]) + Math.abs(A.position[1] - B.position[1]), 2);
+    }
+
+    function normalize(val) {
+        return val * 100;
+    }
+ 
+    /*
+        Returns either 0 or 1 randomly
+    */
+    function getRandomMoveDir() {
+         return Math.round(Math.random());
+    }
+
+    //returns -1, 0, or 1
+    function getRandomTriSetting() {
+        return Math.round(Math.random() * 2) - 1;
+    }
+
+    //initialize Ihtai
+    var closeToTgtDrive={
+        init:function(){
+            this.driveVal = 9999999;
+        },
+        cycle:function(stm,dt){
+            this.driveVal = ( Math.abs(stm[0][0] - window.tgtNum) +  Math.abs(stm[0][1] - window.tgtNum2) ) / 2 ;
+            if(this.driveVal > 20) this.driveVal = 20;
+            console.log('driveVal: ' + this.driveVal);
+            return this.driveVal;
+        },
+        undo:function(){
+        },
+        targetval:0 //the goal value
+    };
+
+    var drives=[closeToTgtDrive];
+    var reflexes=[];
+    var numClusters=1000/*17*/;
+    var ihtai = new Ihtai({
+        clusterCount:numClusters,
+        inputClusterDim:2,
+        outputClusterDim:2,
+        driveClusterDim:1,
+        memoryHeight:30,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+        drivesList:drives,
+        reflexList:reflexes,
+        acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
+        distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/
+    });
+
+    var MEMORIZER_OUTPUT = 0, DRIVES_OUTPUT = 1, CUR_CLUSTERS = 2;
+    var SD = 1, STIMULI = 0, OUTPUT = 1;
+    var ihtaiNumElm = document.getElementById('ihtaiNum');
+    var tgtNumElm = document.getElementById('tgtNum');
+    var ihtaiNum2Elm = document.getElementById('ihtaiNum2');
+    var tgtNum2Elm = document.getElementById('tgtNum2');
+    var tgtNum = 10;
+    var tgtNum2 = 10;
+    var ihtaiNum = 0;
+    var ihtaiNum2 = 0;
+    tgtNumElm.innerHTML = 'TGT: ' + String(tgtNum);
+    tgtNum2Elm.innerHTML = 'TGT: ' + String(tgtNum2);
+    var lastMoveDir = 0;
+    var lastMoveDir2 = 0;
+
+    function mainLoop(t){
+        requestAnimationFrame(mainLoop)
+
+        //first index is sensory input array, second is sensory output (action) array from last cycle
+        var inputStm=[
+            [ihtaiNum, ihtaiNum2],
+            [lastMoveDir, lastMoveDir2]
+        ];
+        var res=ihtai.cycle(inputStm, 9999);
+
+        //////// apply forces based on ihtai response ////////
+        var stimResult = res.memorizerOutput.nextActionMemory;
+        var randDir = getRandomTriSetting();
+        var randDir2 = getRandomTriSetting();
+        if(stimResult != null && Math.random() > closeToTgtDrive.driveVal/20 ) {
+            console.log('act on memory');
+            //handle movement conditions
+            lastMoveDir = stimResult[OUTPUT].stm[0];
+            lastMoveDir2 = stimResult[OUTPUT].stm[1];
+        }
+        else {
+            console.log('act on reflex')
+            //apply random movement signals
+            lastMoveDir = randDir;
+            lastMoveDir2 = randDir2
+        }
+
+        ihtaiNum = ihtaiNum + lastMoveDir;
+        if(ihtaiNum < 0) ihtaiNum = 0;
+        if(ihtaiNum > 20) ihtaiNum = 20;
+
+        ihtaiNum2 = ihtaiNum2 + lastMoveDir2;
+        if(ihtaiNum2 < 0) ihtaiNum2 = 0;
+        if(ihtaiNum2 > 20) ihtaiNum2 = 20;
+        //console.log('PREDICTED SD after action: ' + res.memorizerOutput.sd)
+        //console.log(lastMoveDir);
+        ihtaiNumElm.innerHTML = 'IHTAI: ' + String(ihtaiNum);       
+        ihtaiNum2Elm.innerHTML = 'IHTAI: ' + String(ihtaiNum2);  
+    }
+
+    mainLoop();            
+    </script>
+</body>
+</html>
