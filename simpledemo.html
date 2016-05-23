@@ -25,12 +25,12 @@
 <body>
     <div id="tgtNum"></div>
     <div id="ihtaiNum"></div>
+    <button id='changeTgtNum'>Change Target Number</button>
 
     <script src="js/ihtai/redblacktree.js"></script>
     <script src="js/ihtai/ihtai.js"></script>
     <script src="js/ihtai/utils.js"></script>
     <script>
-
     function roundToTenth(num){
         num*=10;
         num=num >> 0;
@@ -97,6 +97,12 @@
     tgtNumElm.innerHTML = 'TGT: ' + String(tgtNum);
     var lastMoveDir = 0;
 
+    var changeBtn = document.getElementById('changeTgtNum');
+    changeBtn.addEventListener("click", function(){ 
+        tgtNum = Math.round(Math.random() * 10);  
+        tgtNumElm.innerHTML = 'TGT: ' + String(tgtNum);
+    });
+
     function mainLoop(t){
         requestAnimationFrame(mainLoop)
 
@@ -109,8 +115,9 @@
 
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput.nextActionMemory;
+        var resultSD = res.memorizerOutput.sd;
         var randDir = getRandomTriSetting();
-        if(stimResult != null && Math.random() > closeToTgtDrive.driveVal/20 ) {
+        if(stimResult != null && Math.random() > resultSD/*closeToTgtDrive.driveVal*//20 /*<-since this is based on actual current drive score after cycle, a current score of 0 means always take the prescribed action. what i really want is to base off expected drive score from next step  */) {
             console.log('act on memory');
             //handle movement conditions
             lastMoveDir = stimResult[OUTPUT].stm[0];

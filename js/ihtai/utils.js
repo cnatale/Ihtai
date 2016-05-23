@@ -42,9 +42,14 @@ String.prototype.escapeSpecialChars = function() {
 };
 
 IhtaiUtils.toCombinedStmUID=function(clusters){
-	var combinedClustersId = clusters[0].id + "+" + clusters[1].id + "+" + clusters[2].id;
+	var combinedClustersId = clusters[0].id /*+ "+" + clusters[1].id*/ + "+" + clusters[2].id;
 	return combinedClustersId;		
 }
+
+
+//	function getSSUid(mem, tdist) {
+//		return mem[INPUT].id + '+' + mem[DRIVES].id + '+' + mem[OUTPUT].id/* + '+' + tdist*/;
+//	}
 
 // code from http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
 IhtaiUtils.weightedRand = (function(spec) {

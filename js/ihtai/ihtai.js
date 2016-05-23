@@ -769,7 +769,7 @@ var Memorizer = (function(bundle){
 	Pass in second state memory and temporal distance, and get back a uid.
 	*/
 	function getSSUid(mem, tdist) {
-		return mem[INPUT].id + '+' + mem[DRIVES].id + '+' + mem[OUTPUT].id/* + '+' + tdist*/;
+		return /*mem[INPUT].id + '+' +*/ mem[DRIVES].id /*+ '+' + mem[OUTPUT].id*//* + '+' + tdist*/;
 	}
 
 	function getSSOutputId(mem) {
@@ -894,12 +894,15 @@ var Memorizer = (function(bundle){
 						if(storedStm.ct>maxCollisions)
 							storedStm.ct=maxCollisions;
 
+						//iterate over buffer stimuli, and do a weighted averaging with esGoalDist to determine scores 
 						for(var j=0;j<bufferGoalDist.stm.length;j++){
 							var ct=storedStm.ct;
 							// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
 							//TODO: balance weight with number ct better
 							var temporalWeight = height/size;
-							esGoalDist[j]= ((esGoalDist[j] * (ct + temporalWeight) ) + bufferGoalDist.stm[j] ) / ((ct + temporalWeight ) + 1);
+							//TODO: this algorithm looks suspect
+							//debugger;
+							esGoalDist[j]= ((esGoalDist[j] * (ct /*+ temporalWeight*/) ) + bufferGoalDist.stm[j] ) / ((ct /*+ temporalWeight*/ ) + 1);
 						}
 						var args = [0, homeostasisGoal.length].concat(esGoalDist);
 						//replace existing endstate stimuli with updated values
