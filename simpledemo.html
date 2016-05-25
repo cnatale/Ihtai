@@ -118,12 +118,13 @@
         var resultSD = res.memorizerOutput.sd;
         var randDir = getRandomTriSetting();
         if(stimResult != null && Math.random() > resultSD/*closeToTgtDrive.driveVal*//20 /*<-since this is based on actual current drive score after cycle, a current score of 0 means always take the prescribed action. what i really want is to base off expected drive score from next step  */) {
-            console.log('act on memory');
+            //console.log('act on memory');
             //handle movement conditions
+            //console.log('resultSD: ' + resultSD);
             lastMoveDir = stimResult[OUTPUT].stm[0];
         }
         else {
-            console.log('act on reflex')
+            //console.log('act on reflex')
             //apply random movement signals
             lastMoveDir = randDir;
         }

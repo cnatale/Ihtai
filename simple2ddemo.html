@@ -121,7 +121,8 @@
         var stimResult = res.memorizerOutput.nextActionMemory;
         var randDir = getRandomTriSetting();
         var randDir2 = getRandomTriSetting();
-        if(stimResult != null && Math.random() > closeToTgtDrive.driveVal/20 ) {
+        var resultSD = res.memorizerOutput.sd;
+        if(stimResult != null && Math.random() > resultSD/20 ) {
             console.log('act on memory');
             //handle movement conditions
             lastMoveDir = stimResult[OUTPUT].stm[0];

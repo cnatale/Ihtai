@@ -607,7 +607,7 @@ var Ihtai = (function(bundle){
 //params: _height, _homeostasisGoal, _acceptableRange, _buffer, _levels, _distanceAlgo
 var Memorizer = (function(bundle){
 	var height=bundle._memoryHeight, distanceAlgo, acceptableRange/*the square distance that matches must be less than*/;
-	var level, buffer, homeostasisGoal, maxCollisions=1000/*was 10*/, candidatePoolSize;
+	var level, buffer, homeostasisGoal, maxCollisions=2/*was 10*/, candidatePoolSize;
 
 	/* 
 		uidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
@@ -768,8 +768,9 @@ var Memorizer = (function(bundle){
 	/**
 	Pass in second state memory and temporal distance, and get back a uid.
 	*/
+	// TODO: figure out why adding tdist causes cycling near target val
 	function getSSUid(mem, tdist) {
-		return /*mem[INPUT].id + '+' +*/ mem[DRIVES].id /*+ '+' + mem[OUTPUT].id*//* + '+' + tdist*/;
+		return /*mem[INPUT].id + '+' +*/ mem[OUTPUT].id /*+ '+' + mem[DRIVES].id */ /*+ '+' + tdist*/;
 	}
 
 	function getSSOutputId(mem) {
@@ -853,7 +854,7 @@ var Memorizer = (function(bundle){
 				ssMatch=false;
 				if(uidTrees.hasOwnProperty(fsUid)){
 					/*
-					If first and second states are the same, store the memory
+					If first state input and drive data, as well as second state motor output  are the same, store the memory
 					as weighted average of the two memories(same firstState and ss; es drive vals become
 					weighted average)
 
@@ -885,7 +886,10 @@ var Memorizer = (function(bundle){
 					var ssUid = getSSUid(buffer[ss], size);
 					ssMatch = ssIdTables[fsUid].hasOwnProperty( ssUid );
 
+					// note that this logical branch gets called by far the most out of the three
+					// first and second states match. perform weighted average operation.
 					if( ssMatch ){
+						// TODO: something is wrong with the averaging, which breaks finding ideal behavior after behavior changes too many times
 						var storedStm = ssIdTables[fsUid][ ssUid ];
 						var bufferGoalDist = avg;
 						var esGoalDist = storedStm.es.stm.slice();
@@ -931,7 +935,7 @@ var Memorizer = (function(bundle){
 								fs:buffer[fs],
 								ss:buffer[ss],
 								es:avg,
-								ct:maxCollisions,
+								ct:0/*maxCollisions*/,
 								sd:sd1,
 								tdist:size
 							};
@@ -977,7 +981,7 @@ var Memorizer = (function(bundle){
 						fs: buffer[fs], 
 						ss: buffer[ss],
 						es: avg,
-						ct: maxCollisions,
+						ct: 0/*maxCollisions*/,
 						sd: sqDist(avg.stm, homeostasisGoal),
 						tdist: size
 					}

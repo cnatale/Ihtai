@@ -48,7 +48,7 @@ IhtaiUtils.toCombinedStmUID=function(clusters){
 
 
 //	function getSSUid(mem, tdist) {
-//		return mem[INPUT].id + '+' + mem[DRIVES].id + '+' + mem[OUTPUT].id/* + '+' + tdist*/;
+//		return /*mem[INPUT].id + '+' +*/ mem[DRIVES].id /*+ '+' + mem[OUTPUT].id*//* + '+' + tdist*/;
 //	}
 
 // code from http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
