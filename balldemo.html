@@ -212,13 +212,13 @@
     };
     var drives=[nearnessDrive];
     var reflexes=[];
-    var numClusters=10000;
+    var numClusters=100;
     var ihtai = new Ihtai({
         clusterCount:numClusters,
         inputClusterDim:1,
         outputClusterDim:1,
         driveClusterDim:1,
-        memoryHeight:500,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+        memoryHeight:10,/*how many steps ahead can ihtai look for an optimal stm trail?*/
         drivesList:drives,
         reflexList:reflexes,
         acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
@@ -261,9 +261,9 @@
         //res=ihtai.daydream(inputStm, dt*1000);
 
         //////// apply forces based on ihtai response ////////
-        var stimResult = res.memorizerOutput[STIMULI];
+        var stimResult = res.memorizerOutput.nextActionMemory;
         var randDir = normalize(getRandomMoveDir());
-        if(stimResult != null &&  Math.random() > (res.memorizerOutput[SD]/100)
+        if(stimResult != null &&  Math.random() > (res.memorizerOutput.sd/25)
             /*|| (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDir]))*/
         ){
             console.log('act on memory');
@@ -275,9 +275,9 @@
             //apply random movement signals
             moveDir = randDir;
         }
-        console.log('PREDICTED SD: ' + res.memorizerOutput[SD])
+        console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
         //console.log('Move Dir: ' + moveDir);
-        lastSD = res.memorizerOutput[SD];
+        lastSD = res.memorizerOutput.sd;
 
         var moveDirOutput = moveDir === 100 ? -1 : 1;
         //apply forces on body parts

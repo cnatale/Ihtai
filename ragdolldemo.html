@@ -413,7 +413,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=20/*17*/;
+        var numClusters=500/*17*/;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
@@ -536,13 +536,13 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             //res=ihtai.daydream(inputStm, dt*1000);
 
             //////// apply forces based on ihtai response ////////
-            if(res.memorizerOutput[0] != null &&  Math.random() > (res.memorizerOutput[1])/5){
+            if(res.memorizerOutput.nextActionMemory != null &&  Math.random() > res.memorizerOutput.sd/20){
                 console.log('act on memory');
                 //handle movement conditions for each
-                lowerLeftLegForce=res.memorizerOutput[0][1].stm[0];
-                lowerRightLegForce=res.memorizerOutput[0][1].stm[1];
-                lowerLeftArmForce=res.memorizerOutput[0][1].stm[2];
-                lowerRightArmForce=res.memorizerOutput[0][1].stm[3];
+                lowerLeftLegForce=res.memorizerOutput.nextActionMemory[1].stm[0];
+                lowerRightLegForce=res.memorizerOutput.nextActionMemory[1].stm[1];
+                lowerLeftArmForce=res.memorizerOutput.nextActionMemory[1].stm[2];
+                lowerRightArmForce=res.memorizerOutput.nextActionMemory[1].stm[3];
 
                 //console.log('returned action min.sd: ' + res.memorizerOutput[1])
             }
@@ -559,7 +559,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
 
             //memorizeroutput[1] is the predicted score of selected action for the next cycle
             //drivesOutput[0] is the actual drive value from the previous iteration   
-            lastSD = res.memorizerOutput[1]/*res.drivesOutput[0]*/;
+            lastSD = res.memorizerOutput.sd/*res.drivesOutput[0]*/;
 
             //apply forces on body parts
             lowerLeftLeg.applyForce([lowerLeftLegForce * (/*dt*1000/2.5*/5),0],[0,0]);
