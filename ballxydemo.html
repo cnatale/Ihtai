@@ -221,7 +221,7 @@
     };
     var drives=[nearnessDrive];
     var reflexes=[];
-    var numClusters=20;
+    var numClusters=400;
     var ihtai = new Ihtai({
         clusterCount:numClusters,
         inputClusterDim:3,
@@ -282,7 +282,7 @@
         /*
         If a memory chain with current random action already exists, act on best memory no matter what.
         */
-        if( ( stimResult != null && Math.random() > (res.memorizerOutput.sd)/200)
+        if( ( stimResult != null && Math.random() > (res.memorizerOutput.sd)/28)
             /*|| (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDirX, randDirY]) )*/
         ){
 
