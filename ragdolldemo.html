@@ -396,11 +396,13 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                 //stm[0]  is the upright angle, normalized
                 //check if torso is reasonably upright
                 if(stm[0][0] >= 0 && stm[0][0] <= Math.PI/8 || stm[0][0] >= (15*Math.PI)/8 && stm[0][0] <= 2*Math.PI ){
-                    this.uprightVal<=0?this.uprightVal=0:this.uprightVal-=1;
+                    //this.uprightVal<=0?this.uprightVal=0:this.uprightVal-=1;
+                    this.uprightVal=0;
                     console.log('UPRIGHT');
                 }
                 else{    
-                    this.uprightVal>=5?this.uprightVal=5:this.uprightVal+=1;                    
+                    //this.uprightVal>=5?this.uprightVal=5:this.uprightVal+=1;
+                    this.uprightVal=100;                    
                 }
 
                 return this.uprightVal;
@@ -424,8 +426,8 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             reflexList:reflexes,
             acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
             /*backStimCt:0,*/
-            distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/
-
+            distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
+            candidatePoolSize: 200
         });
 
         function roundToTenth(num){
@@ -531,7 +533,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             ];
             var res;
 
-            console.log('lastSD: ' + lastSD);
+            //console.log('lastSD: ' + lastSD);
             res=ihtai.cycle(inputStm, dt*1000);
             //res=ihtai.daydream(inputStm, dt*1000);
 
@@ -545,6 +547,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
                 lowerRightArmForce=res.memorizerOutput.nextActionMemory[1].stm[3];
 
                 //console.log('returned action min.sd: ' + res.memorizerOutput[1])
+                console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
             }
             else{
                 console.log('act on reflex')

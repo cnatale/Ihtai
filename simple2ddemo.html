@@ -122,7 +122,7 @@
         var randDir = getRandomTriSetting();
         var randDir2 = getRandomTriSetting();
         var resultSD = res.memorizerOutput.sd;
-        if(stimResult != null && Math.random() > resultSD/20 ) {
+        if(stimResult != null && Math.random() > resultSD/200 /*20 */ ) {
             console.log('act on memory');
             //handle movement conditions
             lastMoveDir = stimResult[OUTPUT].stm[0];

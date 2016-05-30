@@ -208,7 +208,7 @@
         }.bind(this),
         cycle: function(stm,dt){
             this.prevDist = this.dist;
-            this.dist = Math.min( roundToNearest( 3, getDist(head, box) ), 998);
+            this.dist = Math.min( roundToNearest( 5, getDist(head, box) ), 998);
             //console.log('cycle dist: ' + this.dist);
             return this.dist;
         }.bind(this),
@@ -231,7 +231,7 @@
         reflexList:reflexes,
         acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
         distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
-        candidatePoolSize: 800 // should equal memoryHeight * number of output cluster possibilities
+        candidatePoolSize: 200
     });
 
     var headMoveForce=0;
@@ -252,60 +252,8 @@
         if(typeof t == 'undefined') t=0;
         ct++;
 
-        //vars to record: is moving left or right, is left or right of square, dist from square
-        var leftOrRightOfBox = normalize(isLeftOrRight(head, box));
-        var headVelocityX = roundToNearest(3, head.velocity[0]);
-        var headVelocityY = roundToNearest(3, head.velocity[1]);
-        var headDistX = roundToNearest(.5, head.position[0] - box.position[0]);
-        var headDistY = roundToNearest(.5, head.position[1] - box.position[1]);
-        var headPosX = roundToNearest(3, head.position[0]);
-        var headPosY = roundToNearest(3, head.position[1]);
-        //console.log('left or right of box: ' + leftOrRightOfBox)
-        //console.log('ball velocity: ' + headVelocityX + ', ' + headVelocityY);
-        //first index is sensory input array, second is sensory output (action) array
-
-        var inputStm=[
-            [/*leftOrRightOfBox,*/ headVelocityX, headVelocityY, headPosX, headPosY], //input stm
-            [moveDirX, moveDirY] //last output stim, try removing
-        ];
-        var res;
-
-        res=ihtai.cycle(inputStm, dt*1000);
-        var tDist = res.memorizerOutput.temporalDistance;
-
-        //////// apply forces based on ihtai response ////////
-        var stimResult = res.memorizerOutput.nextActionMemory;
-
-        var rand
-        var randDirX = normalize(getRandomMoveDir());
-        var randDirY = normalize(getRandomMoveDir());
-
-        /*
-        If a memory chain with current random action already exists, act on best memory no matter what.
-        */
-        //dividing by larger num makes it more likely to act on memory
-        if(stimResult != null && Math.random() > res.memorizerOutput.sd/20/*170*/ && head.position[1] < 100 ) {
-            console.log('act on memory');
-            //console.log('result tdist: ' + tDist);
-            //console.log('head pos: '+ head.position[1]);
-            console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
-            //handle movement conditions
-            moveDirX = stimResult[OUTPUT].stm[0];
-            moveDirY = stimResult[OUTPUT].stm[1];
-        }
-        else{
-            console.log('act on reflex')
-            moveDirX = randDirX;
-            moveDirY = randDirY;
-
-        }
-
-        //console.log('Move DirX: ' + moveDirX);
-        //console.log('Move DirY: ' + moveDirY);
-        lastSD = res.memorizerOutput.sd;
-
-        var moveDirXOutput = moveDirX === 100 ? -1 : 1;
-        var moveDirYOutput = moveDirY === 100 ? -1 : 1;
+        var moveDirXOutput = head.position[0] > box.position[0] ? -1 : 1;
+        var moveDirYOutput = head.position[1] > box.position[1] ? -1 : 1;
         //apply forces on body parts
         head.applyForce([moveDirXOutput * 10, moveDirYOutput * 30],[0,0]);
 

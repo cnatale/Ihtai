@@ -52,32 +52,32 @@ require([], function(){
 	var lastTime, lastKeypress=0, prevQuadrant=0;
 	var directionKeySignal=0;
     var viewWidth = /*800*/320;
-    var viewHeight = /*600*/240;	
+    var viewHeight = /*600*/240;
 
 	var pleasureDrive={
 		init:function(){
-			this.pleasure=0;
+			this.pleasure=5;
 			this.prevPleasure=0;
 			return this.pleasure;
 		},
 		cycle:function(stimuli, dt){
 			this.prevPleasure=this.pleasure;
 			//update pleasure on score increase, slowly decrement over time
-			this.pleasure-= .01 * dt;
-			if(this.pleasure<0)
+			this.pleasure=5;
+
+			if(feelingPleasure) {
 				this.pleasure=0;
-			if(feelingPleasure)
-				this.pleasure=3;
+			}
 
 			//clamp vals
-			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));	
+			$("#pleasure").html("pleasure: "+Math.floor(this.pleasure));
 			return Math.round(this.pleasure);
 		},
 		undo:function(){
 			this.pleasure=this.prevPleasure;
 			return Math.round(this.pleasure);			
 		},
-		targetval:3 //the goal value for pleasure
+		targetval:0 //the goal value for pleasure
 	};
 	var painDrive={
 		init:function(){
@@ -88,11 +88,10 @@ require([], function(){
 		cycle:function(stimuli,dt){
 			this.prevPain=this.pain;
 			//increment pain on death, slowly decrement over time
-			this.pain-= .01 * dt;
-			if(this.pain<0)
-				this.pain=0;
+			this.pain=0;
+
 			if(feelingPain)
-				this.pain= 3;
+				this.pain= 5;
 
 			//clamp vals
 			$("#pain").html("pain: "+Math.floor(this.pain));	
@@ -131,27 +130,10 @@ require([], function(){
 		},
 		targetval:0 //the goal value for pain
 	};		
-	drives=[pleasureDrive/*, painDrive, aggressionDrive*/];
+	drives=[pleasureDrive, painDrive/*, aggressionDrive*/];
 
 
-	var reflexes = [
-	/*{
-		init:function(){
-		    this.weightedDirection=[];
-		    for(var i=0;i<100;i++){
-		    	this.weightedDirection[i]=IhtaiUtils.weightedRand({10:0.2, 30:0.1, 50:0.1, 70:0.1, 90:0.5});
-		    }
-		},
-		matcher: function(stimuli){ //randomly select an arrow key
-			return true; //always return a potential random action
-		}, 
-		response: function(stimuli){
-			return {
-				indices:[0],
-				signal:[this.weightedDirection[Math.floor(Math.random()*99)]]
-			}
-		}
-	}*/];
+	var reflexes = [];
 
 	//combine fire key signal with arrow keys, since game can only detect one keypress per cycle
 	var distributionArr=[//fire, up, left, right, and no movement selector
@@ -167,18 +149,19 @@ require([], function(){
 	for(var i=0; i<3;i++){
 		distributionArr.push({0:.25, 1:.25, 2:.25, 3:.25});
 	}
-	
-    ihtai = new Ihtai({
-		clusterCount:/*20480*/3000,
-		vectorDim:12,/*number of iostimuli values + drives*/
-		memoryHeight:300,/*how many steps ahead can ihtai look for an optimal stimuli trail?*/
-		drivesList:drives,
-		reflexList:reflexes,
-		acceptableRange:144,/*max val is 144*//*acceptable range for optimal stimuli is in square dist*/
-		bStmCt:0,
-		distribution:distributionArr,
-		distanceAlgo:"avg"
-	});		
+
+    var ihtai = new Ihtai({
+        clusterCount:100,
+        inputClusterDim:8,
+        outputClusterDim:2,
+        driveClusterDim:2,
+        memoryHeight:100,/*how many steps ahead can ihtai look for an optimal stm trail?*/
+        drivesList:drives,
+        reflexList:reflexes,
+        acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
+        distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
+        candidatePoolSize: 400
+    });
 
 	//var intervalID = window.setInterval(updateIhtai, 33);
 	window.updateIhtai=updateIhtai;
@@ -288,64 +271,65 @@ require([], function(){
 			    			bwSum[i][j]=0;
 			    	}
 			    }
-
 			    //return output;
 			};			
-			//grayscaleImgData= grayscale(data);
-			grayscale(data);
- 
-			cycleArr=[directionKeySignal, eyePosRow, eyePosCol];
+			grayscaleImgData= grayscale(data);
+
+	        var cycleArr=[
+	            [eyePosRow, eyePosCol], //input stm
+	            [directionKeySignal] //last output stim, try removing
+	        ];
+
 			//visLog="";
 		    for(i=0;i<bwSum.length;i++){
 		    	for(j=0;j<bwSum[0].length;j++){
-		    		cycleArr.push(bwSum[i][j]);
+		    		cycleArr[0].push(bwSum[i][j]);
 		    		//visLog=visLog+bwSum[i][j];
 		    	}
 		    }
 
-		    //console.log(visLog);
-		    if(Math.random() > .5)
-				res=ihtai.cycle(cycleArr, td);
-			else
-				res=ihtai.daydream(cycleArr, td,[0]);
+			res=ihtai.cycle(cycleArr, td);
+			var stimResult = res.memorizerOutput.nextActionMemory;
 
 			lastKeypress +=td;
 
-			if(res.memorizerOutput[0] != null /*&& lastKeypress > 100*/ /*&& Math.random() > .1*/ /*prevent overfitting*/){
+			if(stimResult != null  && Math.random() > res.memorizerOutput.sd/20/*3*/){
+				console.log('act on memory');
+				console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
 				//read res keypad signals, and trigger keyboard events per signal output
-				directionKeySignal=res.memorizerOutput[0][0];
+				directionKeySignal=stimResult[1].stm[0];
 
     			if(directionKeySignal == 0){
     				//fire key pressed
 					e = jQuery.Event("keydown");
-					e.which = 32; // # Some key code value
+					e.which = 32;
 					$(window).trigger(e);	    				
     			}
 	    		else if(directionKeySignal == 1){
 	    			//up key pressed
 					e = jQuery.Event("keydown");
-					e.which = 38; // # Some key code value
+					e.which = 38;
 					$(window).trigger(e);	    			
 	    		}
 	    		else if(directionKeySignal == 2){
 	    			//left key pressed
 					e = jQuery.Event("keydown");
-					e.which = 37; // # Some key code value
+					e.which = 37;
 					$(window).trigger(e);	    			
 	    		}else if(directionKeySignal == 3){
 	    			//right key pressed
 					e = jQuery.Event("keydown");
-					e.which = 39; // # Some key code value
+					e.which = 39;
 					$(window).trigger(e);	    			
 	    		}
 	    		else{
 	    			//no key pressed
 	    		}
 
-				console.log('memory');
 				lastKeypress=0;
 			}
 			else{
+				console.log('act on reflex');
 				//TODO:act on instinct, which in this case is random keypad signals.
 				//Trigger keyborad events based on instinct
 		    	if(true /*&& lastKeypress > 100*/){
@@ -354,24 +338,24 @@ require([], function(){
 	    			if(directionKeySignal == 0){
 	    				//fire key pressed
 						e = jQuery.Event("keydown");
-						e.which = 32; // # Some key code value
+						e.which = 32;
 						$(window).trigger(e);	    				
 	    			}
 		    		else if(directionKeySignal == 1){
 		    			//up key pressed
 						e = jQuery.Event("keydown");
-						e.which = 38; // # Some key code value
+						e.which = 38;
 						$(window).trigger(e);	    			
 		    		}
 		    		else if(directionKeySignal == 2){
 		    			//left key pressed
 						e = jQuery.Event("keydown");
-						e.which = 37; // # Some key code value
+						e.which = 37;
 						$(window).trigger(e);	    			
 		    		}else if(directionKeySignal == 3){
 		    			//right key pressed
 						e = jQuery.Event("keydown");
-						e.which = 39; // # Some key code value
+						e.which = 39;
 						$(window).trigger(e);	    			
 		    		}
 		    		else{
@@ -384,25 +368,14 @@ require([], function(){
 			}
 
 			function setEyePos(){
-				/*if(res.memorizerOutput != null && Math.random() > .1){
-					eyePosRow=res.memorizerOutput[1];
-					eyePosCol=res.memorizerOutput[2];
-					eyePos.x=(eyePosCol/8) * viewWidth;
-					eyePos.y=(eyePosRow/8) * viewHeight;					
-					prevQuadrant= Math.floor((eyePos.y/viewHeight)*64) + Math.floor((eyePos.x/viewWidth)*8);
-					prevQuadrant++;		
-					prevQuadrant=prevQuadrant%64;				
-				}
-				else{*/
-					//loop through a 4x4 grid of possible positions
-					eyePosRow=Math.floor(prevQuadrant/8);
-					eyePosCol=prevQuadrant%8;
+				//loop through a 4x4 grid of possible positions
+				eyePosRow=Math.floor(prevQuadrant/8);
+				eyePosCol=prevQuadrant%8;
 
-					eyePos.x=(eyePosCol/8) * viewWidth;
-					eyePos.y=(eyePosRow/8) * viewHeight;
-					prevQuadrant++;		
-					prevQuadrant=prevQuadrant%64;
-				//}
+				eyePos.x=(eyePosCol/8) * viewWidth;
+				eyePos.y=(eyePosRow/8) * viewHeight;
+				prevQuadrant++;		
+				prevQuadrant=prevQuadrant%64;
 			}
 			setEyePos();	   	
 			//console.log('eyepos'+ eyePos.x+', '+eyePos.y)

@@ -705,7 +705,7 @@ var Memorizer = (function(bundle){
 				// console.log('min.es:'+min.es);
 				// console.log('min.sd:'+min.sd);
 				// console.log('acceptablerange:'+acceptableRange);
-				console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
+				//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
 
 				nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
 			}
@@ -865,7 +865,6 @@ var Memorizer = (function(bundle){
 					// note that this logical branch gets called by far the most out of the three
 					// first and second states match. perform weighted average operation.
 					if( ssMatch ){
-						// TODO: something is wrong with the averaging, which breaks finding ideal behavior after behavior changes too many times
 						var storedStm = ssIdTables[fsUid][ ssUid ];
 						var bufferGoalDist = avg;
 						var esGoalDist = storedStm.es.stm.slice();
