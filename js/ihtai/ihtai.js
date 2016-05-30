@@ -878,7 +878,7 @@ var Memorizer = (function(bundle){
 							var ct=storedStm.ct;
 							// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
 							//TODO: balance weight with number ct better
-							var temporalWeight = ((size - 2) / (height - 2)) * 5; //gives a range of 0 to 1, times multiplier
+							var temporalWeight = ((size - 2) / (height - 2)) /** 5*/; //gives a range of 0 to 1, times multiplier
 							//TODO: this algorithm looks suspect
 							//debugger;
 							esGoalDist[j]= ((esGoalDist[j] * (ct) ) + bufferGoalDist.stm[j]  + temporalWeight) / (ct + 1);

@@ -415,7 +415,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
         };
         var drives=[uprightDrive];
         var reflexes=[];
-        var numClusters=17/*17*/;
+        var numClusters=100/*17*/;
         var ihtai = new Ihtai({
             clusterCount:numClusters,
             inputClusterDim:9,
@@ -427,7 +427,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
             /*backStimCt:0,*/
             distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
-            candidatePoolSize: 200
+            candidatePoolSize: 12800
         });
 
         function roundToTenth(num){
@@ -538,7 +538,7 @@ p2.Plane.prototype.computeAABB = function(out, position, angle){
             //res=ihtai.daydream(inputStm, dt*1000);
 
             //////// apply forces based on ihtai response ////////
-            if(res.memorizerOutput.nextActionMemory != null &&  Math.random() > res.memorizerOutput.sd/20){
+            if(res.memorizerOutput.nextActionMemory != null &&  Math.random() > res.memorizerOutput.sd/100){
                 console.log('act on memory');
                 //handle movement conditions for each
                 lowerLeftLegForce=res.memorizerOutput.nextActionMemory[1].stm[0];
