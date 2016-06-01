@@ -220,7 +220,7 @@
     };
     var drives=[nearnessDrive];
     var reflexes=[];
-    var numClusters=200;
+    var numClusters=500;
     var ihtai = new Ihtai({
         clusterCount:numClusters,
         inputClusterDim:4,
@@ -260,6 +260,8 @@
         var headDistY = roundToNearest(3, head.position[1] - box.position[1]);
         var headPosX = roundToNearest(3, head.position[0]);
         var headPosY = roundToNearest(3, head.position[1]);
+        //console.log('velocity x: ' + headVelocityX);
+        //console.log('velocity y: ' + headVelocityY);
 
         //console.log('left or right of box: ' + leftOrRightOfBox)
         //console.log('ball velocity: ' + headVelocityX + ', ' + headVelocityY);
@@ -286,7 +288,7 @@
         If a memory chain with current random action already exists, act on best memory no matter what.
         */
         //dividing by larger num makes it more likely to act on memory
-        if(stimResult != null && Math.random() > res.memorizerOutput.sd/10/*170*/ && head.position[1] < 100 ) {
+        if(stimResult != null && Math.random() > res.memorizerOutput.sd/200/*170*/ && head.position[1] < 100 ) {
             console.log('act on memory');
             //console.log('result tdist: ' + tDist);
             //console.log('head pos: '+ head.position[1]);
