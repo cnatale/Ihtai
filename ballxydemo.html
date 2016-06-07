@@ -223,7 +223,7 @@
     var numClusters=500;
     var ihtai = new Ihtai({
         clusterCount:numClusters,
-        inputClusterDim:4,
+        inputClusterDim:5,
         outputClusterDim:2,
         driveClusterDim:1,
         memoryHeight:200,/*how many steps ahead can ihtai look for an optimal stm trail?*/
@@ -231,7 +231,7 @@
         reflexList:reflexes,
         acceptableRange:9999,/*acceptable range for optimal stm is in square dist*/
         distanceAlgo:/*'avg'*/ 'endState' /*avg or endState*/,
-        candidatePoolSize: 800 // should equal memoryHeight * number of output cluster possibilities
+        candidatePoolSize: 100000 // should equal memoryHeight * number of output cluster possibilities
     });
 
     var headMoveForce=0;
@@ -248,10 +248,11 @@
     function mainLoop(t){
         requestAnimationFrame(mainLoop);
 
-        var dt = typeof t !== 'undefined' && typeof lastTime !== 'undefined' ? t / 1000 - lastTime : 0;
+        var dt = typeof t !== 'undefined' && typeof lastTime !== 'undefined' ? roundToNearest(.01,  t / 1000 - lastTime) : 0;
         if(typeof t == 'undefined') t=0;
         ct++;
 
+        //console.log('dt: ' + dt);
         //vars to record: is moving left or right, is left or right of square, dist from square
         var leftOrRightOfBox = normalize(isLeftOrRight(head, box));
         var headVelocityX = roundToNearest(3, head.velocity[0]);
@@ -260,6 +261,8 @@
         var headDistY = roundToNearest(3, head.position[1] - box.position[1]);
         var headPosX = roundToNearest(3, head.position[0]);
         var headPosY = roundToNearest(3, head.position[1]);
+        var leftOrRightOfBox = head.position[0] - box.position[0] < 0 ? 0 : 100;
+        var aboveOrBelowBox = head.position[1] - box.position[1] < 0 ? 0 : 100;
         //console.log('velocity x: ' + headVelocityX);
         //console.log('velocity y: ' + headVelocityY);
 
@@ -268,7 +271,7 @@
         //first index is sensory input array, second is sensory output (action) array
 
         var inputStm=[
-            [headVelocityX, headVelocityY, headPosX, headPosY], //input stm
+            [headVelocityX, headVelocityY, headPosX, headPosY, dt], //input stm
             [moveDirX, moveDirY] //last output stim, try removing
         ];
         var res;
@@ -288,9 +291,9 @@
         If a memory chain with current random action already exists, act on best memory no matter what.
         */
         //dividing by larger num makes it more likely to act on memory
-        if(stimResult != null && Math.random() > res.memorizerOutput.sd/200/*170*/ && head.position[1] < 100 ) {
+        if(stimResult != null && Math.random() > res.memorizerOutput.sd/20/*170*/ && head.position[1] < 100 ) {
             console.log('act on memory');
-            //console.log('result tdist: ' + tDist);
+            console.log('PREDICTION TDIST: ' + tDist);
             //console.log('head pos: '+ head.position[1]);
             console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
             //handle movement conditions

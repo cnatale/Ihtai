@@ -878,7 +878,7 @@ var Memorizer = (function(bundle){
 							var ct=storedStm.ct;
 							// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
 							//TODO: balance weight with number ct better
-							var temporalWeight = ((size - 2) / (height - 2)) * .01; //gives a range of 0 to 1, times multiplier
+							var temporalWeight = ((size - 2) / (height - 2)) * 1; //gives a range of 0 to 1, times multiplier
 							//var temporalWeight =( 1 - ((size - 2) / (height - 2)) ) * .01 //longterm planning gets precedence
 							esGoalDist[j]= ((esGoalDist[j] * (ct) ) + bufferGoalDist.stm[j]  + temporalWeight) / (ct + 1);
 						}
@@ -908,7 +908,7 @@ var Memorizer = (function(bundle){
 							var insertedNode = {
 								fs:buffer[fs],
 								ss:buffer[ss],
-								es:avg,file:///home/chris/projects/ihtai/ballxydemo.html
+								es:avg,
 								ct:0/*maxCollisions*/,
 								sd:sd1,
 								tdist:size
