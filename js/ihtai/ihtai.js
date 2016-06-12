@@ -798,6 +798,8 @@ var Memorizer = (function(bundle){
 
 				var avg=[], temporalDist=0;
 
+				// TODO: if we're in avg mode, we don't need to do anything except on the last step of the height
+				// before then just run an accumulator
 				if(distanceAlgo == "avg"){
 					for( var j=ss; j<=es; j++ ){
 						temporalDist++;
@@ -862,7 +864,7 @@ var Memorizer = (function(bundle){
 					var ssUid = getSSUid(buffer[ss], size);
 					ssMatch = ssIdTables[fsUid].hasOwnProperty( ssUid );
 
-					// note that this logical branch gets called by far the most out of the three
+					// note that this logical branch gets called by far the most out of the three.
 					// first and second states match. perform weighted average operation.
 					if( ssMatch ){
 						var storedStm = ssIdTables[fsUid][ ssUid ];
@@ -878,7 +880,7 @@ var Memorizer = (function(bundle){
 							var ct=storedStm.ct;
 							// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
 							//TODO: balance weight with number ct better
-							var temporalWeight = ((size - 2) / (height - 2)) * 1; //gives a range of 0 to 1, times multiplier
+							var temporalWeight = ((size - 2) / (height - 2)) * .1; //gives a range of 0 to 1, times multiplier
 							//var temporalWeight =( 1 - ((size - 2) / (height - 2)) ) * .01 //longterm planning gets precedence
 							esGoalDist[j]= ((esGoalDist[j] * (ct) ) + bufferGoalDist.stm[j]  + temporalWeight) / (ct + 1);
 						}
