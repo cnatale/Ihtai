@@ -16,17 +16,33 @@ var RedBlackTreeAdapter = (function() {
 
 	FSUID_TABLES = 'fsUidTrees';
 	SSID_TABLES = 'ssIdTables';
+	var fsUidTrees = {}, ssIdTables = {}
+
+	// in this case, storeName is either fsUidTrees or ssIdTrees, and tableId is the fsUid/ssId property of the storeName
 
 	function insert(storeName, tableId, nodeToAdd) {
-
+		$R.insert( storeName[tableId], nodeToAdd );
 	}
 
 	function del(storeName, tableId, nodeToDelete) {
+		return $R.del( storeName[tableId], nodeToDelete );
+	}
 
+	function update(storeName, tableId, nodeToUpdate) {
+		$R.del( storeName[tableId], nodeToUpdate );
+		return $R.insert( storeName[tableId], nodeToUpdate );
+	}
+
+	function min(storeName, tableId) {
+		return $R.min( storeName[tableId], storeName[tableId].root );
+	}
+
+	function max(storeName, tableId) {
+		return $R.max( storeName[tableId], storeName[tableId].root );
 	}
 
 	function createTable(storeName, tableId) {
-
+		storeName[tableId] = $R.createTree('sd');		
 	}
 
 	function delTable(storeName, tableId) {
@@ -39,6 +55,10 @@ var RedBlackTreeAdapter = (function() {
 		insert: insert,
 		del: del,
 		createTable: createTable,
-		delTable: delTable
+		delTable: delTable,
+		min: min,
+		max: max
 	}
-});
+})();
+
+$RA = RedBlackTreeAdapter;

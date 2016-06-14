@@ -677,7 +677,7 @@ var Memorizer = (function(bundle){
 
 	// TODO: integrate into query and memorize methods
 	function getMinStm(combinedClustersId) {
-		return $R.min( fsUidTrees[combinedClustersId], fsUidTrees[combinedClustersId].root );
+		return $RA.min(fsUidTrees, combinedClustersId);
 	}
 
 	/**
@@ -691,7 +691,8 @@ var Memorizer = (function(bundle){
 		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 		var tdist;
 		if(fsUidTrees.hasOwnProperty(combinedClustersId)){
-			try{ var min = $R.min( fsUidTrees[combinedClustersId], fsUidTrees[combinedClustersId].root ); 
+			try{ 
+				var min = $RA.min(fsUidTrees, combinedClustersId);
 			}
 			catch(e){ 
 				debugger;
@@ -894,14 +895,13 @@ var Memorizer = (function(bundle){
 
 						//delete from tree and insert in again to re-order;
 						//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
-						$R.del( fsUidTrees[fsUid], storedStm );
-						$R.insert( fsUidTrees[fsUid], storedStm );
+						$RA.update(fsUidTrees, fsUid, storedStm);
 					} else {
 						/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
 							than the highest score in this fsUid's tree, get rid of the high score and replace with this.
 						*/
 						sd1= sqDist(avg.stm.slice(), homeostasisGoal);
-						maxTreeNode=$R.max( fsUidTrees[fsUid], fsUidTrees[fsUid].root);
+						maxTreeNode=$RA.max( fsUidTrees, fsUid);
 						sd2 = maxTreeNode.sd;
 						//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
 
@@ -920,13 +920,13 @@ var Memorizer = (function(bundle){
 
 							if( fsUidTrees[fsUid].size >= candidatePoolSize) {
 								try {
-									$R.del( fsUidTrees[fsUid], maxTreeNode );
+									$RA.del(fsUidTrees, fsUid,  maxTreeNode);
 									// delete maxTreeNode from lookup table
 									delete ssIdTables[fsUid][ ssUid ];
 									outputStmCtTables[fsUid][ getSSOutputId(maxTreeNode.ss) ]--;
 								} catch(e) { debugger; }
 							}
-							$R.insert( fsUidTrees[fsUid], insertedNode );
+							$RA.insert(fsUidTrees, fsUid, insertedNode);
 							// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
 							ssUid = getSSUid(insertedNode.ss, size);
 							ssIdTables[fsUid][ ssUid ] = insertedNode;
@@ -961,8 +961,8 @@ var Memorizer = (function(bundle){
 						sd: sqDist(avg.stm, homeostasisGoal),
 						tdist: size
 					}
-					fsUidTrees[fsUid] = $R.createTree('sd');
-					$R.insert( fsUidTrees[fsUid], insertedNode );
+					$RA.createTable(fsUidTrees, fsUid);
+					$RA.insert(fsUidTrees, fsUid, insertedNode);
 
 					if (typeof ssIdTables[fsUid] === 'undefined' ) {
 						ssIdTables[fsUid] = {};
