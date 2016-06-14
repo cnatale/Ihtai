@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 Simply include ihtai.js and utils.js from the js/ihtai/ directory in your project. Jasmine unit tests are also included with the project in the ihtaiSpec.js file.
 
-For more information, visit the Wiki: https://bitbucket.org/chrisnatale/ihtai/wiki/Home.
+For more information, visit the Wiki: https://github.com/cnatale/Ihtai/wiki.
 
 For library documentation, visit : http://chrisnatale.info/projects/ihtai/docs_v011a/classes/Ihtai.html
 
