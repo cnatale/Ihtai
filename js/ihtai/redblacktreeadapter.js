@@ -18,35 +18,79 @@ var RedBlackTreeAdapter = (function() {
 	SSID_TABLES = 'ssIdTables';
 	var fsUidTrees = {}, ssIdTables = {}
 
-	// in this case, storeName is either fsUidTrees or ssIdTrees, and tableId is the fsUid/ssId property of the storeName
-
-	function insert(storeName, tableId, nodeToAdd) {
-		$R.insert( storeName[tableId], nodeToAdd );
+	function insert(tableId, nodeToAdd) {
+		$R.insert( fsUidTrees[tableId], nodeToAdd );
 	}
 
-	function del(storeName, tableId, nodeToDelete) {
-		return $R.del( storeName[tableId], nodeToDelete );
+	function insertToFsuidTrees(tableId, nodeToAdd) {
+		$R.insert( fsUidTrees[tableId], nodeToAdd );
 	}
 
-	function update(storeName, tableId, nodeToUpdate) {
-		$R.del( storeName[tableId], nodeToUpdate );
-		return $R.insert( storeName[tableId], nodeToUpdate );
+	function insertSSID(fsUid, ssUid, nodeToAdd) {
+		ssIdTables[fsUid][ssUid] = nodeToAdd;
 	}
 
-	function min(storeName, tableId) {
-		return $R.min( storeName[tableId], storeName[tableId].root );
+	function del(tableId, nodeToDelete) {
+		$R.del( fsUidTrees[tableId], nodeToDelete );
+		return true;
 	}
 
-	function max(storeName, tableId) {
-		return $R.max( storeName[tableId], storeName[tableId].root );
+	function delSSID(fsUid, ssUid) {
+		delete ssIdTables[fsUid][ssUid];
 	}
 
-	function createTable(storeName, tableId) {
-		storeName[tableId] = $R.createTree('sd');		
+	function update(tableId, nodeToUpdate) {
+		$R.del( fsUidTrees[tableId], nodeToUpdate );
+		return $R.insert( fsUidTrees[tableId], nodeToUpdate );
 	}
 
-	function delTable(storeName, tableId) {
+	function min(tableId) {
+		return $R.min( fsUidTrees[tableId], fsUidTrees[tableId].root );
+	}
 
+	function max(tableId) {
+		return $R.max( fsUidTrees[tableId], fsUidTrees[tableId].root );
+	}
+
+	function createTable(tableId) {
+		fsUidTrees[tableId] = $R.createTree('sd');
+	}
+
+	function createSSIDTable(fsUid) {
+		ssIdTables[fsUid] = {};
+	}
+
+	function delTable(tableId) {
+
+	}
+
+	function hasOutputBeenExperienced(fsUid, ssUid) {
+		return ssIdTables[fsUid].hasOwnProperty( ssUid );
+	}
+
+	function getStoredStimuli(fsUid, ssUid) {
+		return ssIdTables[fsUid][ssUid];
+	}
+
+	function setStoredStimuli(fsUid, ssUid, nodeToStore) {
+		ssIdTables[fsUid][ssUid] = nodeToStore;
+	}
+
+	function doesSSIDTableExist(fsUid) {
+		if (typeof ssIdTables[fsUid] === 'undefined' ) {
+			return false;
+		}
+		else {
+			return true;
+		}
+	}
+
+	function getFSUIDTreeSize(fsUid) {
+		return fsUidTrees[fsUid].size;
+	}
+
+	function isAnFSUIDTree(fsUid) {
+		return fsUidTrees.hasOwnProperty(fsUid);
 	}
 
 	return {
@@ -57,7 +101,17 @@ var RedBlackTreeAdapter = (function() {
 		createTable: createTable,
 		delTable: delTable,
 		min: min,
-		max: max
+		max: max,
+		update: update,
+		hasOutputBeenExperienced: hasOutputBeenExperienced,
+		getStoredStimuli: getStoredStimuli,
+		setStoredStimuli: setStoredStimuli,
+		createSSIDTable: createSSIDTable,
+		insertSSID: insertSSID,
+		delSSID: delSSID,
+		getFSUIDTreeSize: getFSUIDTreeSize,
+		isAnFSUIDTree: isAnFSUIDTree,
+		insertToFsuidTrees: insertToFsuidTrees
 	}
 })();
 

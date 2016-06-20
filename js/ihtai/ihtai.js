@@ -620,7 +620,6 @@ var Memorizer = (function(bundle){
 			-a hash table where each key is a second state output stimuli id for a memory chain, which references
 			 a uidTree node from the tree with the same memory uid as this table's key.
 	*/
-	var fsUidTrees = {}, ssIdTables = {}, outputStmCtTables = {};
 
 	if(!isNaN(bundle._acceptableRange))
 		acceptableRange=bundle._acceptableRange;
@@ -652,19 +651,6 @@ var Memorizer = (function(bundle){
 		else
 			candidatePoolSize=500;		
 
-		if(typeof bundle._fsUidTrees != "undefined"){
-			fsUidTrees=bundle._fsUidTrees;
-			/*
-			Iterate through fsUidTrees, and for each index intantiate a new tree, passing the index's tree as a param.
-			This is necessary because json stringifying the tree instances strips out their methods. 
-			*/
-			for(var elm in fsUidTrees){
-				//TODO: add method to redblack tree library that allows it to create a tree from array
-				//fsUidTrees[elm]=new IhtaiUtils.Heap(minHeaps[elm].heap);
-			}
-
-		}
-
 		/*The default homeostasis goal val is for test purposes only. The _homeostasisGoal 
 		parameter should always be included when initializing Meorizer.*/
 		if(typeof bundle._goals !== "undefined"){
@@ -677,7 +663,7 @@ var Memorizer = (function(bundle){
 
 	// TODO: integrate into query and memorize methods
 	function getMinStm(combinedClustersId) {
-		return $RA.min(fsUidTrees, combinedClustersId);
+		return $RA.min(combinedClustersId);
 	}
 
 	/**
@@ -690,9 +676,10 @@ var Memorizer = (function(bundle){
 		var nextActionMemory=null, stimDist, sd;
 		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 		var tdist;
-		if(fsUidTrees.hasOwnProperty(combinedClustersId)){
+
+		if($RA.isAnFSUIDTree(combinedClustersId)){
 			try{ 
-				var min = $RA.min(fsUidTrees, combinedClustersId);
+				var min = $RA.min(combinedClustersId);
 			}
 			catch(e){ 
 				debugger;
@@ -718,38 +705,6 @@ var Memorizer = (function(bundle){
 			temporalDistance: tdist};
 	}
 
-	/**
-		Determines if Ihtai has acted with a specific set of output stimuli from its current
-		first state UID.
-
-		@returns {Boolean} true or false
-	*/
-	function hasActedInThisWayBefore(clusters, outputSignalCluster){
-		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
-		if(fsUidTrees.hasOwnProperty(combinedClustersId)) {
-			//TODO: get id of second state output
-			var ssUid = outputSignalCluster.id;
-			var ssMatch = outputStmCtTables[combinedClustersId][ssUid];
-			
-			if( ssMatch ){
-				return true;
-			}
-			else {
-				return false;
-			}
-		} else {
-			return false;
-		}
-	}
-
-	/**
-	Pass in second state memory and temporal distance, and get back a uid.
-	*/
-	// TODO: figure out why adding tdist causes cycling near target val
-	function getSSUid(mem, tdist) {
-		return /*mem[INPUT].id + '+' +*/ mem[OUTPUT].id /*+ '+' + mem[DRIVES].id */ + '+' + tdist;
-	}
-
 	function getSSOutputId(mem, tdist) {
 		try {
 			return mem[OUTPUT].id /*+ '+' + tdist*/;
@@ -761,7 +716,6 @@ var Memorizer = (function(bundle){
 	/**
 		Memorizes stm
 	*/
-	var temporalPlanners=0;
 	var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 	function memorize(clusters){
 		/*
@@ -779,7 +733,7 @@ var Memorizer = (function(bundle){
 			vector data).
 		*/
 		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, fsidTree, ssOutput;
+		var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
 		//update the buffer
 		buffer.push(clusters);
 		if(buffer.length>height)
@@ -795,7 +749,6 @@ var Memorizer = (function(bundle){
 				ss=buffer.length-size+1;
 				es=buffer.length-1;
 				fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]) /*+ '+' + size*/; //note that adding size prevents acting on memory for some reason. figure out why
-				fsidTree = fsUidTrees[fsUid];
 
 				var avg=[], temporalDist=0;
 
@@ -831,7 +784,8 @@ var Memorizer = (function(bundle){
 				at this start state, store it regardless.
 				*/				
 				ssMatch=false;
-				if(fsUidTrees.hasOwnProperty(fsUid)){
+
+				if($RA.isAnFSUIDTree(fsUid)){
 					/*
 					If first state input and drive data, as well as second state motor output  are the same, store the memory
 					as weighted average of the two memories(same firstState and ss; es drive vals become
@@ -859,16 +813,14 @@ var Memorizer = (function(bundle){
 					saying, "we started at the same state. The next step's output was also the same. These are 
 					effectively the same actions taken by the agent, so average their resulting drive scores."
 					*/
-					if( typeof ssIdTables[fsUid] === 'undefined') { debugger;}
 
-					//var ssUid = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
-					var ssUid = getSSUid(buffer[ss], size);
-					ssMatch = ssIdTables[fsUid].hasOwnProperty( ssUid );
+					var ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
+					ssMatch = $RA.hasOutputBeenExperienced(fsUid, ssUid);
 
 					// note that this logical branch gets called by far the most out of the three.
 					// first and second states match. perform weighted average operation.
 					if( ssMatch ){
-						var storedStm = ssIdTables[fsUid][ ssUid ];
+						var storedStm = $RA.getStoredStimuli(fsUid, ssUid);
 						var bufferGoalDist = avg;
 						var esGoalDist = storedStm.es.stm.slice();
 						storedStm.ct++;
@@ -895,13 +847,13 @@ var Memorizer = (function(bundle){
 
 						//delete from tree and insert in again to re-order;
 						//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
-						$RA.update(fsUidTrees, fsUid, storedStm);
+						$RA.update(fsUid, storedStm);
 					} else {
 						/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
 							than the highest score in this fsUid's tree, get rid of the high score and replace with this.
 						*/
 						sd1= sqDist(avg.stm.slice(), homeostasisGoal);
-						maxTreeNode=$RA.max( fsUidTrees, fsUid);
+						maxTreeNode=$RA.max(fsUid);
 						sd2 = maxTreeNode.sd;
 						//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
 
@@ -911,43 +863,29 @@ var Memorizer = (function(bundle){
 								fs:buffer[fs],
 								ss:buffer[ss],
 								es:avg,
-								ct:0/*maxCollisions*/,
+								ct:0,
 								sd:sd1,
 								tdist:size
 							};
-							// ssUid = maxTreeNode.ss[INPUT].id + '+' + maxTreeNode.ss[OUTPUT].id + "+" + maxTreeNode.tdist;
-							ssUid = getSSUid(maxTreeNode.ss, maxTreeNode.tdist);
+							ssUid = IhtaiUtils.getSSUid(maxTreeNode.ss, maxTreeNode.tdist);
 
-							if( fsUidTrees[fsUid].size >= candidatePoolSize) {
+							if($RA.getFSUIDTreeSize(fsUid) >= candidatePoolSize) {
 								try {
-									$RA.del(fsUidTrees, fsUid,  maxTreeNode);
+									$RA.del(fsUid,  maxTreeNode);
 									// delete maxTreeNode from lookup table
-									delete ssIdTables[fsUid][ ssUid ];
-									outputStmCtTables[fsUid][ getSSOutputId(maxTreeNode.ss) ]--;
+									$RA.delSSID(fsUid, ssUid);
 								} catch(e) { debugger; }
 							}
-							$RA.insert(fsUidTrees, fsUid, insertedNode);
+							$RA.insert(fsUid, insertedNode);
 							// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
-							ssUid = getSSUid(insertedNode.ss, size);
-							ssIdTables[fsUid][ ssUid ] = insertedNode;
-							if(typeof outputStmCtTables[fsUid][ getSSOutputId(insertedNode.ss) ] === 'undefined'){
-								outputStmCtTables[fsUid][ getSSOutputId(insertedNode.ss) ] = 1;
-							} else {
-								outputStmCtTables[fsUid][ getSSOutputId(insertedNode.ss) ]++;
-							}
+							ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
+							$RA.setStoredStimuli(fsUid, ssUid, insertedNode)
 						}	
 					}	
 				}
 				else {
 					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
 					//console.log('new memory created')
-
-					/*memory cutoff so that we don't create more of these
-					level[i].series[fsUid] Objects after too many have been made. prevents 
-					engine from grinding to a halt due to lack of available memory.
-					*/
-					//if(temporalPlanners>3274926)
-					//	return;
 
 					/*
 					no tree currently exists for this fsUid. Create one, add memory to tree, add reference to ssIdTables
@@ -957,34 +895,22 @@ var Memorizer = (function(bundle){
 						fs: buffer[fs], 
 						ss: buffer[ss],
 						es: avg,
-						ct: 0/*maxCollisions*/,
+						ct: 0,
 						sd: sqDist(avg.stm, homeostasisGoal),
 						tdist: size
 					}
-					$RA.createTable(fsUidTrees, fsUid);
-					$RA.insert(fsUidTrees, fsUid, insertedNode);
+					$RA.createTable(fsUid);
+					$RA.insert(fsUid, insertedNode);
 
-					if (typeof ssIdTables[fsUid] === 'undefined' ) {
-						ssIdTables[fsUid] = {};
-						outputStmCtTables[fsUid] = {};
+					if(!$RA.doesSSIDTableExist(fsUid)) {
+						$RA.createSSIDTable(fsUid);
 					}
 
-					// ssUid = buffer[ss][INPUT].id + '+' + buffer[ss][OUTPUT].id + '+' + size;
-					ssUid = getSSUid(buffer[ss], size);
-					ssIdTables[fsUid][ ssUid ] = insertedNode;
-					if(typeof outputStmCtTables[fsUid][ getSSOutputId(buffer[ss]) ] === 'undefined'){
-						outputStmCtTables[fsUid][ getSSOutputId(buffer[ss]) ] = 1;
-					} else {
-						outputStmCtTables[fsUid][ getSSOutputId(buffer[ss]) ]++;
-					}
+					ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
+					$RA.insertSSID(fsUid, ssUid, insertedNode);
+
 					/* Note that we don't need to check the candidatePoolSize here for a 
-					   possible deletion because this isa brand new tree. */
-
-					/*Keep track of total # of level[i].seriesArray[fsUid] Objects created.
-					Multiply with IHTAI's clustercount property to get rough estimate of memory
-					used by IHTAI. Check that against cutoff value.
-					*/
-					temporalPlanners++;
+					   possible deletion because this is a brand new tree. */
 				}
 			}
 		}
@@ -1047,8 +973,7 @@ var Memorizer = (function(bundle){
 		getLevels: getLevels,
 		getBuffer: getBuffer,
 		getHeaps: getHeaps,
-		exportTemporalDataAsCSV: exportTemporalDataAsCSV,
-		hasActedInThisWayBefore: hasActedInThisWayBefore
+		exportTemporalDataAsCSV: exportTemporalDataAsCSV
 	}
 });
 

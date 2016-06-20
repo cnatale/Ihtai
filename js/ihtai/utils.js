@@ -47,9 +47,12 @@ IhtaiUtils.toCombinedStmUID=function(clusters){
 }
 
 
-//	function getSSUid(mem, tdist) {
-//		return /*mem[INPUT].id + '+' +*/ mem[DRIVES].id /*+ '+' + mem[OUTPUT].id*//* + '+' + tdist*/;
-//	}
+/**
+Pass in second state memory and temporal distance, and get back a uid.
+*/
+IhtaiUtils.getSSUid = function(mem, tdist) {
+	return /*mem[INPUT].id + '+' +*/ mem[OUTPUT].id /*+ '+' + mem[DRIVES].id */ + '+' + tdist;
+}
 
 // code from http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
 IhtaiUtils.weightedRand = (function(spec) {
