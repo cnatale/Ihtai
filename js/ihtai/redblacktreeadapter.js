@@ -111,7 +111,8 @@ var RedBlackTreeAdapter = (function() {
 		delSSID: delSSID,
 		getFSUIDTreeSize: getFSUIDTreeSize,
 		isAnFSUIDTree: isAnFSUIDTree,
-		insertToFsuidTrees: insertToFsuidTrees
+		insertToFsuidTrees: insertToFsuidTrees,
+		doesSSIDTableExist: doesSSIDTableExist
 	}
 })();
 
