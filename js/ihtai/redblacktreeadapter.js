@@ -22,10 +22,6 @@ var RedBlackTreeAdapter = (function() {
 		$R.insert( fsUidTrees[tableId], nodeToAdd );
 	}
 
-	function insertToFsuidTrees(tableId, nodeToAdd) {
-		$R.insert( fsUidTrees[tableId], nodeToAdd );
-	}
-
 	function insertSSID(fsUid, ssUid, nodeToAdd) {
 		ssIdTables[fsUid][ssUid] = nodeToAdd;
 	}
@@ -58,10 +54,6 @@ var RedBlackTreeAdapter = (function() {
 
 	function createSSIDTable(fsUid) {
 		ssIdTables[fsUid] = {};
-	}
-
-	function delTable(tableId) {
-
 	}
 
 	function hasOutputBeenExperienced(fsUid, ssUid) {
@@ -99,7 +91,6 @@ var RedBlackTreeAdapter = (function() {
 		insert: insert,
 		del: del,
 		createTable: createTable,
-		delTable: delTable,
 		min: min,
 		max: max,
 		update: update,
@@ -111,7 +102,6 @@ var RedBlackTreeAdapter = (function() {
 		delSSID: delSSID,
 		getFSUIDTreeSize: getFSUIDTreeSize,
 		isAnFSUIDTree: isAnFSUIDTree,
-		insertToFsuidTrees: insertToFsuidTrees,
 		doesSSIDTableExist: doesSSIDTableExist
 	}
 })();
