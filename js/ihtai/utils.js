@@ -46,7 +46,7 @@ IhtaiUtils.toCombinedStmUID=function(clusters){
 	return combinedClustersId;		
 }
 
-
+var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 /**
 Pass in second state memory and temporal distance, and get back a uid.
 */

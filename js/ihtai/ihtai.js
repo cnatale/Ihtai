@@ -1,3 +1,5 @@
+require(./q);
+
 "use strict";
 /**
 Copyright (c) 2015 Chris Natale
