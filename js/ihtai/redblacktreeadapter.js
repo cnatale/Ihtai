@@ -19,70 +19,121 @@ var RedBlackTreeAdapter = (function() {
 	var fsUidTrees = {}, ssIdTables = {}
 
 	function insert(tableId, nodeToAdd) {
-		$R.insert( fsUidTrees[tableId], nodeToAdd );
+		return new Promise (
+			function(resolve, reject) {
+				$R.insert( fsUidTrees[tableId], nodeToAdd );
+				resolve(true);
+		});
 	}
 
 	function insertSSID(fsUid, ssUid, nodeToAdd) {
-		ssIdTables[fsUid][ssUid] = nodeToAdd;
+		return new Promise (
+			function(resolve, reject) {
+				ssIdTables[fsUid][ssUid] = nodeToAdd;
+				resolve(true);
+		});
 	}
 
 	function del(tableId, nodeToDelete) {
-		$R.del( fsUidTrees[tableId], nodeToDelete );
-		return true;
+		return new Promise (
+			function(resolve, reject) {
+				$R.del( fsUidTrees[tableId], nodeToDelete );
+				resolve(true);
+		});
 	}
 
 	function delSSID(fsUid, ssUid) {
-		delete ssIdTables[fsUid][ssUid];
+		return new Promise (
+			function(resolve, reject) {
+				delete ssIdTables[fsUid][ssUid];
+				resolve(true);
+		});
 	}
 
 	function update(tableId, nodeToUpdate) {
-		$R.del( fsUidTrees[tableId], nodeToUpdate );
-		return $R.insert( fsUidTrees[tableId], nodeToUpdate );
+		return new Promise (
+			function(resolve, reject) {
+				$R.del( fsUidTrees[tableId], nodeToUpdate );
+				resolve($R.insert( fsUidTrees[tableId], nodeToUpdate ));
+		});
 	}
 
 	function min(tableId) {
-		return $R.min( fsUidTrees[tableId], fsUidTrees[tableId].root );
+		return new Promise (
+			function(resolve, reject) {
+				resolve( $R.min( fsUidTrees[tableId], fsUidTrees[tableId].root ));
+		});
 	}
 
 	function max(tableId) {
-		return $R.max( fsUidTrees[tableId], fsUidTrees[tableId].root );
+		return new Promise (
+			function(resolve, reject) {
+				resolve( $R.max( fsUidTrees[tableId], fsUidTrees[tableId].root ));
+		});
 	}
 
 	function createTable(tableId) {
-		fsUidTrees[tableId] = $R.createTree('sd');
+		return new Promise (
+			function(resolve, reject) {
+				fsUidTrees[tableId] = $R.createTree('sd');
+				resolve(true);
+		});
 	}
 
 	function createSSIDTable(fsUid) {
-		ssIdTables[fsUid] = {};
+		return new Promise (
+			function(resolve, reject) {
+				ssIdTables[fsUid] = {};
+				resolve(true);
+		});
 	}
 
 	function hasOutputBeenExperienced(fsUid, ssUid) {
-		return ssIdTables[fsUid].hasOwnProperty( ssUid );
+		return new Promise (
+			function(resolve, reject) {
+				resolve (ssIdTables[fsUid].hasOwnProperty( ssUid ));
+		});
 	}
 
 	function getStoredStimuli(fsUid, ssUid) {
-		return ssIdTables[fsUid][ssUid];
+		return new Promise (
+			function(resolve, reject) {
+				resolve( ssIdTables[fsUid][ssUid]);
+		});
 	}
 
 	function setStoredStimuli(fsUid, ssUid, nodeToStore) {
-		ssIdTables[fsUid][ssUid] = nodeToStore;
+		return new Promise (
+			function(resolve, reject) {
+				ssIdTables[fsUid][ssUid] = nodeToStore;
+				resolve(true);
+		});
 	}
 
 	function doesSSIDTableExist(fsUid) {
-		if (typeof ssIdTables[fsUid] === 'undefined' ) {
-			return false;
-		}
-		else {
-			return true;
-		}
+		return new Promise (
+			function(resolve, reject) {
+				if (typeof ssIdTables[fsUid] === 'undefined' ) {
+					resolve (false);
+				}
+				else {
+					resolve (true);
+				}
+		});
 	}
 
 	function getFSUIDTreeSize(fsUid) {
-		return fsUidTrees[fsUid].size;
+		return new Promise (
+			function(resolve, reject) {
+				resolve( fsUidTrees[fsUid].size);
+		});
 	}
 
 	function isAnFSUIDTree(fsUid) {
-		return fsUidTrees.hasOwnProperty(fsUid);
+		return new Promise (
+			function(resolve, reject) {
+				resolve( fsUidTrees.hasOwnProperty(fsUid));
+		});
 	}
 
 	return {
