@@ -1,4 +1,4 @@
-require(./q);
+//require(./q);
 
 "use strict";
 /**
@@ -256,39 +256,50 @@ var Ihtai = (function(bundle){
 
 	 */
 	function cycle(iostm, dt){
-		//iostm is now divided into sub-arrays: index 0 is input, index 1 is output, index 2 is drives
+		return new Promise( function(resolve, reject) {
+			//iostm is now divided into sub-arrays: index 0 is input, index 1 is output, index 2 is drives
 
-		var combinedstm, curClusters=[];
+			var combinedstm, curClusters=[];
 
-		//cycle drives based on current state
-		var drivesOutput=drives.cycle(iostm, dt);
+			//cycle drives based on current state
+			var drivesOutput=drives.cycle(iostm, dt);
 
-		//merge iostm and drives output
-		iostm[2]=drivesOutput;
-		combinedstm = iostm;
-	
-		var reflexOutput=[], memorizerOutput=null;
+			//merge iostm and drives output
+			iostm[2]=drivesOutput;
+			combinedstm = iostm;
+		
+			var reflexOutput=[], memorizerOutput=null;
 
-		//get nearest cluster for input, output (maybe not necessary?) and drive signals
-		curClusters[0]=inputClusters.findNearestCluster(iostm[0]);
-		curClusters[1]=outputClusters.findNearestCluster(iostm[1]);
-		curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
+			//get nearest cluster for input, output (maybe not necessary?) and drive signals
+			curClusters[0]=inputClusters.findNearestCluster(iostm[0]);
+			curClusters[1]=outputClusters.findNearestCluster(iostm[1]);
+			curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
 
-		if(typeof drivesOutput=='undefined') debugger; //sanity test
-		//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
+			if(typeof drivesOutput=='undefined') debugger; //sanity test
+			//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
 
-		//cycle memorizer	
-		if(_enableMemories){
-			memorizerOutput=memorizer.query(curClusters);
-			memorizer.memorize(curClusters);
-		}
-	
-		//send reflex output and memorizer output back to ai agent
-		return {
-			memorizerOutput:memorizerOutput,
-			drivesOutput:drivesOutput,
-			curClusters:curClusters
-		};
+			//cycle memorizer	
+			if(_enableMemories){
+				memorizerOutput=memorizer.query(curClusters).then( result => {
+					memorizer.memorize(curClusters).then( result => {
+						//send reflex output and memorizer output back to ai agent
+						resolve({
+							memorizerOutput:memorizerOutput,
+							drivesOutput:drivesOutput,
+							curClusters:curClusters
+						});
+					});
+				});
+			}
+			else{
+				//send reflex output and memorizer output back to ai agent
+				resolve({
+					memorizerOutput:memorizerOutput,
+					drivesOutput:drivesOutput,
+					curClusters:curClusters
+				});
+			}
+		});
 	}
 
 	function hasActedInThisWayBefore(curClusters, outputSignal) { 
@@ -665,7 +676,11 @@ var Memorizer = (function(bundle){
 
 	// TODO: integrate into query and memorize methods
 	function getMinStm(combinedClustersId) {
-		return $RA.min(combinedClustersId);
+		$RA.min(combinedClustersId).then(
+			function(val) {
+				return val;
+			}
+		);
 	}
 
 	/**
@@ -675,36 +690,38 @@ var Memorizer = (function(bundle){
 		If no vector is within acceptable range, return null. 2) The square distance of the returned action stimuli from ideal drive state.
 	*/
 	function query(clusters){
-		var nextActionMemory=null, stimDist, sd;
-		var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
-		var tdist;
+		return new Promise( function(resolve, reject) {
+			var nextActionMemory=null, stimDist, sd;
+			var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
+			var tdist;
 
-		if($RA.isAnFSUIDTree(combinedClustersId)){
-			try{ 
-				var min = $RA.min(combinedClustersId);
-			}
-			catch(e){ 
-				debugger;
-				throw "Error: Memorizer.query() failed to execute redblack tree min search"; };
-			
-			tdist = min.tdist;
-			// console.log('selected query fs uid: ' + IhtaiUtils.toCombinedStmUID(min.fs));
-			var sd= min.sd;
-			if(sd <= acceptableRange){
-				// console.log('min.ss: '+min.ss);
-				// console.log('min.es:'+min.es);
-				// console.log('min.sd:'+min.sd);
-				// console.log('acceptablerange:'+acceptableRange);
-				//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
+			Promise.all( [$RA.isAnFSUIDTree(combinedClustersId), $RA.min(combinedClustersId)] ).then( values => {
+				var isAnFSUIDTree = values[0];
+				var min = values[1];
 
-				nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
-			}
-		}
+				if(isAnFSUIDTree){
+					tdist = min.tdist;
+					// console.log('selected query fs uid: ' + IhtaiUtils.toCombinedStmUID(min.fs));
+					var sd= min.sd;
+					if(sd <= acceptableRange){
+						// console.log('min.ss: '+min.ss);
+						// console.log('min.es:'+min.es);
+						// console.log('min.sd:'+min.sd);
+						// console.log('acceptablerange:'+acceptableRange);
+						//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
 
-		return {
-			nextActionMemory: nextActionMemory, 
-			sd: sd, 
-			temporalDistance: tdist};
+						nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
+					}
+				}
+
+				resolve ({
+					nextActionMemory: nextActionMemory, 
+					sd: sd, 
+					temporalDistance: tdist
+				});
+			});
+		});
+
 	}
 
 	function getSSOutputId(mem, tdist) {
@@ -720,202 +737,239 @@ var Memorizer = (function(bundle){
 	*/
 	var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 	function memorize(clusters){
-		/*
-			Think of this as a sliding window of possible new memories to learn.
+		return new Promise( function(resolve, reject) {
+			/*
+				Think of this as a sliding window of possible new memories to learn.
 
-			Loop through each time level. At level i, a memory series is i+2 moments long. 
-			The only moments we need to store in the series are the start and end moments, though.
-			Level i+1 is i+3 moments long, i+2 is i+4 moments long, etc.
-			
-			Every level has a counter, that is reset every time a new memory sequence starts. The memory
-			sequence counts to i+2	
+				Loop through each time level. At level i, a memory series is i+2 moments long. 
+				The only moments we need to store in the series are the start and end moments, though.
+				Level i+1 is i+3 moments long, i+2 is i+4 moments long, etc.
+				
+				Every level has a counter, that is reset every time a new memory sequence starts. The memory
+				sequence counts to i+2	
 
-			Each vector is a reference to to a cluster's stm array, making this an efficient way
-			to re-use the existing memory allocations (only need to store a pointer instead of the raw
-			vector data).
-		*/
-		//fs=firstState, ss=secondState, es=endState
-		var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
-		//update the buffer
-		buffer.push(clusters);
-		if(buffer.length>height)
-			buffer.shift(); //this may be an O(n) implementation. Think about changing.
-		/*
-		Iterate through each temporal dist level, and add memory to tree if sq distance is less than highest sq dist in tree, or tree isn't full. 
-		*/
-		for(var i=0; i<height; i++){
-			size=i+2;
-			//Once we have a buffer full enough for this level, attempt to add a memory every cycle
-			if(buffer.length>=size && size<=height){
-				fs=buffer.length-size;
-				ss=buffer.length-size+1;
-				es=buffer.length-1;
-				fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]) /*+ '+' + size*/; //note that adding size prevents acting on memory for some reason. figure out why
+				Each vector is a reference to to a cluster's stm array, making this an efficient way
+				to re-use the existing memory allocations (only need to store a pointer instead of the raw
+				vector data).
+			*/
+			//fs=firstState, ss=secondState, es=endState
+			var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
+			//update the buffer
+			buffer.push(clusters);
+			if(buffer.length>height)
+				buffer.shift(); //this may be an O(n) implementation. Think about changing.
+			/*
+			Iterate through each temporal dist level, and add memory to tree if sq distance is less than highest sq dist in tree, or tree isn't full. 
+			*/
+			for(var i=0; i<height; i++){
+				size=i+2;
+				//Once we have a buffer full enough for this level, attempt to add a memory every cycle
+				if(buffer.length>=size && size<=height){
+					fs=buffer.length-size;
+					ss=buffer.length-size+1;
+					es=buffer.length-1;
+					fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]) /*+ '+' + size*/; //note that adding size prevents acting on memory for some reason. figure out why
 
-				var avg=[], temporalDist=0;
+					var avg=[], temporalDist=0;
 
-				// TODO: if we're in avg mode, we don't need to do anything except on the last step of the height
-				// before then just run an accumulator
-				if(distanceAlgo == "avg"){
-					for( var j=ss; j<=es; j++ ){
-						temporalDist++;
-						if(j==ss){ //first iteration; set array to second state's drive values
-							avg={stm:buffer[ss][DRIVES].stm.slice()};
-						}
-						else{
-							//add drive stimuli for each moment in time between second state and end state.
-							for(var k=0;k<avg.stm.length;k++){
-								avg.stm[k]+=buffer[j][DRIVES].stm[k];
+					// TODO: if we're in avg mode, we don't need to do anything except on the last step of the height
+					// before then just run an accumulator
+					if(distanceAlgo == "avg"){
+						for( var j=ss; j<=es; j++ ){
+							temporalDist++;
+							if(j==ss){ //first iteration; set array to second state's drive values
+								avg={stm:buffer[ss][DRIVES].stm.slice()};
+							}
+							else{
+								//add drive stimuli for each moment in time between second state and end state.
+								for(var k=0;k<avg.stm.length;k++){
+									avg.stm[k]+=buffer[j][DRIVES].stm[k];
+								}
 							}
 						}
-					}
 
-					//loop over each index, dividing by total number of values. gives average drive values over time series.
-					for(k=0;k<avg.stm.length;k++){
-						avg.stm[k] = avg.stm[k]/temporalDist;
-					}
-				} else {
-					avg={stm:buffer[es][DRIVES].stm.slice()};
-				}
-				
-				////////////////////////////////////////////////				
-				
-				/*
-				If series' end state is closer to homeostasis goal than   
-				current series stored at this start state, overwrite. If no current series is stored
-				at this start state, store it regardless.
-				*/				
-				ssMatch=false;
-
-				if($RA.isAnFSUIDTree(fsUid)){
-					/*
-					If first state input and drive data, as well as second state motor output  are the same, store the memory
-					as weighted average of the two memories(same firstState and ss; es drive vals become
-					weighted average)
-
-					This handles the case where a previously optimal memory leads to a less optimal outcome, which 
-					should raise its cost for future queries. Also if stored outcome becomes more optimal,
-					increase fitness. 
-
-					It also simulates how behavior "hardens" as it is carried out more and more often
-					by using a weighted average that increases with number of ct (collisions count).
-					The averaging step is weighted in favor of the existing drive es,
-					based on how many ss ct have occurred. The more ct, the more the
-					averaging step is weighted towards the existing drive es. This requires storing an 
-					extra number holding the ss collision count, reset every time new ss and es
-					is selected (as opposed to non-weighted average).
-
-					Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
-					by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
-					*/		
-
-					/*
-					Note that we are comparing second state output stimuli here (the ss[1].id). If the buffer and stored memory
-					have the same output values at their second state, average their drive values. This is a way of
-					saying, "we started at the same state. The next step's output was also the same. These are 
-					effectively the same actions taken by the agent, so average their resulting drive scores."
-					*/
-
-					var ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
-					ssMatch = $RA.hasOutputBeenExperienced(fsUid, ssUid);
-
-					// note that this logical branch gets called by far the most out of the three.
-					// first and second states match. perform weighted average operation.
-					if( ssMatch ){
-						var storedStm = $RA.getStoredStimuli(fsUid, ssUid);
-						var bufferGoalDist = avg;
-						var esGoalDist = storedStm.es.stm.slice();
-						storedStm.ct++;
-						//clamp upper bound to keep memory from getting too 'stuck'
-						if(storedStm.ct>maxCollisions)
-							storedStm.ct=maxCollisions;
-
-						//iterate over buffer stimuli, and do a weighted averaging with esGoalDist to determine scores 
-						for(var j=0;j<bufferGoalDist.stm.length;j++){
-							var ct=storedStm.ct;
-							// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
-							//TODO: balance weight with number ct better
-							var temporalWeight = ((size - 2) / (height - 2)) * .1; //gives a range of 0 to 1, times multiplier
-							//var temporalWeight =( 1 - ((size - 2) / (height - 2)) ) * .01 //longterm planning gets precedence
-							esGoalDist[j]= ((esGoalDist[j] * (ct) ) + bufferGoalDist.stm[j]  + temporalWeight) / (ct + 1);
+						//loop over each index, dividing by total number of values. gives average drive values over time series.
+						for(k=0;k<avg.stm.length;k++){
+							avg.stm[k] = avg.stm[k]/temporalDist;
 						}
-						var args = [0, homeostasisGoal.length].concat(esGoalDist);
-						//replace existing endstate stimuli with updated values
-						Array.prototype.splice.apply(storedStm.es.stm, args);	
-						//console.log('existing memory updated');
-						
-						//update sqdist of endstate from drive goals
-						storedStm.sd= sqDist(storedStm.es.stm, homeostasisGoal);
-
-						//delete from tree and insert in again to re-order;
-						//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
-						$RA.update(fsUid, storedStm);
 					} else {
-						/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
-							than the highest score in this fsUid's tree, get rid of the high score and replace with this.
-						*/
-						sd1= sqDist(avg.stm.slice(), homeostasisGoal);
-						maxTreeNode=$RA.max(fsUid);
-						sd2 = maxTreeNode.sd;
-						//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
-
-						if(sd1 < sd2){
-							//replace the currently stored memory with the better-scoring buffer counterpart
-							var insertedNode = {
-								fs:buffer[fs],
-								ss:buffer[ss],
-								es:avg,
-								ct:0,
-								sd:sd1,
-								tdist:size
-							};
-							ssUid = IhtaiUtils.getSSUid(maxTreeNode.ss, maxTreeNode.tdist);
-
-							if($RA.getFSUIDTreeSize(fsUid) >= candidatePoolSize) {
-								try {
-									$RA.del(fsUid,  maxTreeNode);
-									// delete maxTreeNode from lookup table
-									$RA.delSSID(fsUid, ssUid);
-								} catch(e) { debugger; }
-							}
-							$RA.insert(fsUid, insertedNode);
-							// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
-							ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
-							$RA.setStoredStimuli(fsUid, ssUid, insertedNode)
-						}	
-					}	
-				}
-				else {
-					//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
-					//console.log('new memory created')
-
+						avg={stm:buffer[es][DRIVES].stm.slice()};
+					}
+					
+					////////////////////////////////////////////////				
+					
 					/*
-					no tree currently exists for this fsUid. Create one, add memory to tree, add reference to ssIdTables
-					*/
+					If series' end state is closer to homeostasis goal than   
+					current series stored at this start state, overwrite. If no current series is stored
+					at this start state, store it regardless.
+					*/				
+					ssMatch=false;
 
-					var insertedNode = {
-						fs: buffer[fs], 
-						ss: buffer[ss],
-						es: avg,
-						ct: 0,
-						sd: sqDist(avg.stm, homeostasisGoal),
-						tdist: size
-					}
-					$RA.createTable(fsUid);
-					$RA.insert(fsUid, insertedNode);
+					$RA.isAnFSUIDTree(fsUid).then( isAnFSUIDTree => {
+						if(isAnFSUIDTree) {
+							/*
+							If first state input and drive data, as well as second state motor output  are the same, store the memory
+							as weighted average of the two memories(same firstState and ss; es drive vals become
+							weighted average)
 
-					if(!$RA.doesSSIDTableExist(fsUid)) {
-						$RA.createSSIDTable(fsUid);
-					}
+							This handles the case where a previously optimal memory leads to a less optimal outcome, which 
+							should raise its cost for future queries. Also if stored outcome becomes more optimal,
+							increase fitness. 
 
-					ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
-					$RA.insertSSID(fsUid, ssUid, insertedNode);
+							It also simulates how behavior "hardens" as it is carried out more and more often
+							by using a weighted average that increases with number of ct (collisions count).
+							The averaging step is weighted in favor of the existing drive es,
+							based on how many ss ct have occurred. The more ct, the more the
+							averaging step is weighted towards the existing drive es. This requires storing an 
+							extra number holding the ss collision count, reset every time new ss and es
+							is selected (as opposed to non-weighted average).
 
-					/* Note that we don't need to check the candidatePoolSize here for a 
-					   possible deletion because this is a brand new tree. */
+							Note that I am creating copies of all arrays as of 3/6/15. This is because although storing them
+							by reference to clusters is more memory efficient, editing the cluster vals here was breaking the kd tree.
+							*/		
+
+							/*
+							Note that we are comparing second state output stimuli here (the ss[1].id). If the buffer and stored memory
+							have the same output values at their second state, average their drive values. This is a way of
+							saying, "we started at the same state. The next step's output was also the same. These are 
+							effectively the same actions taken by the agent, so average their resulting drive scores."
+							*/
+
+							var ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
+
+							$RA.hasOutputBeenExperienced(fsUid, ssUid).then( ssMatch => {
+								// note that this logical branch gets called by far the most out of the three.
+								// first and second states match. perform weighted average operation.
+								if( ssMatch ){
+									$RA.getStoredStimuli(fsUid, ssUid).then( storedStm => {
+										var bufferGoalDist = avg;
+										var esGoalDist = storedStm.es.stm.slice();
+										storedStm.ct++;
+										//clamp upper bound to keep memory from getting too 'stuck'
+										if(storedStm.ct>maxCollisions)
+											storedStm.ct=maxCollisions;
+
+										//iterate over buffer stimuli, and do a weighted averaging with esGoalDist to determine scores 
+										for(var j=0;j<bufferGoalDist.stm.length;j++){
+											var ct=storedStm.ct;
+											// when short temporal dist, shrink influence of existing goal distance values. when long, increase influence
+											//TODO: balance weight with number ct better
+											var temporalWeight = ((size - 2) / (height - 2)) * .1; //gives a range of 0 to 1, times multiplier
+											//var temporalWeight =( 1 - ((size - 2) / (height - 2)) ) * .01 //longterm planning gets precedence
+											esGoalDist[j]= ((esGoalDist[j] * (ct) ) + bufferGoalDist.stm[j]  + temporalWeight) / (ct + 1);
+										}
+										var args = [0, homeostasisGoal.length].concat(esGoalDist);
+										//replace existing endstate stimuli with updated values
+										Array.prototype.splice.apply(storedStm.es.stm, args);	
+										//console.log('existing memory updated');
+										
+										//update sqdist of endstate from drive goals
+										storedStm.sd= sqDist(storedStm.es.stm, homeostasisGoal);
+
+										//delete from tree and insert in again to re-order;
+										//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
+										$RA.update(fsUid, storedStm).then( result => {
+											resolve(true);
+										});
+									});
+								} else {
+									/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
+										than the highest score in this fsUid's tree, get rid of the high score and replace with this.
+									*/
+									sd1= sqDist(avg.stm.slice(), homeostasisGoal);
+
+									Promise.all( [$RA.max(fsUid), $RA.getFSUIDTreeSize(fsUid)] ).then( values => {
+										var maxTreeNode = values[0];
+										var treeSize = values[1];
+										sd2 = maxTreeNode.sd;
+										//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
+
+										if(sd1 < sd2){
+											//replace the currently stored memory with the better-scoring buffer counterpart
+											var insertedNode = {
+												fs:buffer[fs],
+												ss:buffer[ss],
+												es:avg,
+												ct:0,
+												sd:sd1,
+												tdist:size
+											};
+											ssUid = IhtaiUtils.getSSUid(maxTreeNode.ss, maxTreeNode.tdist);
+
+											if(treeSize >= candidatePoolSize) {
+													$RA.del(fsUid,  maxTreeNode).then( result => {
+														// delete maxTreeNode from lookup table
+														$RA.delSSID(fsUid, ssUid).then( result => {
+															$RA.insert(fsUid, insertedNode).then( result => {
+																// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
+																ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
+																$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
+																	resolve(true);
+																});
+															});
+														});
+													});
+											}
+											else {
+												$RA.insert(fsUid, insertedNode).then( result => {
+													// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
+													ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
+													$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
+														resolve(true);
+													});
+												});
+											}
+										}	
+									});
+								}	
+							});
+						}
+						else {
+							//no pre-existing memory using this key. add memory series to level. Hash based on starting state cluster id.
+							//console.log('new memory created')
+
+							/*
+							no tree currently exists for this fsUid. Create one, add memory to tree, add reference to ssIdTables
+							*/
+
+							var insertedNode = {
+								fs: buffer[fs], 
+								ss: buffer[ss],
+								es: avg,
+								ct: 0,
+								sd: sqDist(avg.stm, homeostasisGoal),
+								tdist: size
+							}
+							$RA.createTable(fsUid).then( result => {
+								Promise.all( [$RA.insert(fsUid, insertedNode), $RA.doesSSIDTableExist(fsUid)] ).then( result => {
+									var doesSSIDTableExist = result[1];
+									if(!doesSSIDTableExist(fsUid)) {
+										$RA.createSSIDTable(fsUid).then( result => {
+											ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
+											$RA.insertSSID(fsUid, ssUid, insertedNode).then( result => {
+												resolve(true);
+											});
+
+											/* Note that we don't need to check the candidatePoolSize here for a 
+											   possible deletion because this is a brand new tree. */
+										});
+									}
+									else {
+										ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
+										$RA.insertSSID(fsUid, ssUid, insertedNode).then( result => {
+											resolve(true);
+										});
+
+										/* Note that we don't need to check the candidatePoolSize here for a 
+										   possible deletion because this is a brand new tree. */
+									}
+								});
+							});
+						}
+					});
 				}
 			}
-		}
+		});
 	}
 
 	function sqDist(a, b){

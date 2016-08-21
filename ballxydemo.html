@@ -275,55 +275,54 @@
             [headVelocityX, headVelocityY, headPosX, headPosY, dt], //input stm
             [moveDirX, moveDirY] //last output stim, try removing
         ];
-        var res;
 
-        res=ihtai.cycle(inputStm, dt*1000);
+        ihtai.cycle(inputStm, dt*1000).then( res => {
+            var tDist = res.memorizerOutput.temporalDistance;
 
-        var tDist = res.memorizerOutput.temporalDistance;
+            //////// apply forces based on ihtai response ////////
+            var stimResult = res.memorizerOutput.nextActionMemory;
 
-        //////// apply forces based on ihtai response ////////
-        var stimResult = res.memorizerOutput.nextActionMemory;
+            var rand
+            var randDirX = normalize(getRandomMoveDir());
+            var randDirY = normalize(getRandomMoveDir());
 
-        var rand
-        var randDirX = normalize(getRandomMoveDir());
-        var randDirY = normalize(getRandomMoveDir());
+            /*
+            If a memory chain with current random action already exists, act on best memory no matter what.
+            */
+            //dividing by larger num makes it more likely to act on memory
+            if(stimResult != null && Math.random() > res.memorizerOutput.sd/20/*170*/ && head.position[1] < 100 ) {
+                console.log('act on memory');
+                console.log('PREDICTION TDIST: ' + tDist);
+                //console.log('head pos: '+ head.position[1]);
+                console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
+                //handle movement conditions
+                moveDirX = stimResult[OUTPUT].stm[0];
+                moveDirY = stimResult[OUTPUT].stm[1];
+            }
+            else{
+                console.log('act on reflex')
+                moveDirX = randDirX;
+                moveDirY = randDirY;
 
-        /*
-        If a memory chain with current random action already exists, act on best memory no matter what.
-        */
-        //dividing by larger num makes it more likely to act on memory
-        if(stimResult != null && Math.random() > res.memorizerOutput.sd/20/*170*/ && head.position[1] < 100 ) {
-            console.log('act on memory');
-            console.log('PREDICTION TDIST: ' + tDist);
-            //console.log('head pos: '+ head.position[1]);
-            console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
-            //handle movement conditions
-            moveDirX = stimResult[OUTPUT].stm[0];
-            moveDirY = stimResult[OUTPUT].stm[1];
-        }
-        else{
-            console.log('act on reflex')
-            moveDirX = randDirX;
-            moveDirY = randDirY;
+            }
 
-        }
+            //console.log('Move DirX: ' + moveDirX);
+            //console.log('Move DirY: ' + moveDirY);
+            lastSD = res.memorizerOutput.sd;
 
-        //console.log('Move DirX: ' + moveDirX);
-        //console.log('Move DirY: ' + moveDirY);
-        lastSD = res.memorizerOutput.sd;
+            var moveDirXOutput = moveDirX === 100 ? -1 : 1;
+            var moveDirYOutput = moveDirY === 100 ? -1 : 1;
+            //apply forces on body parts
+            head.applyForce([moveDirXOutput * 10, moveDirYOutput * 30],[0,0]);
 
-        var moveDirXOutput = moveDirX === 100 ? -1 : 1;
-        var moveDirYOutput = moveDirY === 100 ? -1 : 1;
-        //apply forces on body parts
-        head.applyForce([moveDirXOutput * 10, moveDirYOutput * 30],[0,0]);
+            // Move physics bodies forward in time
+            //world.step(timeStep, dt, maxSubSteps);
+            world.step(timeStep, 0, maxSubSteps);
 
-        // Move physics bodies forward in time
-        //world.step(timeStep, dt, maxSubSteps);
-        world.step(timeStep, 0, maxSubSteps);
-
-        // Render scene
-        render();
-        lastTime = t / 1000;
+            // Render scene
+            render();
+            lastTime = t / 1000;
+        });
     }
 
     function drawBox(body){
