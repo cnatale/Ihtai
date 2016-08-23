@@ -695,30 +695,36 @@ var Memorizer = (function(bundle){
 			var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
 			var tdist;
 
-			Promise.all( [$RA.isAnFSUIDTree(combinedClustersId), $RA.min(combinedClustersId)] ).then( values => {
-				var isAnFSUIDTree = values[0];
-				var min = values[1];
-
+			$RA.isAnFSUIDTree(combinedClustersId).then( isAnFSUIDTree => {
 				if(isAnFSUIDTree){
-					tdist = min.tdist;
-					// console.log('selected query fs uid: ' + IhtaiUtils.toCombinedStmUID(min.fs));
-					var sd= min.sd;
-					if(sd <= acceptableRange){
-						// console.log('min.ss: '+min.ss);
-						// console.log('min.es:'+min.es);
-						// console.log('min.sd:'+min.sd);
-						// console.log('acceptablerange:'+acceptableRange);
-						//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
+					$RA.min(combinedClustersId).then( min => {
+						tdist = min.tdist;
+						// console.log('selected query fs uid: ' + IhtaiUtils.toCombinedStmUID(min.fs));
+						var sd= min.sd;
+						if(sd <= acceptableRange){
+							// console.log('min.ss: '+min.ss);
+							// console.log('min.es:'+min.es);
+							// console.log('min.sd:'+min.sd);
+							// console.log('acceptablerange:'+acceptableRange);
+							//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
 
-						nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
-					}
+							nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
+						}
+
+						resolve ({
+							nextActionMemory: nextActionMemory, 
+							sd: sd, 
+							temporalDistance: tdist
+						});
+					})
 				}
-
-				resolve ({
-					nextActionMemory: nextActionMemory, 
-					sd: sd, 
-					temporalDistance: tdist
-				});
+				else {
+					resolve ({
+						nextActionMemory: nextActionMemory, 
+						sd: sd, 
+						temporalDistance: tdist
+					});	
+				}
 			});
 		});
 
@@ -943,7 +949,7 @@ var Memorizer = (function(bundle){
 							$RA.createTable(fsUid).then( result => {
 								Promise.all( [$RA.insert(fsUid, insertedNode), $RA.doesSSIDTableExist(fsUid)] ).then( result => {
 									var doesSSIDTableExist = result[1];
-									if(!doesSSIDTableExist(fsUid)) {
+									if(!doesSSIDTableExist) {
 										$RA.createSSIDTable(fsUid).then( result => {
 											ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
 											$RA.insertSSID(fsUid, ssUid, insertedNode).then( result => {

@@ -93,6 +93,9 @@ var RedBlackTree  = (function RedBlackTree(){
 		return node;
 	}
 	function min(T, node){
+		if(node.left === null)
+			debugger;
+
 		while(node.left[T.keyName] !== null){
 			node = node.left;
 		}

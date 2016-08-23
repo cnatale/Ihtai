@@ -54,7 +54,8 @@ var RedBlackTreeAdapter = (function() {
 		return new Promise (
 			function(resolve, reject) {
 				$R.del( fsUidTrees[tableId], nodeToUpdate );
-				resolve($R.insert( fsUidTrees[tableId], nodeToUpdate ));
+				$R.insert( fsUidTrees[tableId], nodeToUpdate );
+				resolve(true);
 		});
 	}
 
