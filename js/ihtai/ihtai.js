@@ -280,11 +280,11 @@ var Ihtai = (function(bundle){
 
 			//cycle memorizer	
 			if(_enableMemories){
-				memorizerOutput=memorizer.query(curClusters).then( result => {
+				memorizerOutput=memorizer.query(curClusters).then( memorizerOutputResult => {
 					memorizer.memorize(curClusters).then( result => {
 						//send reflex output and memorizer output back to ai agent
 						resolve({
-							memorizerOutput:memorizerOutput,
+							memorizerOutput:memorizerOutputResult,
 							drivesOutput:drivesOutput,
 							curClusters:curClusters
 						});
@@ -680,7 +680,10 @@ var Memorizer = (function(bundle){
 			function(val) {
 				return val;
 			}
-		);
+		)
+		.catch( err => {
+			debugger;
+		})
 	}
 
 	/**
@@ -710,12 +713,14 @@ var Memorizer = (function(bundle){
 
 							nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
 						}
-
 						resolve ({
 							nextActionMemory: nextActionMemory, 
 							sd: sd, 
 							temporalDistance: tdist
 						});
+					})
+					.catch( err => {
+						debugger;
 					})
 				}
 				else {
@@ -725,7 +730,10 @@ var Memorizer = (function(bundle){
 						temporalDistance: tdist
 					});	
 				}
-			});
+			})
+			.catch( err => {
+				debugger;
+			})
 		});
 
 	}
@@ -759,7 +767,7 @@ var Memorizer = (function(bundle){
 				vector data).
 			*/
 			//fs=firstState, ss=secondState, es=endState
-			var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
+			// var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
 			//update the buffer
 			buffer.push(clusters);
 			if(buffer.length>height)
@@ -767,7 +775,33 @@ var Memorizer = (function(bundle){
 			/*
 			Iterate through each temporal dist level, and add memory to tree if sq distance is less than highest sq dist in tree, or tree isn't full. 
 			*/
+			var promises = [];
 			for(var i=0; i<height; i++){
+				/////////////////
+				/*
+				TODO: turn what's inside this loop into a function that returns a promise, and takes 
+				a param which is the current i value. Populate an array of Promises, then end method on
+				promise.all() resolution.
+				*/
+				/////////////////
+				promises.push( memorizerIteration(i) );
+			}
+
+			Promise.all(promises).then( values => {
+				resolve(true);
+			})
+			.catch( err => {
+				debugger;
+			})
+		});
+	}
+
+
+	function memorizerIteration (i) {
+		return new Promise(
+			function(resolve) {
+				var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
+
 				size=i+2;
 				//Once we have a buffer full enough for this level, attempt to add a memory every cycle
 				if(buffer.length>=size && size<=height){
@@ -780,6 +814,7 @@ var Memorizer = (function(bundle){
 
 					// TODO: if we're in avg mode, we don't need to do anything except on the last step of the height
 					// before then just run an accumulator
+
 					if(distanceAlgo == "avg"){
 						for( var j=ss; j<=es; j++ ){
 							temporalDist++;
@@ -876,8 +911,14 @@ var Memorizer = (function(bundle){
 										//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
 										$RA.update(fsUid, storedStm).then( result => {
 											resolve(true);
-										});
-									});
+										})
+										.catch( err => {
+											debugger;
+										})
+									})
+									.catch( err => {
+										debugger;
+									})
 								} else {
 									/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
 										than the highest score in this fsUid's tree, get rid of the high score and replace with this.
@@ -901,7 +942,7 @@ var Memorizer = (function(bundle){
 												tdist:size
 											};
 											ssUid = IhtaiUtils.getSSUid(maxTreeNode.ss, maxTreeNode.tdist);
-
+											// OK
 											if(treeSize >= candidatePoolSize) {
 													$RA.del(fsUid,  maxTreeNode).then( result => {
 														// delete maxTreeNode from lookup table
@@ -911,10 +952,22 @@ var Memorizer = (function(bundle){
 																ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
 																$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
 																	resolve(true);
-																});
-															});
-														});
-													});
+																})
+																.catch( err => {
+																	debugger;
+																})
+															})
+															.catch( err => {
+																debugger;
+															})
+														})
+														.catch( err => {
+															debugger;
+														})
+													})
+													.catch( err => {
+														debugger;
+													})
 											}
 											else {
 												$RA.insert(fsUid, insertedNode).then( result => {
@@ -922,12 +975,27 @@ var Memorizer = (function(bundle){
 													ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
 													$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
 														resolve(true);
-													});
-												});
+													})
+													.catch( err => {
+														debugger;
+													})
+												})
+												.catch( err => {
+													debugger;
+												})
 											}
+										}
+										else {
+											resolve(true);
 										}	
-									});
+									})
+									.catch( err => {
+										debugger;
+									})
 								}	
+							})
+							.catch( err => {
+								debugger;
 							});
 						}
 						else {
@@ -954,29 +1022,52 @@ var Memorizer = (function(bundle){
 											ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
 											$RA.insertSSID(fsUid, ssUid, insertedNode).then( result => {
 												resolve(true);
-											});
+											})
+											.catch( err => {
+												debugger;
+											})
 
 											/* Note that we don't need to check the candidatePoolSize here for a 
 											   possible deletion because this is a brand new tree. */
+										})
+										.catch( err => {
+											debugger;
 										});
 									}
 									else {
 										ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
 										$RA.insertSSID(fsUid, ssUid, insertedNode).then( result => {
 											resolve(true);
-										});
+										})
+										.catch( err => {
+											debugger;
+										})
 
 										/* Note that we don't need to check the candidatePoolSize here for a 
 										   possible deletion because this is a brand new tree. */
 									}
-								});
-							});
+								})
+								.catch( err => {
+									debugger;
+								})
+							})
+							.catch( err => {
+								debugger;
+							})
 						}
+					})
+					.catch( err => {
+						debugger;
 					});
 				}
-			}
+				else {
+					// resolve to true because no promise branches will be triggered
+					resolve (true);
+				}
+
 		});
 	}
+
 
 	function sqDist(a, b){
 		var d=0;

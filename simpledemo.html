@@ -105,8 +105,6 @@
     });
 
     function mainLoop(t){
-        requestAnimationFrame(mainLoop)
-
         //first index is sensory input array, second is sensory output (action) array from last cycle
         var inputStm=[
             [ihtaiNum],
@@ -136,8 +134,13 @@
             if(ihtaiNum > 20) ihtaiNum = 20;
             //console.log('PREDICTED SD after action: ' + res.memorizerOutput.sd)
             //console.log(lastMoveDir);
-            ihtaiNumElm.innerHTML = 'IHTAI: ' + String(ihtaiNum);       
-        });
+            ihtaiNumElm.innerHTML = 'IHTAI: ' + String(ihtaiNum);
+
+            setTimeout( mainLoop, 33); 
+        })
+        .catch(err => {
+            debugger;
+        })
     }
 
     mainLoop();            
