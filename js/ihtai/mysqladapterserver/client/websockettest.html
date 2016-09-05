@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <title>Chat example</title>
+<script src='websocket-promise-bundle.js'></script>
 <script>
-var connection
+/* var connection
 window.addEventListener("load", function () {
 	var nickname = prompt("Choose a nickname")
 	if (nickname) {
@@ -32,13 +33,26 @@ window.addEventListener("load", function () {
 			document.body.appendChild(div)
 		}
 	}
-})
+})*/
+
+
+
+
+var Connection = new WebSocketP("ws://localhost:8090")
+setTimeout(function() {
+	Connection.request("Hello", "World").then(function(Response){
+	  console.log(Response) // "World"
+	})
+}, 500);
+
+
+
 </script>
 </head>
 
 <body>
-<form id="form">
-Message: <input size="50" id="msg"> <input type="submit" value="Submit">
+<!-- <form id="form">
+Message: <input size="50" id="msg"> <input type="submit" value="Submit"> -->
 </form>
 </body>
 </html>

@@ -1,3 +1,7 @@
+/**
+	The server side db request protocol methods.
+*/
+
 var http = require("http")
 var ws = require("nodejs-websocket")
 var fs = require("fs")
@@ -5,24 +9,41 @@ var finalhandler = require('finalhandler');
 var serveStatic = require('serve-static');
 var serve = serveStatic("./");
 var mysql = require('mysql');
+var WebSocketP = require('websocket-promise');
 
-var mysqlConnection = mysql.createConnection({
+// connect to mysql db
+mysqlConnection: mysql.createConnection({
 	multipleStatements: true,
 	user     : 'root',
 	password : 'bianco',
 	database : 'ihtai'
 });
 
+// create socket server instance
+var Server = new WebSocketP({port: 8090});
+Server.onConnection(function(Client){
+	// instantiation logic goes here
+
+
+
+	Client.on('Hello', function(Job){
+   		console.log(Job.Message) // "World"
+    	Job.Response = 'World'
+	});
+});
+console.log('listening to port 8090');
+
+
 // TODO: write db queries that reproduce the behavior of redblacktreeadapter, then send data back to client.
 // mysqladapter is dumb in that it just ferries requests and receives responses 
 var protocolMethods = {
 	insert: function(tableId, nodeToAdd) {
 		//TODO: convert 
-		$R.insert( fsUidTrees[tableId], nodeToAdd );
-		mysqlConnection.query('CREATE TABLE ' + str + '(PersonID int);', function(err, rows, fields) {
+		// $R.insert( fsUidTrees[tableId], nodeToAdd );
+		/* mysqlConnection.query('CREATE TABLE ' + str + '(PersonID int);', function(err, rows, fields) {
 			if (err) throw err;
 			// console.log('The solution is: ', rows[0].solution);
-		});
+		}); */
 	},
 	insertSSID: function(fsUid, ssUid, nodeToAdd) {
 
@@ -95,61 +116,67 @@ var protocolMethods = {
 	}
 }
 
-/*
-	protocol format:
-	{
-		opName: String,
-		params: []
-	}
-*/
-
-function stringToOp(str) {
-	var jsonObj = JSON.parse(str);
-	if (protocolMethods.hasOwnProperty(jsonObj.opName)) {
-		protocolMethods[str.opName].apply(this, jsonObj.params);
-	}
-	else {
-		throw 'Error: no op by this name';
-	}
-}
-
-var server = ws.createServer(function (connection) {
-	connection.on("text", function (str) {
-		stringToOp(str);
+module.exports = protocolMethods;
 
 
-		if (connection.nickname === null) {
-			connection.nickname = str
-			broadcast(str+" entered")
-		} else {
 
-			///////////
-			mysqlConnection.query('CREATE TABLE ' + str + '(PersonID int);', function(err, rows, fields) {
-			
-			  if (err) throw err;
-			  // console.log('The solution is: ', rows[0].solution);
-			});
-			////////////
-
-			broadcast("["+connection.nickname+"] "+str)
+	// this may not be necessary with the new socket promise api
+	/*
+		protocol format:
+		{
+			opName: String,
+			params: []
 		}
-	})
-	connection.on("close", function (code, reason) {
-		broadcast(connection.nickname+" left")
-	})
-})
-server.listen(8081)
+	*/
 
-function broadcast(str) {
-	server.connections.forEach(function (connection) {
-		connection.sendText(str)
+	/* stringToOp: function(str) {
+		var jsonObj = JSON.parse(str);
+		if (protocolMethods.hasOwnProperty(jsonObj.opName)) {
+			protocolMethods[str.opName].apply(this, jsonObj.params);
+		}
+		else {
+			throw 'Error: no op by this name';
+		}
+	},*/
+
+	/* var server = ws.createServer(function (connection) {
+		connection.on("text", function (str) {
+			stringToOp(str);
+
+
+			if (connection.nickname === null) {
+				connection.nickname = str
+				broadcast(str+" entered")
+			} else {
+
+				///////////
+				mysqlConnection.query('CREATE TABLE ' + str + '(PersonID int);', function(err, rows, fields) {
+				
+				  if (err) throw err;
+				  // console.log('The solution is: ', rows[0].solution);
+				});
+				////////////
+
+				broadcast("["+connection.nickname+"] "+str)
+			}
+		})
+		connection.on("close", function (code, reason) {
+			broadcast(connection.nickname+" left")
+		})
 	})
-}
+	server.listen(8081)
 
-// serve the static html files
-var staticServer = http.createServer(function(req, res) {
-  var done = finalhandler(req, res);
-  serve(req, res, done);
-});
+	function broadcast(str) {
+		server.connections.forEach(function (connection) {
+			connection.sendText(str)
+		})
+	}
 
-staticServer.listen(8000);
+	// serve the static html files
+	var staticServer = http.createServer(function(req, res) {
+	  var done = finalhandler(req, res);
+	  serve(req, res, done);
+	});
+
+	staticServer.listen(8000);
+	*/

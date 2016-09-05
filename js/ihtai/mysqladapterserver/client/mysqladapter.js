@@ -1,17 +1,10 @@
-var RedBlackTreeAdapter = (function() {
+var MysqlAdapter = (function() {
 	/*
-	Things we need to store:
+	The client side db request protocol methods.
 
-	fsUidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
-
-	fsUidTrees: searcheable collections of memory chains, keyed off first state uid.
-		schema: each tree is keyed off dist from ideal drive state
-
-		
-	ssIdTables schema: each key is a memory uid that references:
-		-a hash table where each key is a second state output stimuli id for a memory chain, which references
-		 a uidTree node from the tree with the same memory uid as this table's key.
-
+	This client is 'dumb'. All it does is create a socket connection to server,
+	ferry requests to server using said socket connection, and return promises
+	that resolve to the socket method's response.
 	*/
 
 	FSUID_TABLES = 'fsUidTrees';

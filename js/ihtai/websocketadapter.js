@@ -1,5 +1,12 @@
-var RedBlackTreeAdapter = (function() {
+var WebsocketAdapter = (function() {
 	/*
+	Creates websocket connection to api server. This allows for myriad server side storage options,
+	so long as they obey the protocol.
+
+	To start with, mysqladapterserver will support this protocol
+
+	Protocol will use api method names that are identical to adapter method names
+
 	Things we need to store:
 
 	fsUidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
