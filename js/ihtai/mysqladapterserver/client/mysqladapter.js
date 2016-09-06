@@ -10,99 +10,76 @@ var MysqlAdapter = (function() {
 	FSUID_TABLES = 'fsUidTrees';
 	SSID_TABLES = 'ssIdTables';
 	var fsUidTrees = {}, ssIdTables = {};
-	var connection;
+	var Connection;
 
 	function init() {
-		// initialize websocket connection
-		connection = new WebSocket("ws://"+window.location.hostname+":8081");
-		connection.onopen = function () {
-			console.log("Connection opened")
-		}
-		connection.onclose = function () {
-			console.log("Connection closed")
-		}
-		connection.onerror = function () {
-			console.error("Connection error")
-		}
-		connection.onmessage = function (event) {
-			/*var div = document.createElement("div")
-			div.textContent = event.data
-			document.body.appendChild(div)
-			*/
-		}
+		Connection = new WebSocketP("ws://localhost:8090");
+		console.log('initializing mysqladapter');
 	}
 	init();
 
 	function insert(tableId, nodeToAdd) {
-		$R.insert( fsUidTrees[tableId], nodeToAdd );
+		return MysqlAdapter.Connection.request("insert", [tableId, nodeToAdd]);
 	}
 
 	function insertSSID(fsUid, ssUid, nodeToAdd) {
-		ssIdTables[fsUid][ssUid] = nodeToAdd;
+		return MysqlAdapter.Connection.request("insertSSID", [fsUid, ssUid, nodeToAdd]);
 	}
 
 	function del(tableId, nodeToDelete) {
-		$R.del( fsUidTrees[tableId], nodeToDelete );
-		return true;
+		return MysqlAdapter.Connection.request("del", [tableId, nodeToDelete]);
 	}
 
 	function delSSID(fsUid, ssUid) {
-		delete ssIdTables[fsUid][ssUid];
+		return MysqlAdapter.Connection.request("delSSID", [fsUid, ssUid]);
 	}
 
 	function update(tableId, nodeToUpdate) {
-		$R.del( fsUidTrees[tableId], nodeToUpdate );
-		return $R.insert( fsUidTrees[tableId], nodeToUpdate );
+		return MysqlAdapter.Connection.request("update", [tableId, nodeToUpdate]);
 	}
 
 	function min(tableId) {
-		return $R.min( fsUidTrees[tableId], fsUidTrees[tableId].root );
+		return MysqlAdapter.Connection.request("min", [tableId]);
 	}
 
 	function max(tableId) {
-		return $R.max( fsUidTrees[tableId], fsUidTrees[tableId].root );
+		return MysqlAdapter.Connection.request("max", [tableId]);
 	}
 
 	function createTable(tableId) {
-		// TODO: send request to server
-		connection.send( JSON.stringify({ opName:'createTable', params:tableId }) );
+		return MysqlAdapter.Connection.request("createTable", [tableId]);
 	}
 
 	function createSSIDTable(fsUid) {
-		// TODO: send request to server
-		connection.send( JSON.stringify({ opName: 'createSSIDTable', params:fsUid }) );
+		return MysqlAdapter.Connection.request("createSSIDTable", [fsUid]);
 	}
 
 	function hasOutputBeenExperienced(fsUid, ssUid) {
-		return ssIdTables[fsUid].hasOwnProperty(ssUid);
+		return MysqlAdapter.Connection.request("hasOutputBeenExperienced", [fsUid, ssUid]);
 	}
 
 	function getStoredStimuli(fsUid, ssUid) {
-		return ssIdTables[fsUid][ssUid];
+		return MysqlAdapter.Connection.request("getStoredStimuli", [fsUid, ssUid]);
 	}
 
 	function setStoredStimuli(fsUid, ssUid, nodeToStore) {
-		ssIdTables[fsUid][ssUid] = nodeToStore;
+		return MysqlAdapter.Connection.request("setStoredStimuli", [fsUid, ssUid, nodeToStore]);
 	}
 
 	function doesSSIDTableExist(fsUid) {
-		if (typeof ssIdTables[fsUid] === 'undefined' ) {
-			return false;
-		}
-		else {
-			return true;
-		}
+		return MysqlAdapter.Connection.request("doesSSIDTableExist", [fsUid]);
 	}
 
 	function getFSUIDTreeSize(fsUid) {
-		return fsUidTrees[fsUid].size;
+		return MysqlAdapter.Connection.request("getFSUIDTreeSize", [fsUid]);
 	}
 
 	function isAnFSUIDTree(fsUid) {
-		return fsUidTrees.hasOwnProperty(fsUid);
+		return MysqlAdapter.Connection.request("isAnFSUIDTree", [fsUid]);
 	}
 
 	return {
+		Connection: Connection,
 		FSUID_TABLES: FSUID_TABLES,
 		SSID_TABLES: SSID_TABLES,
 		insert: insert,
@@ -123,4 +100,4 @@ var MysqlAdapter = (function() {
 	}
 })();
 
-$RA = RedBlackTreeAdapter;
+var $MA = MysqlAdapter;

@@ -1,0 +1,76 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/Cellar/node/6.3.1/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'install',
+1 verbose cli   'node-inspector' ]
+2 info using npm@3.10.3
+3 info using node@v6.3.1
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readLocalPackageData
+7 silly fetchPackageMetaData node-inspector
+8 silly fetchNamedPackageData node-inspector
+9 silly mapToRegistry name node-inspector
+10 silly mapToRegistry using default registry
+11 silly mapToRegistry registry https://registry.npmjs.org/
+12 silly mapToRegistry data Result {
+12 silly mapToRegistry   raw: 'node-inspector',
+12 silly mapToRegistry   scope: null,
+12 silly mapToRegistry   escapedName: 'node-inspector',
+12 silly mapToRegistry   name: 'node-inspector',
+12 silly mapToRegistry   rawSpec: '',
+12 silly mapToRegistry   spec: 'latest',
+12 silly mapToRegistry   type: 'tag' }
+13 silly mapToRegistry uri https://registry.npmjs.org/node-inspector
+14 verbose request uri https://registry.npmjs.org/node-inspector
+15 verbose request no auth needed
+16 info attempt registry request try #1 at 4:04:36 PM
+17 verbose request using bearer token for auth
+18 verbose request id e74e58f230a7510b
+19 http request GET https://registry.npmjs.org/node-inspector
+20 info retry will retry, error on last attempt: Error: connect ETIMEDOUT 151.101.52.162:443
+21 info attempt registry request try #2 at 4:04:54 PM
+22 verbose request using bearer token for auth
+23 http request GET https://registry.npmjs.org/node-inspector
+24 info retry will retry, error on last attempt: Error: connect ETIMEDOUT 151.101.52.162:443
+25 info attempt registry request try #3 at 4:06:03 PM
+26 verbose request using bearer token for auth
+27 http request GET https://registry.npmjs.org/node-inspector
+28 silly fetchPackageMetaData Error: connect ETIMEDOUT 151.101.52.162:443
+28 silly fetchPackageMetaData     at Object.exports._errnoException (util.js:1012:11)
+28 silly fetchPackageMetaData     at exports._exceptionWithHostPort (util.js:1035:20)
+28 silly fetchPackageMetaData     at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1080:14)
+28 silly fetchPackageMetaData  error for node-inspector { Error: connect ETIMEDOUT 151.101.52.162:443
+28 silly fetchPackageMetaData     at Object.exports._errnoException (util.js:1012:11)
+28 silly fetchPackageMetaData     at exports._exceptionWithHostPort (util.js:1035:20)
+28 silly fetchPackageMetaData     at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1080:14)
+28 silly fetchPackageMetaData   code: 'ETIMEDOUT',
+28 silly fetchPackageMetaData   errno: 'ETIMEDOUT',
+28 silly fetchPackageMetaData   syscall: 'connect',
+28 silly fetchPackageMetaData   address: '151.101.52.162',
+28 silly fetchPackageMetaData   port: 443 }
+29 silly rollbackFailedOptional Starting
+30 silly rollbackFailedOptional Finishing
+31 silly runTopLevelLifecycles Starting
+32 silly runTopLevelLifecycles Finishing
+33 silly install printInstalled
+34 verbose stack Error: connect ETIMEDOUT 151.101.52.162:443
+34 verbose stack     at Object.exports._errnoException (util.js:1012:11)
+34 verbose stack     at exports._exceptionWithHostPort (util.js:1035:20)
+34 verbose stack     at TCPConnectWrap.afterConnect [as oncomplete] (net.js:1080:14)
+35 verbose cwd /Users/chrisnatale/Projects/Ihtai
+36 error Darwin 15.5.0
+37 error argv "/usr/local/Cellar/node/6.3.1/bin/node" "/usr/local/bin/npm" "install" "node-inspector"
+38 error node v6.3.1
+39 error npm  v3.10.3
+40 error code ETIMEDOUT
+41 error errno ETIMEDOUT
+42 error syscall connect
+43 error network connect ETIMEDOUT 151.101.52.162:443
+44 error network This is most likely not a problem with npm itself
+44 error network and is related to network connectivity.
+44 error network In most cases you are behind a proxy or have bad network settings.
+44 error network
+44 error network If you are behind a proxy, please make sure that the
+44 error network 'proxy' config is set properly.  See: 'npm help config'
+45 verbose exit [ 1, true ]
