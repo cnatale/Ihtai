@@ -276,7 +276,7 @@ var Ihtai = (function(bundle){
 			curClusters[2]=driveClusters.findNearestCluster(iostm[2]);
 
 			if(typeof drivesOutput=='undefined') debugger; //sanity test
-			//console.log('query cluster id: ' + curClusters[0].id + "+" + curClusters[1].id + "+" + curClusters[2].id);
+			//console.log('query cluster id: ' + curClusters[0].id + "_" + curClusters[1].id + "_" + curClusters[2].id);
 
 			//cycle memorizer	
 			if(_enableMemories){
@@ -709,7 +709,7 @@ var Memorizer = (function(bundle){
 							// console.log('min.es:'+min.es);
 							// console.log('min.sd:'+min.sd);
 							// console.log('acceptablerange:'+acceptableRange);
-							//console.log('selected cluster id: ' + min.ss[0].id + "+" + min.ss[1].id + "+" + min.ss[2].id);
+							//console.log('selected cluster id: ' + min.ss[0].id + "_" + min.ss[1].id + "_" + min.ss[2].id);
 
 							nextActionMemory = min.ss.slice(); //pass a copy so that if user edits outputstm, it doesn't affect copy stored in tree
 						}
@@ -740,7 +740,7 @@ var Memorizer = (function(bundle){
 
 	function getSSOutputId(mem, tdist) {
 		try {
-			return mem[OUTPUT].id /*+ '+' + tdist*/;
+			return mem[OUTPUT].id;
 		} catch(e) {
 			debugger;
 		}
@@ -808,7 +808,7 @@ var Memorizer = (function(bundle){
 					fs=buffer.length-size;
 					ss=buffer.length-size+1;
 					es=buffer.length-1;
-					fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]) /*+ '+' + size*/; //note that adding size prevents acting on memory for some reason. figure out why
+					fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]);
 
 					var avg=[], temporalDist=0;
 
@@ -948,7 +948,7 @@ var Memorizer = (function(bundle){
 														// delete maxTreeNode from lookup table
 														$RA.delSSID(fsUid, ssUid).then( result => {
 															$RA.insert(fsUid, insertedNode).then( result => {
-																// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
+																// ssUid = insertedNode.ss[INPUT].id + '_' + insertedNode.ss[OUTPUT].id + "_" + size;
 																ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
 																$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
 																	resolve(true);
@@ -971,7 +971,7 @@ var Memorizer = (function(bundle){
 											}
 											else {
 												$RA.insert(fsUid, insertedNode).then( result => {
-													// ssUid = insertedNode.ss[INPUT].id + '+' + insertedNode.ss[OUTPUT].id + "+" + size;
+													// ssUid = insertedNode.ss[INPUT].id + '_' + insertedNode.ss[OUTPUT].id + "_" + size;
 													ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
 													$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
 														resolve(true);

@@ -8,10 +8,13 @@
 <script>
 
 setTimeout(function() {
-	$MA.insert('1+3+4', 'a node').then(function(Response){
-	  console.log(Response) // "World"
-	})
-	
+	$MA.insert('t1_3_4', 'a node').then(function(Response){
+	  console.log(Response);
+	});
+
+	$MA.createTable('t1_3_4').then(function(Response){
+		console.log(Response);
+	});
 }, 500);
 
 </script>

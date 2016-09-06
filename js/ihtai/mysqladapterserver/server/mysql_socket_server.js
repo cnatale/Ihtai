@@ -6,8 +6,8 @@ var WebSocketP = require('websocket-promise');
 
 console.log('loading mysql_socket_server module');
 
-// connect to mysql db
-mysqlConnection: mysql.createConnection({
+// connect to mysql db, default port is 3306
+mysqlConnection = mysql.createConnection({
 	multipleStatements: true,
 	user     : 'root',
 	password : 'bianco',
@@ -56,11 +56,12 @@ var protocolMethods = {
 	insert: function(Job, tableId, nodeToAdd) {
 		//TODO: convert 
 		// $R.insert( fsUidTrees[tableId], nodeToAdd );
-		// mysqlConnection.query('CREATE TABLE ' + str + '(PersonID int);', function(err, rows, fields) {
-		//	if (err) throw err;
+		mysqlConnection.query('CREATE TABLE ' + tableId + '(PersonID int);', function(err, rows, fields) {
+			if (err) throw err;
 			// console.log('The solution is: ', rows[0].solution);
-		// }); 
-		Job.Response = 'insert response';
+			Job.Response = 'insert response';
+		}); 
+		
 	},
 	insertSSID: function(fsUid, ssUid, nodeToAdd) {
 

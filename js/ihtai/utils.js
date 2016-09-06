@@ -42,7 +42,7 @@ String.prototype.escapeSpecialChars = function() {
 };
 
 IhtaiUtils.toCombinedStmUID=function(clusters){
-	var combinedClustersId = clusters[0].id /*+ "+" + clusters[1].id*/ + "+" + clusters[2].id;
+	var combinedClustersId = 'cs' + clusters[0].id /*+ '_' + clusters[1].id*/ + '_' + clusters[2].id;
 	return combinedClustersId;		
 }
 
@@ -51,7 +51,7 @@ var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 Pass in second state memory and temporal distance, and get back a uid.
 */
 IhtaiUtils.getSSUid = function(mem, tdist) {
-	return /*mem[INPUT].id + '+' +*/ mem[OUTPUT].id /*+ '+' + mem[DRIVES].id */ + '+' + tdist;
+	return /*mem[INPUT].id + '_' +*/ 'ss' + mem[OUTPUT].id /*+ '_' + mem[DRIVES].id */ + '_' + tdist;
 }
 
 // code from http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
