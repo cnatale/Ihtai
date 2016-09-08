@@ -22,16 +22,16 @@ var MysqlAdapter = (function() {
 		return MysqlAdapter.Connection.request("insert", [tableId, nodeToAdd]);
 	}
 
-	function insertSSID(fsUid, ssUid, nodeToAdd) {
-		return MysqlAdapter.Connection.request("insertSSID", [fsUid, ssUid, nodeToAdd]);
+	function insertSSID(fsUid, actionUid, nodeToAdd) {
+		return MysqlAdapter.Connection.request("insertSSID", [fsUid, actionUid, nodeToAdd]);
 	}
 
 	function del(tableId, nodeToDelete) {
 		return MysqlAdapter.Connection.request("del", [tableId, nodeToDelete]);
 	}
 
-	function delSSID(fsUid, ssUid) {
-		return MysqlAdapter.Connection.request("delSSID", [fsUid, ssUid]);
+	function delSSID(fsUid, actionUid) {
+		return MysqlAdapter.Connection.request("delSSID", [fsUid, actionUid]);
 	}
 
 	function update(tableId, nodeToUpdate) {
@@ -54,16 +54,16 @@ var MysqlAdapter = (function() {
 		return MysqlAdapter.Connection.request("createSSIDTable", [fsUid]);
 	}
 
-	function hasOutputBeenExperienced(fsUid, ssUid) {
-		return MysqlAdapter.Connection.request("hasOutputBeenExperienced", [fsUid, ssUid]);
+	function hasOutputBeenExperienced(fsUid, actionUid) {
+		return MysqlAdapter.Connection.request("hasOutputBeenExperienced", [fsUid, actionUid]);
 	}
 
-	function getStoredStimuli(fsUid, ssUid) {
-		return MysqlAdapter.Connection.request("getStoredStimuli", [fsUid, ssUid]);
+	function getStoredStimuli(fsUid, actionUid) {
+		return MysqlAdapter.Connection.request("getStoredStimuli", [fsUid, actionUid]);
 	}
 
-	function setStoredStimuli(fsUid, ssUid, nodeToStore) {
-		return MysqlAdapter.Connection.request("setStoredStimuli", [fsUid, ssUid, nodeToStore]);
+	function setStoredStimuli(fsUid, actionUid, nodeToStore) {
+		return MysqlAdapter.Connection.request("setStoredStimuli", [fsUid, actionUid, nodeToStore]);
 	}
 
 	function doesSSIDTableExist(fsUid) {

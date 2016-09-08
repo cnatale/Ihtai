@@ -36,8 +36,8 @@ var WebsocketAdapter = (function() {
 		$R.insert( fsUidTrees[tableId], nodeToAdd );
 	}
 
-	function insertSSID(fsUid, ssUid, nodeToAdd) {
-		ssIdTables[fsUid][ssUid] = nodeToAdd;
+	function insertSSID(fsUid, actionUid, nodeToAdd) {
+		ssIdTables[fsUid][actionUid] = nodeToAdd;
 	}
 
 	function del(tableId, nodeToDelete) {
@@ -45,8 +45,8 @@ var WebsocketAdapter = (function() {
 		return true;
 	}
 
-	function delSSID(fsUid, ssUid) {
-		delete ssIdTables[fsUid][ssUid];
+	function delSSID(fsUid, actionUid) {
+		delete ssIdTables[fsUid][actionUid];
 	}
 
 	function update(tableId, nodeToUpdate) {
@@ -70,16 +70,16 @@ var WebsocketAdapter = (function() {
 		ssIdTables[fsUid] = {};
 	}
 
-	function hasOutputBeenExperienced(fsUid, ssUid) {
-		return ssIdTables[fsUid].hasOwnProperty(ssUid);
+	function hasOutputBeenExperienced(fsUid, actionUid) {
+		return ssIdTables[fsUid].hasOwnProperty(actionUid);
 	}
 
-	function getStoredStimuli(fsUid, ssUid) {
-		return ssIdTables[fsUid][ssUid];
+	function getStoredStimuli(fsUid, actionUid) {
+		return ssIdTables[fsUid][actionUid];
 	}
 
-	function setStoredStimuli(fsUid, ssUid, nodeToStore) {
-		ssIdTables[fsUid][ssUid] = nodeToStore;
+	function setStoredStimuli(fsUid, actionUid, nodeToStore) {
+		ssIdTables[fsUid][actionUid] = nodeToStore;
 	}
 
 	function doesSSIDTableExist(fsUid) {

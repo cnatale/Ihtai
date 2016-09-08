@@ -1404,7 +1404,7 @@ String.prototype.escapeSpecialChars = <span class="fstat-no" title="function not
                .replace(new RegExp("\f", "g"), "\\f");
 };
 &nbsp;
-IhtaiUtils.toCombinedStmUID=function(clusters){
+IhtaiUtils.getCombinedStmUID=function(clusters){
 	var combinedClustersId = clusters[0].id + "+" + clusters[1].id + "+" + clusters[2].id;
 	return combinedClustersId;		
 }

@@ -26,10 +26,10 @@ var RedBlackTreeAdapter = (function() {
 		});
 	}
 
-	function insertSSID(fsUid, ssUid, nodeToAdd) {
+	function insertSSID(fsUid, actionUid, nodeToAdd) {
 		return new Promise (
 			function(resolve, reject) {
-				ssIdTables[fsUid][ssUid] = nodeToAdd;
+				ssIdTables[fsUid][actionUid] = nodeToAdd;
 				resolve(true);
 		});
 	}
@@ -42,10 +42,10 @@ var RedBlackTreeAdapter = (function() {
 		});
 	}
 
-	function delSSID(fsUid, ssUid) {
+	function delSSID(fsUid, actionUid) {
 		return new Promise (
 			function(resolve, reject) {
-				delete ssIdTables[fsUid][ssUid];
+				delete ssIdTables[fsUid][actionUid];
 				resolve(true);
 		});
 	}
@@ -89,24 +89,24 @@ var RedBlackTreeAdapter = (function() {
 		});
 	}
 
-	function hasOutputBeenExperienced(fsUid, ssUid) {
+	function hasOutputBeenExperienced(fsUid, actionUid) {
 		return new Promise (
 			function(resolve, reject) {
-				resolve (ssIdTables[fsUid].hasOwnProperty( ssUid ));
+				resolve (ssIdTables[fsUid].hasOwnProperty( actionUid ));
 		});
 	}
 
-	function getStoredStimuli(fsUid, ssUid) {
+	function getStoredStimuli(fsUid, actionUid) {
 		return new Promise (
 			function(resolve, reject) {
-				resolve( ssIdTables[fsUid][ssUid]);
+				resolve( ssIdTables[fsUid][actionUid]);
 		});
 	}
 
-	function setStoredStimuli(fsUid, ssUid, nodeToStore) {
+	function setStoredStimuli(fsUid, actionUid, nodeToStore) {
 		return new Promise (
 			function(resolve, reject) {
-				ssIdTables[fsUid][ssUid] = nodeToStore;
+				ssIdTables[fsUid][actionUid] = nodeToStore;
 				resolve(true);
 		});
 	}

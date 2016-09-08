@@ -45,7 +45,7 @@ Server.onConnection(function(Client){
 		 a uidTree node from the tree with the same memory uid as this table's key.
 		
 		ex: ssIdTables[fsUid] = {} //create a ssid lookup table
-			 ssIdTables[fsUid][ssUid] = nodeToStore; //store something in ssid lookup table
+			 ssIdTables[fsUid][actionUid] = nodeToStore; //store something in ssid lookup table
 
 		-note that fsUidTrees sub-objects store red-black trees, while ssIdTables sub-objects store
 		 nodes directly. This difference may not longer be applicable since we're storing everything
@@ -63,13 +63,13 @@ var protocolMethods = {
 		}); 
 		
 	},
-	insertSSID: function(fsUid, ssUid, nodeToAdd) {
+	insertSSID: function(fsUid, actionUid, nodeToAdd) {
 
 	},
 	del: function(tableId, nodeToDelete) {
 
 	},
-	delSSID: function(fsUid, ssUid) {
+	delSSID: function(fsUid, actionUid) {
 
 	},
 	update: function(tableId, nodeToUpdate) {
@@ -94,13 +94,13 @@ var protocolMethods = {
 			// console.log('The solution is: ', rows[0].solution);
 		});
 	},
-	hasOutputBeenExperienced: function(fsUid, ssUid) {
+	hasOutputBeenExperienced: function(fsUid, actionUid) {
 
 	},
-	getStoredStimuli: function(fsUid, ssUid) {
+	getStoredStimuli: function(fsUid, actionUid) {
 
 	},
-	setStoredStimuli: function(fsUid, ssUid, nodeToStore) {
+	setStoredStimuli: function(fsUid, actionUid, nodeToStore) {
 
 	},
 	doesSSIDTableExist: function(fsUid) {

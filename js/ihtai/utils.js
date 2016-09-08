@@ -41,7 +41,7 @@ String.prototype.escapeSpecialChars = function() {
                .replace(new RegExp("\f", "g"), "\\f");
 };
 
-IhtaiUtils.toCombinedStmUID=function(clusters){
+IhtaiUtils.getCombinedStmUID=function(clusters){
 	var combinedClustersId = 'cs' + clusters[0].id /*+ '_' + clusters[1].id*/ + '_' + clusters[2].id;
 	return combinedClustersId;		
 }
@@ -50,7 +50,7 @@ var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 /**
 Pass in second state memory and temporal distance, and get back a uid.
 */
-IhtaiUtils.getSSUid = function(mem, tdist) {
+IhtaiUtils.getactionUid = function(mem, tdist) {
 	return /*mem[INPUT].id + '_' +*/ 'ss' + mem[OUTPUT].id /*+ '_' + mem[DRIVES].id */ + '_' + tdist;
 }
 

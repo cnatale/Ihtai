@@ -695,14 +695,14 @@ var Memorizer = (function(bundle){
 	function query(clusters){
 		return new Promise( function(resolve, reject) {
 			var nextActionMemory=null, stimDist, sd;
-			var combinedClustersId = IhtaiUtils.toCombinedStmUID(clusters);
+			var combinedClustersId = IhtaiUtils.getCombinedStmUID(clusters);
 			var tdist;
 
 			$RA.isAnFSUIDTree(combinedClustersId).then( isAnFSUIDTree => {
 				if(isAnFSUIDTree){
 					$RA.min(combinedClustersId).then( min => {
 						tdist = min.tdist;
-						// console.log('selected query fs uid: ' + IhtaiUtils.toCombinedStmUID(min.fs));
+						// console.log('selected query fs uid: ' + IhtaiUtils.getCombinedStmUID(min.fs));
 						var sd= min.sd;
 						if(sd <= acceptableRange){
 							// console.log('min.ss: '+min.ss);
@@ -808,7 +808,7 @@ var Memorizer = (function(bundle){
 					fs=buffer.length-size;
 					ss=buffer.length-size+1;
 					es=buffer.length-1;
-					fsUid=IhtaiUtils.toCombinedStmUID(buffer[fs]);
+					fsUid=IhtaiUtils.getCombinedStmUID(buffer[fs]);
 
 					var avg=[], temporalDist=0;
 
@@ -876,13 +876,13 @@ var Memorizer = (function(bundle){
 							effectively the same actions taken by the agent, so average their resulting drive scores."
 							*/
 
-							var ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
+							var actionUid = IhtaiUtils.getactionUid(buffer[ss], size);
 
-							$RA.hasOutputBeenExperienced(fsUid, ssUid).then( ssMatch => {
+							$RA.hasOutputBeenExperienced(fsUid, actionUid).then( ssMatch => {
 								// note that this logical branch gets called by far the most out of the three.
 								// first and second states match. perform weighted average operation.
 								if( ssMatch ){
-									$RA.getStoredStimuli(fsUid, ssUid).then( storedStm => {
+									$RA.getStoredStimuli(fsUid, actionUid).then( storedStm => {
 										var bufferGoalDist = avg;
 										var esGoalDist = storedStm.es.stm.slice();
 										storedStm.ct++;
@@ -913,9 +913,9 @@ var Memorizer = (function(bundle){
 										//delete from tree and insert in again to re-order;
 										//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
 										///////////////////////////////////////
-										// TODO: this won't work with generalized protocol. perhaps use fsUid, ssUid as keys instead of storedStm,
+										// TODO: this won't work with generalized protocol. perhaps use fsUid, actionUid as keys instead of storedStm,
 										// and pass storedStm along as the mutation value.
-										// TODO: change protocol to $RA.update(fsUid, ssUid, storedStm)...
+										// TODO: change protocol to $RA.update(fsUid, actionUid, storedStm)...
 										//////////////////////////////////////
 										$RA.update(fsUid, storedStm).then( result => {
 											resolve(true);
@@ -949,16 +949,16 @@ var Memorizer = (function(bundle){
 												sd:sd1,
 												tdist:size
 											};
-											ssUid = IhtaiUtils.getSSUid(maxTreeNode.ss, maxTreeNode.tdist);
+											actionUid = IhtaiUtils.getactionUid(maxTreeNode.ss, maxTreeNode.tdist);
 											// OK
 											if(treeSize >= candidatePoolSize) {
 													$RA.del(fsUid,  maxTreeNode).then( result => {
 														// delete maxTreeNode from lookup table
-														$RA.delSSID(fsUid, ssUid).then( result => {
+														$RA.delSSID(fsUid, actionUid).then( result => {
 															$RA.insert(fsUid, insertedNode).then( result => {
-																// ssUid = insertedNode.ss[INPUT].id + '_' + insertedNode.ss[OUTPUT].id + "_" + size;
-																ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
-																$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
+																// actionUid = insertedNode.ss[INPUT].id + '_' + insertedNode.ss[OUTPUT].id + "_" + size;
+																actionUid = IhtaiUtils.getactionUid(insertedNode.ss, size);
+																$RA.setStoredStimuli(fsUid, actionUid, insertedNode).then( result => {
 																	resolve(true);
 																})
 																.catch( err => {
@@ -979,9 +979,9 @@ var Memorizer = (function(bundle){
 											}
 											else {
 												$RA.insert(fsUid, insertedNode).then( result => {
-													// ssUid = insertedNode.ss[INPUT].id + '_' + insertedNode.ss[OUTPUT].id + "_" + size;
-													ssUid = IhtaiUtils.getSSUid(insertedNode.ss, size);
-													$RA.setStoredStimuli(fsUid, ssUid, insertedNode).then( result => {
+													// actionUid = insertedNode.ss[INPUT].id + '_' + insertedNode.ss[OUTPUT].id + "_" + size;
+													actionUid = IhtaiUtils.getactionUid(insertedNode.ss, size);
+													$RA.setStoredStimuli(fsUid, actionUid, insertedNode).then( result => {
 														resolve(true);
 													})
 													.catch( err => {
@@ -1027,8 +1027,8 @@ var Memorizer = (function(bundle){
 									var doesSSIDTableExist = result[1];
 									if(!doesSSIDTableExist) {
 										$RA.createSSIDTable(fsUid).then( result => {
-											ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
-											$RA.insertSSID(fsUid, ssUid, insertedNode).then( result => {
+											actionUid = IhtaiUtils.getactionUid(buffer[ss], size);
+											$RA.insertSSID(fsUid, actionUid, insertedNode).then( result => {
 												resolve(true);
 											})
 											.catch( err => {
@@ -1043,8 +1043,8 @@ var Memorizer = (function(bundle){
 										});
 									}
 									else {
-										ssUid = IhtaiUtils.getSSUid(buffer[ss], size);
-										$RA.insertSSID(fsUid, ssUid, insertedNode).then( result => {
+										actionUid = IhtaiUtils.getactionUid(buffer[ss], size);
+										$RA.insertSSID(fsUid, actionUid, insertedNode).then( result => {
 											resolve(true);
 										})
 										.catch( err => {
