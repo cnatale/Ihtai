@@ -899,16 +899,24 @@ var Memorizer = (function(bundle){
 											//var temporalWeight =( 1 - ((size - 2) / (height - 2)) ) * .01 //longterm planning gets precedence
 											esGoalDist[j]= ((esGoalDist[j] * (ct) ) + bufferGoalDist.stm[j]  + temporalWeight) / (ct + 1);
 										}
+
 										var args = [0, homeostasisGoal.length].concat(esGoalDist);
 										//replace existing endstate stimuli with updated values
+
 										Array.prototype.splice.apply(storedStm.es.stm, args);	
 										//console.log('existing memory updated');
 										
 										//update sqdist of endstate from drive goals
 										storedStm.sd= sqDist(storedStm.es.stm, homeostasisGoal);
 
+
 										//delete from tree and insert in again to re-order;
 										//since storedStm is a pointer to the node in our uidTree, we can delete easily then add again
+										///////////////////////////////////////
+										// TODO: this won't work with generalized protocol. perhaps use fsUid, ssUid as keys instead of storedStm,
+										// and pass storedStm along as the mutation value.
+										// TODO: change protocol to $RA.update(fsUid, ssUid, storedStm)...
+										//////////////////////////////////////
 										$RA.update(fsUid, storedStm).then( result => {
 											resolve(true);
 										})

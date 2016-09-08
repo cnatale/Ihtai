@@ -8,13 +8,14 @@
 <script>
 
 setTimeout(function() {
+	$MA.createTable('t1_3_4').then(function(Response){
+		console.log(Response);
+	});
+
 	$MA.insert('t1_3_4', 'a node').then(function(Response){
 	  console.log(Response);
 	});
 
-	$MA.createTable('t1_3_4').then(function(Response){
-		console.log(Response);
-	});
 }, 500);
 
 </script>

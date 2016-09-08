@@ -2,6 +2,7 @@ var http = require("http");
 var finalhandler = require('finalhandler');
 var serveStatic = require('serve-static');
 var serve = serveStatic("./");
+
 //socket server is auto-instantiated
 var socketServer = require('./server/mysql_socket_server');
 
