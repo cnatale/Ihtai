@@ -41,17 +41,18 @@ String.prototype.escapeSpecialChars = function() {
                .replace(new RegExp("\f", "g"), "\\f");
 };
 
+var INPUT = 0, OUTPUT = 1, DRIVES = 2;
+
 IhtaiUtils.getCombinedStmUID=function(clusters){
-	var combinedClustersId = 'cs' + clusters[0].id /*+ '_' + clusters[1].id*/ + '_' + clusters[2].id;
+	var combinedClustersId = 'cs' + clusters[INPUT].id + '_' + clusters[DRIVES].id;
 	return combinedClustersId;		
 }
 
-var INPUT = 0, OUTPUT = 1, DRIVES = 2;
 /**
 Pass in second state memory and temporal distance, and get back a uid.
 */
 IhtaiUtils.getactionUid = function(mem, tdist) {
-	return /*mem[INPUT].id + '_' +*/ 'ss' + mem[OUTPUT].id /*+ '_' + mem[DRIVES].id */ + '_' + tdist;
+	return 'ss' + mem[OUTPUT].id + '_' + tdist;
 }
 
 // code from http://stackoverflow.com/questions/8435183/generate-a-weighted-random-number
