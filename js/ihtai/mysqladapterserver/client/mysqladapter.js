@@ -8,8 +8,8 @@ var MysqlAdapter = (function() {
 	*/
 
 	FSUID_TABLES = 'fsUidTrees';
-	SSID_TABLES = 'ssIdTables';
-	var fsUidTrees = {}, ssIdTables = {};
+	SSActionId_TABLES = 'SSActionIdTables';
+	var fsUidTrees = {}, SSActionIdTables = {};
 	var Connection;
 
 	function init() {
@@ -22,16 +22,16 @@ var MysqlAdapter = (function() {
 		return MysqlAdapter.Connection.request("insert", [tableId, nodeToAdd]);
 	}
 
-	function insertSSID(fsUid, actionUid, nodeToAdd) {
-		return MysqlAdapter.Connection.request("insertSSID", [fsUid, actionUid, nodeToAdd]);
+	function insertSSActionId(fsUid, actionUid, nodeToAdd) {
+		return MysqlAdapter.Connection.request("insertSSActionId", [fsUid, actionUid, nodeToAdd]);
 	}
 
 	function del(tableId, nodeToDelete) {
 		return MysqlAdapter.Connection.request("del", [tableId, nodeToDelete]);
 	}
 
-	function delSSID(fsUid, actionUid) {
-		return MysqlAdapter.Connection.request("delSSID", [fsUid, actionUid]);
+	function delSSActionId(fsUid, actionUid) {
+		return MysqlAdapter.Connection.request("delSSActionId", [fsUid, actionUid]);
 	}
 
 	function update(tableId, nodeToUpdate) {
@@ -50,8 +50,8 @@ var MysqlAdapter = (function() {
 		return MysqlAdapter.Connection.request("createTable", [tableId]);
 	}
 
-	function createSSIDTable(fsUid) {
-		return MysqlAdapter.Connection.request("createSSIDTable", [fsUid]);
+	function createSSActionIdTable(fsUid) {
+		return MysqlAdapter.Connection.request("createSSActionIdTable", [fsUid]);
 	}
 
 	function hasOutputBeenExperienced(fsUid, actionUid) {
@@ -66,8 +66,8 @@ var MysqlAdapter = (function() {
 		return MysqlAdapter.Connection.request("setStoredStimuli", [fsUid, actionUid, nodeToStore]);
 	}
 
-	function doesSSIDTableExist(fsUid) {
-		return MysqlAdapter.Connection.request("doesSSIDTableExist", [fsUid]);
+	function doesSSActionIdTableExist(fsUid) {
+		return MysqlAdapter.Connection.request("doesSSActionIdTableExist", [fsUid]);
 	}
 
 	function getFSUIDTreeSize(fsUid) {
@@ -81,7 +81,7 @@ var MysqlAdapter = (function() {
 	return {
 		Connection: Connection,
 		FSUID_TABLES: FSUID_TABLES,
-		SSID_TABLES: SSID_TABLES,
+		SSActionId_TABLES: SSActionId_TABLES,
 		insert: insert,
 		del: del,
 		createTable: createTable,
@@ -91,12 +91,12 @@ var MysqlAdapter = (function() {
 		hasOutputBeenExperienced: hasOutputBeenExperienced,
 		getStoredStimuli: getStoredStimuli,
 		setStoredStimuli: setStoredStimuli,
-		createSSIDTable: createSSIDTable,
-		insertSSID: insertSSID,
-		delSSID: delSSID,
+		createSSActionIdTable: createSSActionIdTable,
+		insertSSActionId: insertSSActionId,
+		delSSActionId: delSSActionId,
 		getFSUIDTreeSize: getFSUIDTreeSize,
 		isAnFSUIDTree: isAnFSUIDTree,
-		doesSSIDTableExist: doesSSIDTableExist
+		doesSSActionIdTableExist: doesSSActionIdTableExist
 	}
 })();
 

@@ -2,21 +2,21 @@ var RedBlackTreeAdapter = (function() {
 	/*
 	Things we need to store:
 
-	fsUidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
+	fsUidTrees and SSActionIdTables allow for efficient storage and retrieval of memory sequence data
 
 	fsUidTrees: searcheable collections of memory chains, keyed off first state uid.
 		schema: each tree is keyed off dist from ideal drive state
 
 		
-	ssIdTables schema: each key is a memory uid that references:
+	SSActionIdTables schema: each key is a memory uid that references:
 		-a hash table where each key is a second state output stimuli id for a memory chain, which references
 		 a uidTree node from the tree with the same memory uid as this table's key.
 
 	*/
 
 	FSUID_TABLES = 'fsUidTrees';
-	SSID_TABLES = 'ssIdTables';
-	var fsUidTrees = {}, ssIdTables = {}
+	SSActionId_TABLES = 'SSActionIdTables';
+	var fsUidTrees = {}, SSActionIdTables = {}
 
 	function insert(tableId, nodeToAdd) {
 		return new Promise (
@@ -26,10 +26,10 @@ var RedBlackTreeAdapter = (function() {
 		});
 	}
 
-	function insertSSID(fsUid, actionUid, nodeToAdd) {
+	function insertSSActionId(fsUid, actionUid, nodeToAdd) {
 		return new Promise (
 			function(resolve, reject) {
-				ssIdTables[fsUid][actionUid] = nodeToAdd;
+				SSActionIdTables[fsUid][actionUid] = nodeToAdd;
 				resolve(true);
 		});
 	}
@@ -42,10 +42,10 @@ var RedBlackTreeAdapter = (function() {
 		});
 	}
 
-	function delSSID(fsUid, actionUid) {
+	function delSSActionId(fsUid, actionUid) {
 		return new Promise (
 			function(resolve, reject) {
-				delete ssIdTables[fsUid][actionUid];
+				delete SSActionIdTables[fsUid][actionUid];
 				resolve(true);
 		});
 	}
@@ -81,10 +81,10 @@ var RedBlackTreeAdapter = (function() {
 		});
 	}
 
-	function createSSIDTable(fsUid) {
+	function createSSActionIdTable(fsUid) {
 		return new Promise (
 			function(resolve, reject) {
-				ssIdTables[fsUid] = {};
+				SSActionIdTables[fsUid] = {};
 				resolve(true);
 		});
 	}
@@ -92,29 +92,29 @@ var RedBlackTreeAdapter = (function() {
 	function hasOutputBeenExperienced(fsUid, actionUid) {
 		return new Promise (
 			function(resolve, reject) {
-				resolve (ssIdTables[fsUid].hasOwnProperty( actionUid ));
+				resolve (SSActionIdTables[fsUid].hasOwnProperty( actionUid ));
 		});
 	}
 
 	function getStoredStimuli(fsUid, actionUid) {
 		return new Promise (
 			function(resolve, reject) {
-				resolve( ssIdTables[fsUid][actionUid]);
+				resolve( SSActionIdTables[fsUid][actionUid]);
 		});
 	}
 
 	function setStoredStimuli(fsUid, actionUid, nodeToStore) {
 		return new Promise (
 			function(resolve, reject) {
-				ssIdTables[fsUid][actionUid] = nodeToStore;
+				SSActionIdTables[fsUid][actionUid] = nodeToStore;
 				resolve(true);
 		});
 	}
 
-	function doesSSIDTableExist(fsUid) {
+	function doesSSActionIdTableExist(fsUid) {
 		return new Promise (
 			function(resolve, reject) {
-				if (typeof ssIdTables[fsUid] === 'undefined' ) {
+				if (typeof SSActionIdTables[fsUid] === 'undefined' ) {
 					resolve (false);
 				}
 				else {
@@ -139,7 +139,7 @@ var RedBlackTreeAdapter = (function() {
 
 	return {
 		FSUID_TABLES: FSUID_TABLES,
-		SSID_TABLES: SSID_TABLES,
+		SSActionId_TABLES: SSActionId_TABLES,
 		insert: insert,
 		del: del,
 		createTable: createTable,
@@ -149,12 +149,12 @@ var RedBlackTreeAdapter = (function() {
 		hasOutputBeenExperienced: hasOutputBeenExperienced,
 		getStoredStimuli: getStoredStimuli,
 		setStoredStimuli: setStoredStimuli,
-		createSSIDTable: createSSIDTable,
-		insertSSID: insertSSID,
-		delSSID: delSSID,
+		createSSActionIdTable: createSSActionIdTable,
+		insertSSActionId: insertSSActionId,
+		delSSActionId: delSSActionId,
 		getFSUIDTreeSize: getFSUIDTreeSize,
 		isAnFSUIDTree: isAnFSUIDTree,
-		doesSSIDTableExist: doesSSIDTableExist
+		doesSSActionIdTableExist: doesSSActionIdTableExist
 	}
 })();
 

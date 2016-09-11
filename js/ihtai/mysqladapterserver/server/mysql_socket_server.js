@@ -32,7 +32,7 @@ Server.onConnection(function(Client){
 // mysqladapter is dumb in that it just ferries requests and receives responses 
 
 /*  from Ihtai.js comments:
-	fsUidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
+	fsUidTrees and SSActionIdTables allow for efficient storage and retrieval of memory sequence data
 
 	fsUidTrees: searcheable collections of memory chains, keyed off first state uid.
 		schema: each tree is keyed off dist from ideal drive state
@@ -40,14 +40,14 @@ Server.onConnection(function(Client){
 		ex: fsUidTrees[tableId] = $R.createTree('delta'); //create an fsUid tree
 			$R.insert( fsUidTrees[tableId], nodeToAdd ); //insert a memory into an fsUidTree
 		
-	ssIdTables schema: each key is a memory uid that references:
+	SSActionIdTables schema: each key is a memory uid that references:
 		-a hash table where each key is a second state output stimuli id for a memory chain, which references
 		 a uidTree node from the tree with the same memory uid as this table's key.
 		
-		ex: ssIdTables[fsUid] = {} //create a ssid lookup table
-			 ssIdTables[fsUid][actionUid] = nodeToStore; //store something in ssid lookup table
+		ex: SSActionIdTables[fsUid] = {} //create a SSActionId lookup table
+			 SSActionIdTables[fsUid][actionUid] = nodeToStore; //store something in SSActionId lookup table
 
-		-note that fsUidTrees sub-objects store red-black trees, while ssIdTables sub-objects store
+		-note that fsUidTrees sub-objects store red-black trees, while SSActionIdTables sub-objects store
 		 nodes directly. This difference may not longer be applicable since we're storing everything
 		 in sql tables (essentially b-trees)
 */
@@ -63,13 +63,13 @@ var protocolMethods = {
 		}); 
 		
 	},
-	insertSSID: function(fsUid, actionUid, nodeToAdd) {
+	insertSSActionId: function(fsUid, actionUid, nodeToAdd) {
 
 	},
 	del: function(tableId, nodeToDelete) {
 
 	},
-	delSSID: function(fsUid, actionUid) {
+	delSSActionId: function(fsUid, actionUid) {
 
 	},
 	update: function(tableId, nodeToUpdate) {
@@ -88,7 +88,7 @@ var protocolMethods = {
 			// console.log('The solution is: ', rows[0].solution);
 		});
 	},
-	createSSIDTable: function(fsUid) {
+	createSSActionIdTable: function(fsUid) {
 		mysqlConnection.query('CREATE TABLE ' + fsUid + '(uid varchar, delta double, tdist integer, jsondata text);', function(err, rows, fields) {
 			if (err) throw err;
 			// console.log('The solution is: ', rows[0].solution);
@@ -103,7 +103,7 @@ var protocolMethods = {
 	setStoredStimuli: function(fsUid, actionUid, nodeToStore) {
 
 	},
-	doesSSIDTableExist: function(fsUid) {
+	doesSSActionIdTableExist: function(fsUid) {
 
 	},
 	getFSUIDTreeSize: function(fsUid) {

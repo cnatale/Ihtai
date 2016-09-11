@@ -9,21 +9,21 @@ var WebsocketAdapter = (function() {
 
 	Things we need to store:
 
-	fsUidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
+	fsUidTrees and SSActionIdTables allow for efficient storage and retrieval of memory sequence data
 
 	fsUidTrees: searcheable collections of memory chains, keyed off first state uid.
 		schema: each tree is keyed off dist from ideal drive state
 
 		
-	ssIdTables schema: each key is a memory uid that references:
+	SSActionIdTables schema: each key is a memory uid that references:
 		-a hash table where each key is a second state output stimuli id for a memory chain, which references
 		 a uidTree node from the tree with the same memory uid as this table's key.
 
 	*/
 
 	FSUID_TABLES = 'fsUidTrees';
-	SSID_TABLES = 'ssIdTables';
-	var fsUidTrees = {}, ssIdTables = {}
+	SSActionId_TABLES = 'SSActionIdTables';
+	var fsUidTrees = {}, SSActionIdTables = {}
 
 	function init() {
 		// initialize websocket connection
@@ -36,8 +36,8 @@ var WebsocketAdapter = (function() {
 		$R.insert( fsUidTrees[tableId], nodeToAdd );
 	}
 
-	function insertSSID(fsUid, actionUid, nodeToAdd) {
-		ssIdTables[fsUid][actionUid] = nodeToAdd;
+	function insertSSActionId(fsUid, actionUid, nodeToAdd) {
+		SSActionIdTables[fsUid][actionUid] = nodeToAdd;
 	}
 
 	function del(tableId, nodeToDelete) {
@@ -45,8 +45,8 @@ var WebsocketAdapter = (function() {
 		return true;
 	}
 
-	function delSSID(fsUid, actionUid) {
-		delete ssIdTables[fsUid][actionUid];
+	function delSSActionId(fsUid, actionUid) {
+		delete SSActionIdTables[fsUid][actionUid];
 	}
 
 	function update(tableId, nodeToUpdate) {
@@ -66,24 +66,24 @@ var WebsocketAdapter = (function() {
 		fsUidTrees[tableId] = $R.createTree('delta');
 	}
 
-	function createSSIDTable(fsUid) {
-		ssIdTables[fsUid] = {};
+	function createSSActionIdTable(fsUid) {
+		SSActionIdTables[fsUid] = {};
 	}
 
 	function hasOutputBeenExperienced(fsUid, actionUid) {
-		return ssIdTables[fsUid].hasOwnProperty(actionUid);
+		return SSActionIdTables[fsUid].hasOwnProperty(actionUid);
 	}
 
 	function getStoredStimuli(fsUid, actionUid) {
-		return ssIdTables[fsUid][actionUid];
+		return SSActionIdTables[fsUid][actionUid];
 	}
 
 	function setStoredStimuli(fsUid, actionUid, nodeToStore) {
-		ssIdTables[fsUid][actionUid] = nodeToStore;
+		SSActionIdTables[fsUid][actionUid] = nodeToStore;
 	}
 
-	function doesSSIDTableExist(fsUid) {
-		if (typeof ssIdTables[fsUid] === 'undefined' ) {
+	function doesSSActionIdTableExist(fsUid) {
+		if (typeof SSActionIdTables[fsUid] === 'undefined' ) {
 			return false;
 		}
 		else {
@@ -101,7 +101,7 @@ var WebsocketAdapter = (function() {
 
 	return {
 		FSUID_TABLES: FSUID_TABLES,
-		SSID_TABLES: SSID_TABLES,
+		SSActionId_TABLES: SSActionId_TABLES,
 		insert: insert,
 		del: del,
 		createTable: createTable,
@@ -111,12 +111,12 @@ var WebsocketAdapter = (function() {
 		hasOutputBeenExperienced: hasOutputBeenExperienced,
 		getStoredStimuli: getStoredStimuli,
 		setStoredStimuli: setStoredStimuli,
-		createSSIDTable: createSSIDTable,
-		insertSSID: insertSSID,
-		delSSID: delSSID,
+		createSSActionIdTable: createSSActionIdTable,
+		insertSSActionId: insertSSActionId,
+		delSSActionId: delSSActionId,
 		getFSUIDTreeSize: getFSUIDTreeSize,
 		isAnFSUIDTree: isAnFSUIDTree,
-		doesSSIDTableExist: doesSSIDTableExist
+		doesSSActionIdTableExist: doesSSActionIdTableExist
 	}
 })();
 

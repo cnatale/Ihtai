@@ -623,13 +623,13 @@ var Memorizer = (function(bundle){
 	var level, buffer, homeostasisGoal, maxCollisions=2/*was 10*/, candidatePoolSize;
 
 	/* 
-		fsUidTrees and ssIdTables allow for efficient storage and retrieval of memory sequence data
+		fsUidTrees and SSActionIdTables allow for efficient storage and retrieval of memory sequence data
 
 		fsUidTrees: searcheable collections of memory chains, keyed off first state uid.
 			schema: each tree is keyed off dist from ideal drive state
 
 			
-		ssIdTables schema: each key is a memory uid that references:
+		SSActionIdTables schema: each key is a memory uid that references:
 			-a hash table where each key is a second state output stimuli id for a memory chain, which references
 			 a uidTree node from the tree with the same memory uid as this table's key.
 	*/
@@ -954,7 +954,7 @@ var Memorizer = (function(bundle){
 											if(treeSize >= candidatePoolSize) {
 													$RA.del(fsUid,  maxTreeNode).then( result => {
 														// delete maxTreeNode from lookup table
-														$RA.delSSID(fsUid, actionUid).then( result => {
+														$RA.delSSActionId(fsUid, actionUid).then( result => {
 															$RA.insert(fsUid, insertedNode).then( result => {
 																// actionUid = insertedNode.ss[INPUT].id + '_' + insertedNode.ss[OUTPUT].id + "_" + size;
 																actionUid = IhtaiUtils.getactionUid(insertedNode.ss, size);
@@ -1011,7 +1011,7 @@ var Memorizer = (function(bundle){
 							//console.log('new memory created')
 
 							/*
-							no tree currently exists for this fsUid. Create one, add memory to tree, add reference to ssIdTables
+							no tree currently exists for this fsUid. Create one, add memory to tree, add reference to SSActionIdTables
 							*/
 
 							var insertedNode = {
@@ -1023,12 +1023,12 @@ var Memorizer = (function(bundle){
 								tdist: size
 							}
 							$RA.createTable(fsUid).then( result => {
-								Promise.all( [$RA.insert(fsUid, insertedNode), $RA.doesSSIDTableExist(fsUid)] ).then( result => {
-									var doesSSIDTableExist = result[1];
-									if(!doesSSIDTableExist) {
-										$RA.createSSIDTable(fsUid).then( result => {
+								Promise.all( [$RA.insert(fsUid, insertedNode), $RA.doesSSActionIdTableExist(fsUid)] ).then( result => {
+									var doesSSActionIdTableExist = result[1];
+									if(!doesSSActionIdTableExist) {
+										$RA.createSSActionIdTable(fsUid).then( result => {
 											actionUid = IhtaiUtils.getactionUid(buffer[ss], size);
-											$RA.insertSSID(fsUid, actionUid, insertedNode).then( result => {
+											$RA.insertSSActionId(fsUid, actionUid, insertedNode).then( result => {
 												resolve(true);
 											})
 											.catch( err => {
@@ -1044,7 +1044,7 @@ var Memorizer = (function(bundle){
 									}
 									else {
 										actionUid = IhtaiUtils.getactionUid(buffer[ss], size);
-										$RA.insertSSID(fsUid, actionUid, insertedNode).then( result => {
+										$RA.insertSSActionId(fsUid, actionUid, insertedNode).then( result => {
 											resolve(true);
 										})
 										.catch( err => {
