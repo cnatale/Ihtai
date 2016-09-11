@@ -231,8 +231,8 @@
     var headMoveForce=0;
     var lastTime, dt, t=0;
     //body parts under control of Ihtai: pelvis, lowerLeftLeg, lowerRightLeg, lowerLeftArm, lowerRightArm;
-    var allInput='', ct=0, lastSD;
-    var SD = 1, STIMULI = 0, OUTPUT = 1;
+    var allInput='', ct=0, lastDelta;
+    var DELTA = 1, STIMULI = 0, OUTPUT = 1;
     var moveDir = normalize(getRandomMoveDir()); 
 
     function getRandomMoveDir() {
@@ -264,7 +264,7 @@
         //////// apply forces based on ihtai response ////////
         var stimResult = res.memorizerOutput.nextActionMemory;
         var randDir = normalize(getRandomMoveDir());
-        if(stimResult != null &&  Math.random() > (res.memorizerOutput.sd/25)
+        if(stimResult != null &&  Math.random() > (res.memorizerOutput.delta/25)
             /*|| (stimResult != null && ihtai.hasActedInThisWayBefore(res.curClusters, [randDir]))*/
         ){
             console.log('act on memory');
@@ -276,9 +276,9 @@
             //apply random movement signals
             moveDir = randDir;
         }
-        console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
+        console.log('PREDICTED delta: ' + res.memorizerOutput.delta)
         //console.log('Move Dir: ' + moveDir);
-        lastSD = res.memorizerOutput.sd;
+        lastDelta = res.memorizerOutput.delta;
 
         var moveDirOutput = moveDir === 100 ? -1 : 1;
         //apply forces on body parts

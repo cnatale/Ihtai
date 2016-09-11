@@ -33,7 +33,7 @@ var RedBlackTree  = (function RedBlackTree(){
 			inOrder(T, x.left);
 			console.log('=====NODE=====');
 			console.log('id: ' + x.ss[2].id + T.size)
-			console.log('sd: ' + x[T.keyName]);
+			console.log('delta: ' + x[T.keyName]);
 			console.log('tdist: ' + x.tdist);
 			console.log('left node: ' + (x.left !== T.nilNode ? x.left.ss[2].id : 'nil') + T.size);
 			console.log('right node: ' + (x.right !== T.nilNode ? x.right.ss[2].id : 'nil') + T.size);

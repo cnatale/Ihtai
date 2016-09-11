@@ -438,12 +438,12 @@ var Ihtai = (function(bundle){
 			    return normal query result. */
 
 			//store the square distances to ideal drive states for imagined and real memorizer output
-			var imaginedOutputSd=imaginedMemorizerOutput[1]; //the queried sd
-			var realOutputSd=realMemorizerOutput[1]; //the queried sd
+			var imaginedOutputdelta=imaginedMemorizerOutput[1]; //the queried delta
+			var realOutputdelta=realMemorizerOutput[1]; //the queried delta
 
 			////////////////////////////////////////////////////////////////////////////////////////////////
-			//if the real stimuli hasn't been experienced yet, or if it has a smaller sd the the imagined stm, memorize it
-			if(typeof realOutputSd != 'undefined' && imaginedOutputSd<realOutputSd){ //use daydream output
+			//if the real stimuli hasn't been experienced yet, or if it has a smaller delta the the imagined stm, memorize it
+			if(typeof realOutputdelta != 'undefined' && imaginedOutputdelta<realOutputdelta){ //use daydream output
 				//memorize the imagined cluster
 				drives.undo();
 				imaginedDrivesOutput=drives.cycle(imaginedStm/*iostm*/, dt);
@@ -694,7 +694,7 @@ var Memorizer = (function(bundle){
 	*/
 	function query(clusters){
 		return new Promise( function(resolve, reject) {
-			var nextActionMemory=null, stimDist, sd;
+			var nextActionMemory=null, stimDist, delta;
 			var combinedClustersId = IhtaiUtils.getCombinedStmUID(clusters);
 			var tdist;
 
@@ -703,11 +703,11 @@ var Memorizer = (function(bundle){
 					$RA.min(combinedClustersId).then( min => {
 						tdist = min.tdist;
 						// console.log('selected query fs uid: ' + IhtaiUtils.getCombinedStmUID(min.fs));
-						var sd= min.sd;
-						if(sd <= acceptableRange){
+						var delta= min.delta;
+						if(delta <= acceptableRange){
 							// console.log('min.ss: '+min.ss);
 							// console.log('min.es:'+min.es);
-							// console.log('min.sd:'+min.sd);
+							// console.log('min.delta:'+min.delta);
 							// console.log('acceptablerange:'+acceptableRange);
 							//console.log('selected cluster id: ' + min.ss[0].id + "_" + min.ss[1].id + "_" + min.ss[2].id);
 
@@ -715,7 +715,7 @@ var Memorizer = (function(bundle){
 						}
 						resolve ({
 							nextActionMemory: nextActionMemory, 
-							sd: sd, 
+							delta: delta, 
 							temporalDistance: tdist
 						});
 					})
@@ -726,7 +726,7 @@ var Memorizer = (function(bundle){
 				else {
 					resolve ({
 						nextActionMemory: nextActionMemory, 
-						sd: sd, 
+						delta: delta, 
 						temporalDistance: tdist
 					});	
 				}
@@ -767,7 +767,7 @@ var Memorizer = (function(bundle){
 				vector data).
 			*/
 			//fs=firstState, ss=secondState, es=endState
-			// var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
+			// var delta1,delta2,size, fs, ss, es, fsUid, seriesArray, delta, ssMatch, maxTreeNode, ssOutput;
 			//update the buffer
 			buffer.push(clusters);
 			if(buffer.length>height)
@@ -800,7 +800,7 @@ var Memorizer = (function(bundle){
 	function memorizerIteration (i) {
 		return new Promise(
 			function(resolve) {
-				var sd1,sd2,size, fs, ss, es, fsUid, seriesArray, sd, ssMatch, maxTreeNode, ssOutput;
+				var delta1,delta2,size, fs, ss, es, fsUid, seriesArray, delta, ssMatch, maxTreeNode, ssOutput;
 
 				size=i+2;
 				//Once we have a buffer full enough for this level, attempt to add a memory every cycle
@@ -907,7 +907,7 @@ var Memorizer = (function(bundle){
 										//console.log('existing memory updated');
 										
 										//update sqdist of endstate from drive goals
-										storedStm.sd= sqDist(storedStm.es.stm, homeostasisGoal);
+										storedStm.delta= sqDist(storedStm.es.stm, homeostasisGoal);
 
 
 										//delete from tree and insert in again to re-order;
@@ -931,22 +931,22 @@ var Memorizer = (function(bundle){
 									/* No matching second state drive output in memory. If buffer memory is closer to ideal drive state
 										than the highest score in this fsUid's tree, get rid of the high score and replace with this.
 									*/
-									sd1= sqDist(avg.stm.slice(), homeostasisGoal);
+									delta1= sqDist(avg.stm.slice(), homeostasisGoal);
 
 									Promise.all( [$RA.max(fsUid), $RA.getFSUIDTreeSize(fsUid)] ).then( values => {
 										var maxTreeNode = values[0];
 										var treeSize = values[1];
-										sd2 = maxTreeNode.sd;
-										//sd1 is the buffer memory, sd2 is the highest scoring memory in tree
+										delta2 = maxTreeNode.delta;
+										//delta1 is the buffer memory, delta2 is the highest scoring memory in tree
 
-										if(sd1 < sd2){
+										if(delta1 < delta2){
 											//replace the currently stored memory with the better-scoring buffer counterpart
 											var insertedNode = {
 												fs:buffer[fs],
 												ss:buffer[ss],
 												es:avg,
 												ct:0,
-												sd:sd1,
+												delta:delta1,
 												tdist:size
 											};
 											actionUid = IhtaiUtils.getactionUid(maxTreeNode.ss, maxTreeNode.tdist);
@@ -1019,7 +1019,7 @@ var Memorizer = (function(bundle){
 								ss: buffer[ss],
 								es: avg,
 								ct: 0,
-								sd: sqDist(avg.stm, homeostasisGoal),
+								delta: sqDist(avg.stm, homeostasisGoal),
 								tdist: size
 							}
 							$RA.createTable(fsUid).then( result => {

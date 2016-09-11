@@ -63,7 +63,7 @@ var WebsocketAdapter = (function() {
 	}
 
 	function createTable(tableId) {
-		fsUidTrees[tableId] = $R.createTree('sd');
+		fsUidTrees[tableId] = $R.createTree('delta');
 	}
 
 	function createSSIDTable(fsUid) {

@@ -90,7 +90,7 @@
     });
 
     var MEMORIZER_OUTPUT = 0, DRIVES_OUTPUT = 1, CUR_CLUSTERS = 2;
-    var SD = 1, STIMULI = 0, OUTPUT = 1;
+    var DELTA = 1, STIMULI = 0, OUTPUT = 1;
     var ihtaiNumElm = document.getElementById('ihtaiNum');
     var tgtNumElm = document.getElementById('tgtNum');
     var tgtNum = 10;
@@ -113,13 +113,13 @@
         
         ihtai.cycle(inputStm, 9999).then( res => {
             var stimResult = res.memorizerOutput.nextActionMemory;
-            var resultSD = res.memorizerOutput.sd;
+            var resultDelta = res.memorizerOutput.delta;
             var randDir = getRandomTriSetting();
             var tDist = res.memorizerOutput.temporalDistance;
-            if(stimResult != null && Math.random() > resultSD/*closeToTgtDrive.driveVal*//20 /*<-since this is based on actual current drive score after cycle, a current score of 0 means always take the prescribed action. what i really want is to base off expected drive score from next step  */) {
+            if(stimResult != null && Math.random() > resultDelta/*closeToTgtDrive.driveVal*//20 /*<-since this is based on actual current drive score after cycle, a current score of 0 means always take the prescribed action. what i really want is to base off expected drive score from next step  */) {
                 console.log('act on memory');
                 //handle movement conditions
-                console.log('resultSD: ' + resultSD);
+                console.log('resultDelta: ' + resultDelta);
                 console.log('result tdist: ' + tDist);
                 lastMoveDir = stimResult[OUTPUT].stm[0];
             }
@@ -132,7 +132,7 @@
             ihtaiNum = ihtaiNum + lastMoveDir;
             if(ihtaiNum < 0) ihtaiNum = 0;
             if(ihtaiNum > 20) ihtaiNum = 20;
-            //console.log('PREDICTED SD after action: ' + res.memorizerOutput.sd)
+            //console.log('PREDICTED Delta after action: ' + res.memorizerOutput.delta)
             //console.log(lastMoveDir);
             ihtaiNumElm.innerHTML = 'IHTAI: ' + String(ihtaiNum);
 

@@ -154,8 +154,8 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 		function compare(node){
 			par=par(node); //the parent node index
 			if(heapType==="min"){
-				//If current node's sd is less than parent, swap positions with parent. Secondary key is lvl.
-				if( (par >= 0 && heap[node].sd < heap[par].sd) || (par >= 0 && heap[node].sd == heap[par].sd && heap[node].lvl < heap[par].lvl) ){
+				//If current node's delta is less than parent, swap positions with parent. Secondary key is lvl.
+				if( (par >= 0 && heap[node].delta < heap[par].delta) || (par >= 0 && heap[node].delta == heap[par].delta && heap[node].lvl < heap[par].lvl) ){
 					tmp=heap[node];
 					heap[node]=heap[par];
 					heap[par]=tmp;
@@ -164,8 +164,8 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 				}
 			}
 			else{
-				//If current node's sd is more than parent, swap positions with parent. Secondary key is lvl.
-				if( (par >= 0 && heap[node].sd > heap[par].sd) || (par >= 0 && heap[node].sd == heap[par].sd && heap[node].lvl < heap[par].lvl) ){
+				//If current node's delta is more than parent, swap positions with parent. Secondary key is lvl.
+				if( (par >= 0 && heap[node].delta > heap[par].delta) || (par >= 0 && heap[node].delta == heap[par].delta && heap[node].lvl < heap[par].lvl) ){
 					tmp=heap[node];
 					heap[node]=heap[par];
 					heap[par]=tmp;
@@ -193,12 +193,12 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 		function siftDown(i){
 			l=left(i); 
 			r=right(i);
-			if( (heap[l] && heap[l].sd < heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
+			if( (heap[l] && heap[l].delta < heap[i].delta) || (heap[l] && heap[l].delta == heap[i].delta && heap[l].lvl < heap[i].lvl) )
 				smallest= l;
 			else
 				smallest= i;
 
-			if( (heap[r] && heap[r].sd < heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl)  )
+			if( (heap[r] && heap[r].delta < heap[smallest].delta) || (heap[r] && heap[r].delta == heap[smallest].delta && heap[r].lvl < heap[smallest].lvl)  )
 				smallest= r;
 
 			if(smallest != i){
@@ -230,12 +230,12 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 		function siftDown(i){
 			l=left(i); 
 			r=right(i);
-			if( (heap[l] && heap[l].sd > heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
+			if( (heap[l] && heap[l].delta > heap[i].delta) || (heap[l] && heap[l].delta == heap[i].delta && heap[l].lvl < heap[i].lvl) )
 				biggest= l;
 			else
 				biggest= i;
 
-			if( (heap[r] && heap[r].sd > heap[biggest].sd) || (heap[r] && heap[r].sd == heap[biggest].sd && heap[r].lvl < heap[biggest].lvl)  )
+			if( (heap[r] && heap[r].delta > heap[biggest].delta) || (heap[r] && heap[r].delta == heap[biggest].delta && heap[r].lvl < heap[biggest].lvl)  )
 				biggest= r;
 
 			if(biggest != i){
@@ -273,12 +273,12 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 			l=left(i); 
 			r=right(i); 
 
-			if( (heap[l] && heap[l].sd < heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
+			if( (heap[l] && heap[l].delta < heap[i].delta) || (heap[l] && heap[l].delta == heap[i].delta && heap[l].lvl < heap[i].lvl) )
 				smallest= l;
 			else
 				smallest= i;
 
-			if( (heap[r] && heap[r].sd < heap[smallest].sd) || (heap[r] && heap[r].sd == heap[smallest].sd && heap[r].lvl < heap[smallest].lvl) )
+			if( (heap[r] && heap[r].delta < heap[smallest].delta) || (heap[r] && heap[r].delta == heap[smallest].delta && heap[r].lvl < heap[smallest].lvl) )
 				smallest= r;
 
 			if(smallest != i){
@@ -317,12 +317,12 @@ IhtaiUtils.Heap = function(_param /*can be either a heap array, or min/max param
 			l=left(i); 
 			r=right(i); 
 
-			if( (heap[l] && heap[l].sd > heap[i].sd) || (heap[l] && heap[l].sd == heap[i].sd && heap[l].lvl < heap[i].lvl) )
+			if( (heap[l] && heap[l].delta > heap[i].delta) || (heap[l] && heap[l].delta == heap[i].delta && heap[l].lvl < heap[i].lvl) )
 				biggest= l;
 			else
 				biggest= i;
 
-			if( (heap[r] && heap[r].sd > heap[biggest].sd) || (heap[r] && heap[r].sd == heap[biggest].sd && heap[r].lvl < heap[biggest].lvl) )
+			if( (heap[r] && heap[r].delta > heap[biggest].delta) || (heap[r] && heap[r].delta == heap[biggest].delta && heap[r].lvl < heap[biggest].lvl) )
 				biggest= r;
 
 			if(biggest != i){

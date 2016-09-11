@@ -237,8 +237,8 @@
 
     var headMoveForce=0;
     var lastTime, dt, t=0;
-    var allInput='', ct=0, lastSD;
-    var SD = 1, STIMULI = 0, OUTPUT = 1;
+    var allInput='', ct=0, lastDelta;
+    var DELTA = 1, STIMULI = 0, OUTPUT = 1;
     var moveDirX = normalize(getRandomMoveDir());
     var moveDirY = normalize(getRandomMoveDir());
 
@@ -290,11 +290,11 @@
             If a memory chain with current random action already exists, act on best memory no matter what.
             */
             //dividing by larger num makes it more likely to act on memory
-            if(stimResult != null && Math.random() > res.memorizerOutput.sd/20/*170*/ && head.position[1] < 100 ) {
+            if(stimResult != null && Math.random() > res.memorizerOutput.delta/20/*170*/ && head.position[1] < 100 ) {
                 console.log('act on memory');
                 console.log('PREDICTION TDIST: ' + tDist);
                 //console.log('head pos: '+ head.position[1]);
-                console.log('PREDICTED SD: ' + res.memorizerOutput.sd)
+                console.log('PREDICTED Delta: ' + res.memorizerOutput.delta)
                 //handle movement conditions
                 moveDirX = stimResult[OUTPUT].stm[0];
                 moveDirY = stimResult[OUTPUT].stm[1];
@@ -308,7 +308,7 @@
 
             //console.log('Move DirX: ' + moveDirX);
             //console.log('Move DirY: ' + moveDirY);
-            lastSD = res.memorizerOutput.sd;
+            lastDelta = res.memorizerOutput.delta;
 
             var moveDirXOutput = moveDirX === 100 ? -1 : 1;
             var moveDirYOutput = moveDirY === 100 ? -1 : 1;

@@ -37,7 +37,7 @@ Server.onConnection(function(Client){
 	fsUidTrees: searcheable collections of memory chains, keyed off first state uid.
 		schema: each tree is keyed off dist from ideal drive state
 		
-		ex: fsUidTrees[tableId] = $R.createTree('sd'); //create an fsUid tree
+		ex: fsUidTrees[tableId] = $R.createTree('delta'); //create an fsUid tree
 			$R.insert( fsUidTrees[tableId], nodeToAdd ); //insert a memory into an fsUidTree
 		
 	ssIdTables schema: each key is a memory uid that references:
@@ -83,13 +83,13 @@ var protocolMethods = {
 	},
 
 	createTable: function(tableId) {
-		mysqlConnection.query('CREATE TABLE ' + tableId + '(uid varchar, sd double, tdist integer, jsondata text);', function(err, rows, fields) {
+		mysqlConnection.query('CREATE TABLE ' + tableId + '(uid varchar, delta double, tdist integer, jsondata text);', function(err, rows, fields) {
 			if (err) throw err;
 			// console.log('The solution is: ', rows[0].solution);
 		});
 	},
 	createSSIDTable: function(fsUid) {
-		mysqlConnection.query('CREATE TABLE ' + fsUid + '(uid varchar, sd double, tdist integer, jsondata text);', function(err, rows, fields) {
+		mysqlConnection.query('CREATE TABLE ' + fsUid + '(uid varchar, delta double, tdist integer, jsondata text);', function(err, rows, fields) {
 			if (err) throw err;
 			// console.log('The solution is: ', rows[0].solution);
 		});

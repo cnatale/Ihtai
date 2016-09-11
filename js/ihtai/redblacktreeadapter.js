@@ -76,7 +76,7 @@ var RedBlackTreeAdapter = (function() {
 	function createTable(tableId) {
 		return new Promise (
 			function(resolve, reject) {
-				fsUidTrees[tableId] = $R.createTree('sd');
+				fsUidTrees[tableId] = $R.createTree('delta');
 				resolve(true);
 		});
 	}
