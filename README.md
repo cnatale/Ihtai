@@ -28,6 +28,13 @@ THE SOFTWARE.
 
 Simply include ihtai.js and utils.js from the js/ihtai/ directory in your project. Jasmine unit tests are also included with the project in the ihtaiSpec.js file.
 
+Note: the new Mysql socket server storage requires additional steps:
+- install mysql
+- install node
+- navigate to the `js/ihtai/mysqladapterserver` folder
+- enter `node main.js`
+- to test the configuration, open a browser and navigate to http://localhost:8000/client/websockettest.html
+
 For more information, visit the Wiki: https://github.com/cnatale/Ihtai/wiki.
 
 For library documentation, visit : http://chrisnatale.info/projects/ihtai/docs_v011a/classes/Ihtai.html
