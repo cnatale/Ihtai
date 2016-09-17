@@ -19,7 +19,10 @@ var MysqlAdapter = (function() {
 	init();
 
 	function insert(tableId, nodeToAdd) {
-		return MysqlAdapter.Connection.request("insert", [tableId, nodeToAdd]);
+		var stringifiedNodeToAdd = JSON.stringify(nodeToAdd);
+		var delta = nodeToAdd.delta;
+		var tdist = nodeToAdd.tdist;
+		return MysqlAdapter.Connection.request("insert", [tableId, delta, tdist, stringifiedNodeToAdd]);
 	}
 
 	function insertSSActionId(fsUid, actionUid, nodeToAdd) {

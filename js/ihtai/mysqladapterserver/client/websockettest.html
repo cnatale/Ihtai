@@ -2,18 +2,18 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Chat example</title>
+<title>web socket test</title>
 <script src='websocket-promise-bundle.js'></script>
 <script src='mysqladapter.js'></script>
 <script>
 
 setTimeout(function() {
-	$MA.createTable('t1_3_4').then(function(Response){
+	/* $MA.createTable('t1_3_4').then(function(Response){
 		console.log(Response);
-	});
+	}); */
 
-	$MA.insert('t1_3_4', 'a node').then(function(Response){
-	  console.log(Response);
+	$MA.insert('t1_3_4', { tdist: 30, delta: 2, es:{}, fs:{}, ss:{} }).then(function(Response){
+		console.log(Response);
 	});
 
 }, 500);

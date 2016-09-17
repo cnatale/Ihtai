@@ -950,7 +950,6 @@ var Memorizer = (function(bundle){
 												tdist:size
 											};
 											actionUid = IhtaiUtils.getactionUid(maxTreeNode.ss, maxTreeNode.tdist);
-											// OK
 											if(treeSize >= candidatePoolSize) {
 													$RA.del(fsUid,  maxTreeNode).then( result => {
 														// delete maxTreeNode from lookup table

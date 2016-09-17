@@ -24,6 +24,11 @@ Server.onConnection(function(Client){
    		console.log(Job.Message)
    		protocolMethods.insert(Job, Job.Message[0], Job.Message[1]);
 	});
+
+	Client.on('createTable', function(Job){
+		console.log(Job.Message)
+		protocolMethods.createTable(Job.Message[0]);
+	});
 });
 
 
@@ -53,64 +58,85 @@ Server.onConnection(function(Client){
 */
 
 var protocolMethods = {
-	insert: function(Job, tableId, nodeToAdd) {
-		//TODO: convert 
-		// $R.insert( fsUidTrees[tableId], nodeToAdd );
-		mysqlConnection.query('CREATE TABLE ' + tableId + '(PersonID int);', function(err, rows, fields) {
-			if (err) throw err;
-			// console.log('The solution is: ', rows[0].solution);
-			Job.Response = 'insert response';
-		}); 
-		
+	insert: function(Job) {
+		var tableId = Job.Message[0];
+		var delta = Job.Message[1];
+		var tdist = Job.Message[2];
+		var nodeToAdd = Job.Message[3];
+
+		//added a node to redblacktree
+		var queryString = "INSERT INTO " + tableId + " VALUES ('"+ tableId +"', "+ delta +", "+ tdist +", '"+ nodeToAdd +"');";
+		mysqlConnection.query(queryString, function(err, rows, fields) {
+		//mysqlConnection.query("INSERT INTO t1_3_4 VALUES (2, 4, 30, 'another node');", function(err, rows, fields) {
+			if (err) throw err; 
+			return true;
+		});
 	},
 	insertSSActionId: function(fsUid, actionUid, nodeToAdd) {
-
+		//inserted an element into SSActionId table in redblacktree
+		//can be turned into no-op, and all functionality handled by insert
+		return true;
 	},
 	del: function(tableId, nodeToDelete) {
+		//deleted node from redblacktree
 
 	},
 	delSSActionId: function(fsUid, actionUid) {
-
+		//deleted memory reference from SSActionId table
+		//can be turned into no-op, and all functionality handled by del
+		return true;
 	},
 	update: function(tableId, nodeToUpdate) {
+		//used to rebalance redblacktree.
+		//called delete then add in order in redblacktree. 
 
+		//make this the only update method
 	},
 	min: function(tableId) {
+		//should rename tableId to fsuid since that's what it's being called everywhere else in this module
 
 	},
 	max: function(tableId) {
 
 	},
 
+	// TODO: look into using native mysql JSON object for jsondata
 	createTable: function(tableId) {
-		mysqlConnection.query('CREATE TABLE ' + tableId + '(uid varchar, delta double, tdist integer, jsondata text);', function(err, rows, fields) {
-			if (err) throw err;
-			// console.log('The solution is: ', rows[0].solution);
+		//note: callback function throws an error if table already exists
+
+		//created redblacktree and referenced through fsuid table
+		mysqlConnection.query('CREATE TABLE ' + tableId + '(uid varchar(255), delta double, tdist integer, jsondata text);', function(err, rows, fields) {
+			if (err) throw err; 
+			return true;
 		});
 	},
 	createSSActionIdTable: function(fsUid) {
-		mysqlConnection.query('CREATE TABLE ' + fsUid + '(uid varchar, delta double, tdist integer, jsondata text);', function(err, rows, fields) {
-			if (err) throw err;
-			// console.log('The solution is: ', rows[0].solution);
-		});
+		//created SSActionId table
+		//can be turned into no-op, and all funcitonality handled by createTable
+		return true;
 	},
 	hasOutputBeenExperienced: function(fsUid, actionUid) {
-
+		//query fsuid table for row with actionUid
 	},
 	getStoredStimuli: function(fsUid, actionUid) {
+		// get the entire stored stm json object (fs, ss, es, etc.)
 
 	},
 	setStoredStimuli: function(fsUid, actionUid, nodeToStore) {
-
+		// change value of entire stored stm json object based on SSActionId value
+		// should call through to update
+		this.update(fsUid, nodeToStore);
 	},
 	doesSSActionIdTableExist: function(fsUid) {
-
+		// name could probably be refactored since this is looking up the same table as fsuid, unlike the
+		// redblacktree implementation
 	},
 	getFSUIDTreeSize: function(fsUid) {
-
+		//returned number of elements in redblacktree; can do same thing with number of rows for an fsuid table
 	},
 	isAnFSUIDTree: function(fsUid) {
-
+		// returned boolean representing if fsUid key existed in fsUid tree table
+		// this should be the same functionality as doesSSActionIdTableExist
 	}
 };
 
